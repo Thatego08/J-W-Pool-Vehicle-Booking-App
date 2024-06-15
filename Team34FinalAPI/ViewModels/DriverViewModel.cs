@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Team34FinalAPI.Models
+﻿namespace Team34FinalAPI.ViewModels
 {
-    public class Driver
+    public class DriverViewModel
     {
-        [Key]
         public string UserName { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
