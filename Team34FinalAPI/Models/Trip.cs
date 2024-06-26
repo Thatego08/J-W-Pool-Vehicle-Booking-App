@@ -2,5 +2,6 @@
 {
     public class Trip
     {
+        public string image;
     }
 }
