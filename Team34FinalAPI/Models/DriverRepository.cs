@@ -19,7 +19,7 @@ namespace Team34FinalAPI.Models
 
         public async Task<Driver> GetDriverAsync(string userName)
         {
-            // Corrected parameter from courseId to userName and added OfType<Driver>()
+           
             IQueryable<Driver> query = _userDbContext.Drivers.OfType<Driver>().Where(c => c.UserName ==userName);
             return await query.FirstOrDefaultAsync();
         }

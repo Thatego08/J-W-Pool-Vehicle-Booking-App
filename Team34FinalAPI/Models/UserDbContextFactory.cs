@@ -11,7 +11,7 @@ namespace Team34FinalAPI.Models
         {
             var optionsBuilder = new DbContextOptionsBuilder<UserDbContext>();
 
-            // Assuming you have the connection string in appsettings.json
+            
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
