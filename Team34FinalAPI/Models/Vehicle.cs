@@ -31,5 +31,6 @@
 
         public int VehicleModelID { get; set; }
 
+        public ICollection<Trip> Trips { get; set; }
     }
 }
