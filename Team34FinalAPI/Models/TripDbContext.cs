@@ -1,0 +1,34 @@
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace Team34FinalAPI.Models
+{
+    public class TripDbContext : DbContext
+    {
+        public TripDbContext(DbContextOptions<TripDbContext> options) : base(options) { }
+
+        public DbSet<Trip> Trips { get; set; }
+        public DbSet<TripMedia> TripMedia { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Trip>().ToTable("Trips");
+            modelBuilder.Entity<TripMedia>().ToTable("TripMedia");
+
+            // Configure the relationship between Trip and TripMedia
+            modelBuilder.Entity<Trip>()
+                .HasMany(t => t.TripMedia)
+                .WithOne(m => m.Trip)
+                .HasForeignKey(m => m.TripId);
+
+            // Configure the relationship between Trip and Vehicle
+            modelBuilder.Entity<Trip>()
+                .HasOne<Vehicle>(t => t.Vehicle)
+                .WithMany() // Assuming a vehicle can have multiple trips
+                .HasForeignKey(t => t.VehicleId)
+                .IsRequired();
+
+            // Ignore the Vehicle entity to avoid creating its table
+            modelBuilder.Ignore<Vehicle>();
+        }
+    }
+}
