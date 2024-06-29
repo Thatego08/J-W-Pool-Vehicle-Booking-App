@@ -11,17 +11,25 @@ namespace Team34FinalAPI.Models
             _userDbContext = userDbContext;
         }
 
-        public async Task<Driver[]> GetAllDriverAsync()
-        {
-            IQueryable<Driver> query = _userDbContext.Drivers.OfType<Driver>();
+        public async Task<User[]> GetAllDriverAsync()
+        { 
+            // Query ApplicationUser with Driver role
+            IQueryable<User> query = _userDbContext.Drivers
+                .OfType<User>()
+                .Where(u => _userDbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Driver").Id));
+
             return await query.ToArrayAsync();
         }
 
         public async Task<Driver> GetDriverAsync(string userName)
         {
-           
-            IQueryable<Driver> query = _userDbContext.Drivers.OfType<Driver>().Where(c => c.UserName ==userName);
-            return await query.FirstOrDefaultAsync();
+            // Query for a specific Driver by username
+            var driver = await _userDbContext.Drivers
+                .OfType<Driver>()
+                .Where(d => d.UserName == userName && _userDbContext.UserRoles.Any(ur => ur.UserId == d.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Driver").Id))
+                .FirstOrDefaultAsync();
+            //IQueryable<Driver> query = _userDbContext.Drivers.OfType<Driver>().Where(c => c.UserName ==userName);
+            return driver;
         }
         public void Add<T>(T entity) where T : class
         {

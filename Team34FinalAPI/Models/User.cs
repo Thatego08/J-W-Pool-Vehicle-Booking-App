@@ -1,15 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace Team34FinalAPI.Models
 {
-    public class User
+    public class User: IdentityUser
     {
+        //Parent class
+        
+        /*
         [Key]
-        public string UserName { get; set; }
+        public string UserName { get; set; }*/
         public string Name { get; set; }
         public string Surname { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        public int PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Role { get; set; }
     }
+
 }
