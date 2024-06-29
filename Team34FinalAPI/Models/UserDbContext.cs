@@ -1,19 +1,69 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Team34FinalAPI.Models
 {
-    public class UserDbContext : DbContext
+    public class UserDbContext : IdentityDbContext<User, IdentityRole, string, IdentityUserClaim<string>, IdentityUserRole<string>, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
+
     {
-        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options) 
+        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options)
         { }
 
         public DbSet<Driver> Drivers { get; set; } // DbSet for Driver entity
 
+        public override DbSet<User> Users { get; set; } //DbSet for User entity
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); 
+            base.OnModelCreating(modelBuilder);
+            //Configure User Entity with Asp Identity Standards
 
-            // Map the Driver entity to the Users table
+            //Mapping
+            // Configure the ApplicationUser to use the 'Users' table
+            /*modelBuilder.Entity<User>()
+                .ToTable("Users");
+
+            // Add configuration for the Driver entity if needed
+            modelBuilder.Entity<Driver>()
+                .ToTable("Users");
+*/
+            // Configure the User entity
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id); // Ensure Id is the primary key
+                entity.Property(e => e.UserName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Email).IsRequired();
+                entity.Property(e => e.Name).HasMaxLength(50);
+                entity.Property(e => e.Surname).HasMaxLength(50);
+            });
+            modelBuilder.Entity<User>()
+        .HasDiscriminator<string>("Role")
+        .HasValue<Admin>("Admin")
+        .HasValue<User>("User")
+        .HasValue<Driver>("Driver");
+
+            //Config of IdentyUserRole relationship
+            modelBuilder.Entity<IdentityUserRole<string>>(entity =>
+            {
+                entity.HasKey(r => new { r.UserId, r.RoleId });
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(r => r.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<IdentityRole>(entity =>
+            {
+                //customizations for IdentityRole entity
+                //customizations for IdentityRole entity
+            });
+
+
+            //My Additions conlusion
+
+
+            /*// Map the Driver entity to the Users table
             modelBuilder.Entity<Driver>().ToTable("Users");
 
             // Seed data for Drivers (not Users)
@@ -36,7 +86,7 @@ namespace Team34FinalAPI.Models
                     PhoneNumber = 713341011, // Remove leading zero for integers
                     Password = "0000"
                 }
-            );
+            );*/
         }
     }
 }

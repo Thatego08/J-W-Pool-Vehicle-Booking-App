@@ -5,7 +5,7 @@
         Task<bool> SaveChangesAync();
         void Add<T>(T entity) where T : class;
         void Delete<T>(T entity) where T : class;
-        Task<Driver[]> GetAllDriverAsync();
+        Task<User[]> GetAllDriverAsync();
         Task<Driver> GetDriverAsync(string userName);
     }
 }
