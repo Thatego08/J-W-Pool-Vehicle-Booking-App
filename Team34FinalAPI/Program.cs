@@ -60,7 +60,9 @@ builder.Services.AddSwaggerGen(c =>
 
 
 
-
+// Configure TripDbContext
+builder.Services.AddDbContext<TripDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure VehicleDbContext
 builder.Services.AddDbContext<VehicleDbContext>(options =>
@@ -125,6 +127,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 
+builder.Services.AddScoped<ITripRepository, TripRepository>();
 
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
