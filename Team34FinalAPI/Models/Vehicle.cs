@@ -31,6 +31,9 @@
 
         public int VehicleModelID { get; set; }
 
+        // This line establishes the one-to-many relationship
         public ICollection<Trip> Trips { get; set; }
+        
+        public ICollection<Booking> Bookings { get; set; }
     }
 }
