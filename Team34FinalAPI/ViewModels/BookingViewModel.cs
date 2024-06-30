@@ -1,18 +1,14 @@
-﻿namespace Team34FinalAPI.Models
+﻿namespace Team34FinalAPI.ViewModels
 {
-    public class Booking
+    public class BookingViewModel
     {
         public int BookingID { get; set; }
         public string UserName { get; set; }
-
         public string? Event { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public int VehicleId { get; set; }
-        public Vehicle Vehicle { get; set; }
-
-        public int? ProjectId { get; set; }
-        public Project Project { get; set; }
+        public string VehicleName { get; set; }
+        public string? ProjectName { get; set; }
     }
 }
