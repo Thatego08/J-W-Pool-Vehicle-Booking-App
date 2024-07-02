@@ -13,6 +13,12 @@ namespace Team34FinalAPI.Models
         public DbSet<Driver> Drivers { get; set; } // DbSet for Driver entity
 
         public override DbSet<User> Users { get; set; } //DbSet for User entity
+
+        public DbSet<AuditLog> AuditLogs { get; set; } //DbSet for Audit log entity
+
+        public DbSet<Feedback> Feedbacks { get; set; } //DbSet for Feedback entity
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -41,6 +47,29 @@ namespace Team34FinalAPI.Models
         .HasValue<Admin>("Admin")
         .HasValue<User>("User")
         .HasValue<Driver>("Driver");
+
+            //Audit Log Config
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserName).IsRequired().HasMaxLength(256);
+                entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Details).IsRequired();
+                entity.Property(e => e.Timestamp).IsRequired();
+            });
+
+            //Feedback config
+
+            modelBuilder.Entity<Feedback>(entity =>
+            {
+                entity.HasKey(f => f.Id);
+                entity.Property(f => f.UserName).IsRequired().HasMaxLength(256);
+                entity.Property(f => f.Email).IsRequired().HasMaxLength(256);
+                entity.Property(f => f.Message).IsRequired();
+                entity.Property(f => f.Timestamp).IsRequired();
+                entity.Property(f => f.Rating).IsRequired().HasDefaultValue(0); 
+            });
 
             //Config of IdentyUserRole relationship
             modelBuilder.Entity<IdentityUserRole<string>>(entity =>
