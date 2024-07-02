@@ -25,8 +25,9 @@ namespace Team34FinalAPI.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserClaimsPrincipalFactory<User> _claimsPrincipalFactory;
         private readonly IConfiguration _configuration;
+        private IAuditLogRepository _auditLogRepository;
 
-        public UserController(UserManager<User> userManager, IAuthService authService, SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, UserDbContext userDbContext, IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
+        public UserController(UserManager<User> userManager, IAuthService authService, SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
         {
             this._userDbContext = userDbContext;
             _userRepository = userRepository;
@@ -37,6 +38,7 @@ namespace Team34FinalAPI.Controllers
             _roleManager = roleManager;
             _configuration = configuration;
             _claimsPrincipalFactory = userClaimsPrincipal;
+            _auditLogRepository = auditLogRepository;
         }
 
         [HttpGet]
@@ -98,13 +100,22 @@ namespace Team34FinalAPI.Controllers
 
                 if (result.Succeeded)
                 {
+                    //Audit Log Stuff
+                    await _auditLogRepository.AddLogAsync(new AuditLog
+                    {
+                        UserName = model.Email,
+                        Action = "Register",
+                        Details = $"User registered with username: {model.Name} {model.Surname}",
+                        Timestamp = DateTime.UtcNow
+                    });
+
                     if (!await _roleManager.RoleExistsAsync(model.Role))
                     {
                         await _roleManager.CreateAsync(new IdentityRole(model.Role));
                     }
                     await _userManager.AddToRoleAsync(user, model.Role);
 
-                    return Ok("User registered successfully" + "Your Username is: " + username);
+                    return result.Succeeded ? Ok("User registered successfully" + "Your Username is: " + username) : BadRequest(result.Errors); ;
                 }
                 else
                 {
@@ -152,11 +163,41 @@ namespace Team34FinalAPI.Controllers
             try
             {
                 var result = await _authService.LoginAsync(model.UserName, model.Password);
+                await _auditLogRepository.AddLogAsync(new AuditLog
+                {
+                    UserName = model.UserName,
+                    Action = "Login",
+                    Details = "User logged in.",
+                    Timestamp = DateTime.UtcNow
+                });
                 return Ok(new { Token = result });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "An error occurred during login.");
+
                 return Unauthorized(new { Message = ex.Message });
+            }
+        }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                await _signInManager.SignOutAsync();
+                await _auditLogRepository.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Logout",
+                    Details = "User logged out successfully.",
+                    Timestamp = DateTime.UtcNow
+                });
+                return Ok(new { Message = "Logged out successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during logout.");
+                return StatusCode(500, "Internal server error. Please contact support.");
             }
         }
 
