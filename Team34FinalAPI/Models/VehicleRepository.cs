@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Team34FinalAPI.Models;
+using Team34FinalAPI.ViewModels;
 
 namespace Team34FinalAPI.Models
 {
@@ -13,11 +15,39 @@ namespace Team34FinalAPI.Models
         {
             _context = context;
         }
+        
 
-
-        public void Add<T>(T entity) where T : class
+        public async Task AddVehicleAsync(VehicleViewModel vvm)
         {
-            _context.Add(entity);
+            var vehicle = new Vehicle()
+            {
+                VehicleID = vvm.VehicleID,
+                Name = vvm.Name,
+                Description = vvm.Description,
+                DateAcquired = vvm.DateAcquired,
+                RegistrationNumber = vvm.RegistrationNumber,
+                VehicleMakeID = vvm.VehicleMakeID,
+                VehicleModelID = vvm.VehicleModelID,
+                VIN = vvm.VIN,
+                StatusID = vvm.StatusID,
+                ColourID = vvm.ColourID,
+                InsuranceCoverID = vvm.InsuranceCoverID,
+                FuelTypeID = vvm.FuelTypeID,
+                LicenseExpiryDate   = vvm.LicenseExpiryDate,
+                EngineNo = vvm.EngineNo,
+            };
+
+            var licenseDisk = new LicenseDisk()
+            {
+                LicenseExpiryDate = vvm.LicenseExpiryDate,
+            };
+
+            vehicle.LicenseDisk = licenseDisk;
+
+            _context.Vehicles.Add(vehicle);
+            _context.LicenseDisks.Add(licenseDisk);
+
+            await _context.SaveChangesAsync();
         }
 
         public void Delete<T>(T entity) where T : class

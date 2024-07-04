@@ -33,5 +33,7 @@
         public ICollection<Trip> Trips { get; set; }
         
         public ICollection<Booking> Bookings { get; set; }
+
+        public virtual LicenseDisk LicenseDisk { get; set; }
     }
 }
