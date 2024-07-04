@@ -9,6 +9,7 @@
         public string Comment { get; set; }
         public DateTime TravelStart { get; set; }
         public DateTime TravelEnd { get; set; }
+        public string RegistrationNumber { get; set; }
         public List<IFormFile> MediaFiles { get; set; } // For file uploads
         public string MediaDescription { get; set; } // Additional description
     }

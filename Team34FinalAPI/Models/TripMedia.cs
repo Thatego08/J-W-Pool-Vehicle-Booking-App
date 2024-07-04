@@ -12,16 +12,12 @@ namespace Team34FinalAPI.Models
         public int TripId { get; set; }
 
         [ForeignKey("TripId")]
-        public Trip Trip { get; set; }
-
-        public string MediaPath { get; set; }
-
+        public Trip Trip { get; set; } // Navigation property
         public string Description { get; set; }
-
-        // Additional properties for file storage
         public string FileName { get; set; }
-        public byte[] FileContent { get; set; } // Store file content as byte array
-        public string MediaType { get; set; } // MIME type of the file
+        public byte[] FileContent { get; set; }
+        public string MediaType { get; set; }
+
 
     }
 }
