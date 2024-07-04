@@ -36,6 +36,80 @@ namespace Team34FinalAPI.Models
             return await _context.Vehicles.FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
         }
 
+        public async Task<InsuranceCover[]> GetInsuranceCoverAsync()
+        {
+            IQueryable<InsuranceCover> query = _context.InsuranceCover;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<Status[]> GetAllStatusAsync()
+        {
+            IQueryable<Status> query = _context.Status;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<VehicleFuelType[]> GetAllFuelTypeAsync()
+        {
+            IQueryable<VehicleFuelType> query = _context.FuelTypes;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<Colour[]> GetAllColoursAsync()
+        {
+            IQueryable<Colour> query = _context.Colour;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<LicenseDisk[]> GetAllLicenseDiskAsync()
+        {
+            IQueryable<LicenseDisk> query = _context.LicenseDisks;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<VehicleChecklist[]> GetAllVehicleChecklistAsync()
+        {
+            IQueryable<VehicleChecklist> query = _context.VehicleChecklists;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<VehicleModel[]> GetAllVehicleModelAsync()
+        {
+            IQueryable<VehicleModel> query = _context.VehicleModel;
+            return await query.ToArrayAsync();
+        }
+
+        public async Task<VehicleMake[]> GetAllVehicleMakeAsync()
+        {
+            IQueryable<VehicleMake> query = _context.VehicleMake;
+            return await query.ToArrayAsync();
+        }
+
+        public void AddColour(Colour colour)
+        {
+            _context.Add(colour);
+
+        }
+
+        public void AddFuelType(VehicleFuelType fuelType)
+        {
+            _context.Add(fuelType);
+        }
+
+        public void AddInsuranceCover(InsuranceCover insurance)
+        {
+            _context.Add(insurance);
+        }
+
+        public void AddVehicleMake(VehicleMake vehicleMake)
+        {
+            _context.Add(vehicleMake);
+        }
+
+        public void AddVehicleModel(VehicleModel vehicleModel)
+        {
+            _context.Add(vehicleModel);
+        }
+
 
         public async Task<bool> SaveChangesAsync()
         {
