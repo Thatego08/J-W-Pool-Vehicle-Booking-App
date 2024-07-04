@@ -59,6 +59,21 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [HttpPost("AddVehicle")]
+        public async Task<IActionResult> AddVehicle([FromBody] VehicleViewModel vehicleViewModel)
+        {
+            try
+            {
+                await _vehicleRepository.AddVehicleAsync(vehicleViewModel);
+                return Ok("Vehicle added successfully!");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error adding vehicle: {ex.Message}");
+            }
+        }
+
+        /*
         [HttpPost]
         [Route("AddVehicle")]
         public async Task<IActionResult> AddVehicle(VehicleViewModel vvm)
@@ -91,7 +106,7 @@ namespace Team34FinalAPI.Controllers
             }
 
             return Ok(vehicle);
-        }
+        } */
 
 
         [HttpPut]
