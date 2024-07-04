@@ -27,6 +27,11 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest(ModelState);
             }
 
+            if (tvm == null)
+            {
+                return BadRequest("TripViewModel cannot be null");
+            }
+
             var trip = new Trip
             {
                 VehicleId = tvm.VehicleId,
@@ -34,28 +39,34 @@ namespace Team34FinalAPI.Controllers
                 FuelAmount = tvm.FuelAmount,
                 Comment = tvm.Comment,
                 TravelStart = tvm.TravelStart,
-                TravelEnd = tvm.TravelEnd
+                TravelEnd = tvm.TravelEnd,
+                RegistrationNumber = tvm.RegistrationNumber
             };
 
+            // Initialize TripMedia collection if it's null
+            trip.TripMedia = new List<TripMedia>();
+
             // Handle file uploads
-            foreach (var file in tvm.MediaFiles)
+            if (tvm.MediaFiles != null)
             {
-                using (var ms = new MemoryStream())
+                foreach (var file in tvm.MediaFiles)
                 {
-                    await file.CopyToAsync(ms);
-                    var fileBytes = ms.ToArray();
-
-                    var tripMedia = new TripMedia
+                    using (var ms = new MemoryStream())
                     {
-                        Trip = trip,
-                        MediaPath = "path/to/your/uploaded/file", // Set your path or storage location
-                        Description = tvm.MediaDescription,
-                        FileName = file.FileName,
-                        FileContent = fileBytes,
-                        MediaType = file.ContentType
-                    };
+                        await file.CopyToAsync(ms);
+                        var fileBytes = ms.ToArray();
 
-                    trip.TripMedia.Add(tripMedia);
+                        var tripMedia = new TripMedia
+                        {
+                            Trip = trip,
+                            Description = tvm.MediaDescription,
+                            FileName = file.FileName,
+                            FileContent = fileBytes,
+                            MediaType = file.ContentType
+                        };
+
+                        trip.TripMedia.Add(tripMedia);
+                    }
                 }
             }
 
@@ -64,6 +75,12 @@ namespace Team34FinalAPI.Controllers
                 _context.Trips.Add(trip);
                 await _context.SaveChangesAsync();
             }
+            catch (DbUpdateException dbEx)
+            {
+                // Log the inner exception message
+                var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+                return StatusCode(500, $"Internal server error: {innerExceptionMessage}");
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
@@ -71,6 +88,8 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(trip);
         }
+
+
         [HttpPut("UpdateTrip/{id}")]
         public async Task<IActionResult> UpdateTrip(int id, TripViewModel tvm)
         {
