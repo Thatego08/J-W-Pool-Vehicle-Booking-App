@@ -19,14 +19,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder
-                .WithOrigins("https://localhost:4200")  // Ensure this matches your frontend URL
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
+            builder.WithOrigins("http://localhost:4200") // Adjust this to match the frontend's origin
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
         });
 });
 
@@ -188,7 +186,7 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();
 app.UseAuthorization();
