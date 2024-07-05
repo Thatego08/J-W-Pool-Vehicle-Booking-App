@@ -116,10 +116,12 @@ namespace Team34FinalAPI.Controllers
                     }
                     await _userManager.AddToRoleAsync(user, model.Role);
 
-                    return result.Succeeded ? Ok("User registered successfully" + "Your Username is: " + username) : BadRequest(result.Errors); ;
+                    
+                    return Ok(new { message = "User registered successfully", username = user.UserName });
                 }
                 else
                 {
+
                     foreach (var error in result.Errors)
                     {
                         _logger.LogInformation("User creation error: {Error}", error.Description);
@@ -127,6 +129,12 @@ namespace Team34FinalAPI.Controllers
                     }
                     return BadRequest(ModelState);
                 }
+                // Check if the error is due to duplicate username
+                if (result.Errors.Any(e => e.Code == "DuplicateUserName"))
+                {
+                    return BadRequest(new { message = "Username already exists." });
+                }
+                return BadRequest(new { message = "Registration failed." });
             }
             catch (DbUpdateException dbEx)
             {
