@@ -54,5 +54,14 @@ namespace Team34FinalAPI.Models
         {
             return _context.Bookings.Any(e => e.BookingID == id);
         }
+
+        public async Task<IEnumerable<Booking>> GetBookingsByVehicleIdAsync(int vehicleId)
+        {
+            return await _context.Bookings
+                .Include(b => b.Vehicle)
+                .Include(b => b.Project)
+                .Where(b => b.VehicleId == vehicleId)
+                .ToListAsync();
+        }
     }
 }

@@ -82,7 +82,14 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
+//Configure EmailService
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddTransient<IEmailService, EmailService>();
 
+//Configure backgroundService
+builder.Services.AddHostedService<BookingReminderService>();
+
+//Config DbContexts
 
 //Configure BookingDbContext
 builder.Services.AddDbContext<BookingDbContext>(options =>
@@ -154,7 +161,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("DriverPolicy", policy => policy.RequireRole("Driver", "Admin"));
 });
 
-
+//Add repositories and services
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
@@ -176,7 +183,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
     app.UseDeveloperExceptionPage();
 }
 else
@@ -261,4 +267,5 @@ public static class RoleInitializer
             }
         }
     }
+
 }
