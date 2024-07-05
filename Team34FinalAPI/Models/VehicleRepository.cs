@@ -57,13 +57,19 @@ namespace Team34FinalAPI.Models
 
         public async Task<Vehicle[]> GetAllVehiclesAsync()
         {
-            IQueryable<Vehicle> query = _context.Vehicles;
+            IQueryable<Vehicle> query = _context.Vehicles.
+                Include(v => v.InsuranceCover).Include(v => v.VehicleMake).Include(v => v.VehicleModel).Include(v => v.FuelType).Include(v => v.Colour); 
             return await query.ToArrayAsync();
         }
 
         public async Task<Vehicle> GetVehicleAsync(int vehicleId)
         {
-            return await _context.Vehicles.FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
+            return await _context.Vehicles.Include(v => v.InsuranceCover)
+        .Include(v => v.Colour)
+        .Include(v => v.FuelType)
+        .Include(v => v.VehicleMake)
+        .Include(v => v.VehicleModel).
+                FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
         }
 
         public async Task<InsuranceCover[]> GetInsuranceCoverAsync()
@@ -104,7 +110,7 @@ namespace Team34FinalAPI.Models
 
         public async Task<VehicleModel[]> GetAllVehicleModelAsync()
         {
-            IQueryable<VehicleModel> query = _context.VehicleModel;
+            IQueryable<VehicleModel> query = _context.VehicleModel.Include(vm => vm.VehicleMake);
             return await query.ToArrayAsync();
         }
 

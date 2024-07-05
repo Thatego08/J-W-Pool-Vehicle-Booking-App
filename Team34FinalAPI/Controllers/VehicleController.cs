@@ -50,6 +50,12 @@ namespace Team34FinalAPI.Controllers
             {
                 var result = await _vehicleRepository.GetVehicleAsync(vehicleId);
                 if (result == null) return NotFound("Vehicle does not exist.");
+
+                var insuranceCoverName = result.InsuranceCover.InsuranceCoverName;
+                var colourName = result.Colour.Name;
+                var fuelTypeName = result.FuelType.FuelName;
+                var vehicleMakeName = result.VehicleMake.Name;
+                var vehicleModelName = result.VehicleModel.VehicleModelName;
                 return Ok(result);
             }
             catch (Exception )
