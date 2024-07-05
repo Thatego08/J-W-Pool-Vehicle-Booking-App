@@ -1,4 +1,6 @@
-﻿namespace Team34FinalAPI.Models
+﻿using Microsoft.VisualBasic.FileIO;
+
+namespace Team34FinalAPI.Models
 {
     public class Vehicle
     {
@@ -15,6 +17,8 @@
         public string RegistrationNumber { get; set; }
 
         public int InsuranceCoverID { get; set; }
+
+
 
         public string VIN { get; set; }
 
@@ -35,5 +39,11 @@
         public ICollection<Booking> Bookings { get; set; }
 
         public virtual LicenseDisk LicenseDisk { get; set; }
+       
+        public virtual InsuranceCover InsuranceCover { get; set; }
+        public virtual Colour Colour { get; set; }
+        public virtual VehicleFuelType FuelType { get; set; }
+        public virtual VehicleMake VehicleMake { get; set; }
+        public virtual VehicleModel VehicleModel { get; set; }
     }
 }

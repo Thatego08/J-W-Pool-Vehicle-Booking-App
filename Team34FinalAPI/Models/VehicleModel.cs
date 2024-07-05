@@ -7,5 +7,7 @@
         public string VehicleModelName { get; set; }
 
         public int VehicleMakeID { get; set; }
+
+        public VehicleMake VehicleMake { get; set; }
     }
 }
