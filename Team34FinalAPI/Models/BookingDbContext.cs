@@ -10,7 +10,7 @@ namespace Team34FinalAPI.Models
         }
 
         public DbSet<Booking> Bookings { get; set; }
-        public DbSet<Vehicle> Vehicles { get; set; }
+        
         public DbSet<Project> Projects { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<InspectionList> InspectionLists { get; set; }
@@ -38,6 +38,7 @@ namespace Team34FinalAPI.Models
             );
 
             //End of my adjustments
+
             //Project config 
             modelBuilder.Entity<Project>(entity =>
             {

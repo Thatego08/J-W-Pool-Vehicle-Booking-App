@@ -8,5 +8,6 @@
         Task UpdateBookingAsync(Booking booking);
         Task DeleteBookingAsync(int id);
         bool BookingExists(int id);
+        Task<IEnumerable<Booking>> GetBookingsByVehicleIdAsync(int vehicleId);
     }
 }
