@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Security.Claims;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.Services;
 using Team34FinalAPI.Tools;
@@ -103,9 +104,9 @@ namespace Team34FinalAPI.Controllers
                     //Audit Log Stuff
                     await _auditLogRepository.AddLogAsync(new AuditLog
                     {
-                        UserName = model.Email,
+                        UserName = username,
                         Action = "Register",
-                        Details = $"User registered with username: {model.Name} {model.Surname}",
+                        Details = $"User registered with username: "+ username,
                         Timestamp = DateTime.UtcNow
                     });
 
@@ -199,6 +200,39 @@ namespace Team34FinalAPI.Controllers
                 _logger.LogError(ex, "An error occurred during logout.");
                 return StatusCode(500, "Internal server error. Please contact support.");
             }
+        }
+        // In UserController.cs
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            // Get the username of the logged-in user
+            var userName = User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                return BadRequest(new { message = "User not found." });
+            }
+
+            // Retrieve the user profile based on the username
+            var user = await _userManager.FindByNameAsync(userName);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            // Return the user profile information
+            var userProfile = new
+            {
+                user.UserName,
+                user.Email,
+                user.Name,
+                user.Surname,
+                user.Role
+            };
+
+            return Ok(userProfile);
         }
 
         [Authorize(Roles = "Admin")]
