@@ -17,13 +17,18 @@ using OfficeOpenXml;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddCors(options => options.AddDefaultPolicy(
-    include =>
-    {
-        include.AllowAnyHeader();
-        include.AllowAnyMethod();
-        include.AllowAnyOrigin();
-    }));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder =>
+        {
+            builder
+                .WithOrigins("https://localhost:4200")  // Ensure this matches your frontend URL
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+});
 
 
 builder.Services.AddControllers();
@@ -183,6 +188,7 @@ else
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
