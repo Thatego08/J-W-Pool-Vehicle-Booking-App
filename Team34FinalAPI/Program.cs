@@ -83,12 +83,6 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-//Configure EmailService
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-builder.Services.AddTransient<IEmailService, EmailService>();
-
-//Configure backgroundService
-builder.Services.AddHostedService<BookingReminderService>();
 
 //Config DbContexts
 
@@ -197,7 +191,7 @@ app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors();
+
 app.MapControllers();
 
 

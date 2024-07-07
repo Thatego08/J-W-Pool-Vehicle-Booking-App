@@ -17,6 +17,10 @@ namespace Team34FinalAPI.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            //Explicitly mapping tables
+            modelBuilder.Entity<Booking>().ToTable("Booking");
+            modelBuilder.Entity<Project>().ToTable("Project");
+            modelBuilder.Entity<Vehicle>().ToTable("Vehicles");
 
             // Configure the relationship between Project and Booking
             modelBuilder.Entity<Project>()
