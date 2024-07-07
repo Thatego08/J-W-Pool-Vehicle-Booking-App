@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+
 using Team34FinalAPI.Services;
 
 namespace Team34FinalAPI.Controllers
@@ -15,14 +19,12 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly IBookingRepository _bookingRepository;
         private readonly BookingDbContext _context;
-        private readonly IEmailService _emailService;
         private readonly VehicleDbContext _vehicleContext;
 
-        public BookingController(IBookingRepository bookingRepository, BookingDbContext context, VehicleDbContext vehicleContext, IEmailService emailService)
+        public BookingController(IBookingRepository bookingRepository, BookingDbContext context, VehicleDbContext vehicleContext)
         {
             _bookingRepository = bookingRepository;
             _context = context;
-            _emailService = emailService;
             _vehicleContext = vehicleContext;
         }
 
@@ -61,12 +63,9 @@ namespace Team34FinalAPI.Controllers
             var vehicle = await _vehicleContext.Vehicles.SingleOrDefaultAsync(v => v.Name == bookingViewModel.VehicleName);
             if (vehicle == null) return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} does not exist.");
 
-
-
             // Fetch the project based on the provided project name
             var project = await _context.Projects.SingleOrDefaultAsync(p => p.ProjectName == bookingViewModel.ProjectName);
             if (project == null) return BadRequest($"Project with name {bookingViewModel.ProjectName} does not exist.");
-
 
             // Map BookingViewModel to Booking model
             var booking = new Booking
@@ -85,14 +84,11 @@ namespace Team34FinalAPI.Controllers
             // Map back to BookingViewModel for the response
             bookingViewModel.BookingID = booking.BookingID;
 
-            // Send booking confirmation email
-            var message = $"Dear {bookingViewModel.UserName},\n\nYour booking has been confirmed.\n\nDetails:\nStart Date: {bookingViewModel.StartDate}\nEnd Date: {bookingViewModel.EndDate}\nVehicle: {bookingViewModel.VehicleName}\nProject: {bookingViewModel.ProjectName}\n\nBest regards,\nTeam";
-            await _emailService.SendEmailAsync(bookingViewModel.UserName, "Booking Confirmation", message);
-
 
             // Return 201 created response with newly created booking
             return CreatedAtAction(nameof(GetBookingAsync), new { id = booking.BookingID }, bookingViewModel);
         }
+
 
 
         // Edit booking
@@ -100,7 +96,7 @@ namespace Team34FinalAPI.Controllers
         public async Task<IActionResult> PutBookingAsync(int id, BookingViewModel bookingViewModel)
         {
             // If booking Id in url does not match booking id in request body, return Bad request response 400
-            if (id != bookingViewModel.BookingID) return NotFound();
+            if (id != bookingViewModel.BookingID) return BadRequest();
 
 
             // Find the existing booking
