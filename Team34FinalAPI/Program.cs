@@ -13,6 +13,7 @@ using Team34FinalAPI.Services;
 using DinkToPdf.Contracts;
 using DinkToPdf;
 using OfficeOpenXml;
+using Team34FinalAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
