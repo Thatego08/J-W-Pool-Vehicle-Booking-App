@@ -1,8 +1,8 @@
 ﻿namespace Team34FinalAPI.Models
 {
-    public class IRateRepo
+    public interface IRateRepo
     {
-
-
+        Task<bool> CreateRate(Rate rate);
+        Task<bool> UpdateRate(Rate rate);
     }
 }
