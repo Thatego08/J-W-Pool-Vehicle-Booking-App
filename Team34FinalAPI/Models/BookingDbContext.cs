@@ -51,17 +51,15 @@ namespace Team34FinalAPI.Models
                 entity.Property(p => p.JobNo).IsRequired();
                 entity.Property(p => p.TaskCode).IsRequired();
                 entity.Property(p => p.ActivityCode).IsRequired();
-                entity.Property(p => p.HalfDayRate).HasColumnType("decimal(18,2)"); // Add this line
-                entity.Property(p => p.FullDayRate).HasColumnType("decimal(18,2)"); // Add this line
             });
 
 
             modelBuilder.Entity<Project>().HasData(
-            new Project { ProjectID = 1, ProjectName = "Construction Project", JobNo = 1001, TaskCode = 2001, ActivityCode = 3001, HalfDayRate = 150.00m, FullDayRate = 300.00m },
-            new Project { ProjectID = 2, ProjectName = "Mining Project", JobNo = 1002, TaskCode = 2002, ActivityCode = 3002, HalfDayRate = 200.00m, FullDayRate = 400.00m },
-            new Project { ProjectID = 3, ProjectName = "Bridge Building Project", JobNo = 1003, TaskCode = 2003, ActivityCode = 3003, HalfDayRate = 180.00m, FullDayRate = 360.00m },
-            new Project { ProjectID = 4, ProjectName = "City Infrastructure Project", JobNo = 1004, TaskCode = 2004, ActivityCode = 3004, HalfDayRate = 250.00m, FullDayRate = 500.00m },
-            new Project { ProjectID = 5, ProjectName = "Impact Analysis Project", JobNo = 1005, TaskCode = 2005, ActivityCode = 3005, HalfDayRate = 120.00m, FullDayRate = 240.00m }
+            new Project { ProjectID = 1, ProjectName = "Construction Project", JobNo = 1001, TaskCode = 2001, ActivityCode = 3001},
+            new Project {ProjectID = 2, ProjectName = "Mining Project", JobNo = 1002, TaskCode = 2002, ActivityCode = 3002 },
+            new Project {ProjectID = 3, ProjectName = "Bridge Building Project", JobNo = 1003, TaskCode = 2003, ActivityCode = 3003 },
+            new Project {ProjectID = 4, ProjectName = "City Infrastructure Project", JobNo = 1004, TaskCode = 2004, ActivityCode = 3004 },
+            new Project {ProjectID = 5, ProjectName = "Impact Analysis Project", JobNo = 1005, TaskCode = 2005, ActivityCode = 3005 }
         );
 
         }
