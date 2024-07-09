@@ -19,6 +19,7 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly UserDbContext _userDbContext;
         private readonly IAuthService _authService;
+        private readonly IEmailService _emailService;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UserController> _logger;
         private readonly UserManager<User> _userManager;
@@ -28,7 +29,7 @@ namespace Team34FinalAPI.Controllers
         private readonly IConfiguration _configuration;
         private IAuditLogRepository _auditLogRepository;
 
-        public UserController(UserManager<User> userManager, IAuthService authService, SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
+        public UserController(UserManager<User> userManager, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
         {
             this._userDbContext = userDbContext;
             _userRepository = userRepository;
@@ -40,6 +41,10 @@ namespace Team34FinalAPI.Controllers
             _configuration = configuration;
             _claimsPrincipalFactory = userClaimsPrincipal;
             _auditLogRepository = auditLogRepository;
+
+            //_userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _emailService = emailService;
+
         }
 
         [HttpGet]
@@ -358,5 +363,56 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support. Details: {ex.Message}");
             }
         }
+
+        [HttpPost]
+        [Route("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for forgot password request.");
+                return BadRequest(ModelState);
+            }
+
+            _logger.LogInformation("Processing forgot password request for email: {Email}", model.Email);
+
+            var user = await _userRepository.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("User not found for email: {Email}", model.Email);
+                return NotFound("User not found");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.Action(nameof(ResetPassword), "Auth", new { token, email = user.Email }, Request.Scheme);
+
+            // Send email (use your email service)
+            await _emailService.SendEmailAsync(user.Email, "Reset Password", $"Please reset your password by clicking here: {callbackUrl}");
+
+            _logger.LogInformation("Password reset link sent to email: {Email}", user.Email);
+            return Ok("Password reset link has been sent to your email.");
+        }
+
+        [HttpPost]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return NotFound("User not found");
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            if (result.Succeeded)
+                return Ok("Password has been reset.");
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            return BadRequest(ModelState);
+        }
+
     }
 }

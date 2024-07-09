@@ -10,5 +10,7 @@
         //User
         Task<User[]> GetAllUsersAsync();
         Task<User> GetUserAsync(string UserName);
+
+        Task<User> FindByEmailAsync(string email);
     }
 }

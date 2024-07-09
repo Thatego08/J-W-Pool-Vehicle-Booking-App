@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Team34FinalAPI.Models
@@ -6,10 +7,12 @@ namespace Team34FinalAPI.Models
     public class UserRepository: IUserRepository
     {
         private readonly UserDbContext _userDbContext;
+        private readonly UserManager<User> _userManager;
 
-        public UserRepository(UserDbContext userDbContext)
+        public UserRepository(UserDbContext userDbContext, UserManager<User> userManager)
         {
             _userDbContext = userDbContext;
+            _userManager = userManager;
         }
 
         public void Add<T>(T entity) where T : class
@@ -37,5 +40,9 @@ namespace Team34FinalAPI.Models
             return await _userDbContext.SaveChangesAsync() > 0;
         }
 
+        public async Task<User> FindByEmailAsync(string email)
+        {
+            return await _userManager.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        }
     }
 }
