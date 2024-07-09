@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using iText.Kernel.Counter.Context;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Team34FinalAPI.Models;
-using Microsoft.AspNetCore.Http;
-using System.IO;
 using Team34FinalAPI.ViewModels;
-using Microsoft.EntityFrameworkCore;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -19,6 +22,7 @@ namespace Team34FinalAPI.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Driver,Admin")]
         [HttpPost("createTrip")]
         public async Task<IActionResult> CreateTrip([FromForm] TripViewModel tvm)
         {
@@ -39,8 +43,7 @@ namespace Team34FinalAPI.Controllers
                 FuelAmount = tvm.FuelAmount,
                 Comment = tvm.Comment,
                 TravelStart = tvm.TravelStart,
-                TravelEnd = tvm.TravelEnd,
-                RegistrationNumber = tvm.RegistrationNumber
+                TravelEnd = tvm.TravelEnd
             };
 
             // Initialize TripMedia collection if it's null
@@ -77,7 +80,6 @@ namespace Team34FinalAPI.Controllers
             }
             catch (DbUpdateException dbEx)
             {
-                // Log the inner exception message
                 var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
                 return StatusCode(500, $"Internal server error: {innerExceptionMessage}");
             }
@@ -89,9 +91,9 @@ namespace Team34FinalAPI.Controllers
             return Ok(trip);
         }
 
-
+        [Authorize(Roles = "Driver,Admin")]
         [HttpPut("UpdateTrip/{id}")]
-        public async Task<IActionResult> UpdateTrip(int id, TripViewModel tvm)
+        public async Task<IActionResult> UpdateTrip(int id, [FromForm] TripViewModel tvm)
         {
             if (id != tvm.TripId)
             {
@@ -104,7 +106,7 @@ namespace Team34FinalAPI.Controllers
             }
 
             var trip = await _context.Trips
-                .Include(t => t.TripMedia) // Include TripMedias if needed
+                .Include(t => t.TripMedia)
                 .FirstOrDefaultAsync(t => t.TripId == id);
 
             if (trip == null)
@@ -119,9 +121,6 @@ namespace Team34FinalAPI.Controllers
             trip.Comment = tvm.Comment;
             trip.TravelStart = tvm.TravelStart;
             trip.TravelEnd = tvm.TravelEnd;
-
-            // Handle media files if necessary
-            // ...
 
             try
             {
@@ -142,9 +141,48 @@ namespace Team34FinalAPI.Controllers
             return NoContent();
         }
 
-        private bool TripExists(int id)
+        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllTrips")]
+        public async Task<IActionResult> GetAllTrips()
         {
-            return _context.Trips.Any(e => e.TripId == id);
+            var trips = await _context.Trips.Include(t => t.TripMedia).ToListAsync();
+            return Ok(trips);
         }
+
+        [Authorize(Roles = "Driver,Admin")]
+        [HttpGet("GetTripById/{id}")]
+        public async Task<IActionResult> GetTripById(int id)
+        {
+            var trip = await _context.Trips.Include(t => t.TripMedia).FirstOrDefaultAsync(t => t.TripId == id);
+
+            if (trip == null)
+            {
+                return NotFound($"Trip with ID {id} not found");
+            }
+
+            return Ok(trip);
+        }
+
+        [Authorize(Roles = "Driver,Admin")]
+        [HttpGet("GetTripsByDriver/{driverId}")]
+    public async Task<IActionResult> GetTripsByDriver(int driverId)
+    {
+        var trips = await _context.Trips
+            .Include(t => t.TripMedia)
+            .Where(t => t.VehicleId == driverId)
+            .ToListAsync();
+
+        if (trips == null || !trips.Any())
+        {
+            return NotFound($"No trips found for driver with ID {driverId}");
+        }
+
+        return Ok(trips);
     }
+
+    private bool TripExists(int id)
+    {
+        return _context.Trips.Any(e => e.TripId == id);
+    }
+}
 }

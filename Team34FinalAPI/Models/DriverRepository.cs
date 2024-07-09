@@ -31,6 +31,7 @@ namespace Team34FinalAPI.Models
             //IQueryable<Driver> query = _userDbContext.Drivers.OfType<Driver>().Where(c => c.UserName ==userName);
             return driver;
         }
+      
         public void Add<T>(T entity) where T : class
         {
             _userDbContext.Add(entity);

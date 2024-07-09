@@ -12,6 +12,7 @@ using Team34FinalAPI.Tools;
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -84,7 +85,7 @@ namespace Team34FinalAPI.Controllers
 
             string username = GenerateUsername(dvm.Name, dvm.Surname);
 
-            var driver = new User { UserName = username, Name = dvm.Name, Surname = dvm.Surname, Email = dvm.Email, Password = Pass.hashPassword(dvm.Password), PhoneNumber = dvm.PhoneNumber, Role = "Driver"};
+            var driver = new User { UserName = username, Name = dvm.Name, Surname = dvm.Surname, Email = dvm.Email, Password = Pass.hashPassword(dvm.Password), PhoneNumber = dvm.PhoneNumber, Role = "Driver" };
 
             try
             {
