@@ -7,5 +7,6 @@
         void Delete<T>(T entity) where T : class;
         Task<User[]> GetAllDriverAsync();
         Task<Driver> GetDriverAsync(string userName);
+          
     }
 }

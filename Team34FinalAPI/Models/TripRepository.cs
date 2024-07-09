@@ -23,6 +23,14 @@ namespace Team34FinalAPI.Models
             return await _context.Trips.Include(t => t.TripMedia).FirstOrDefaultAsync(t => t.TripId == tripId);
         }
 
+        public async Task<IEnumerable<Trip>> GetTripsByDriverIdAsync(int driverId)
+        {
+            return await _context.Trips
+                .Include(t => t.TripMedia)
+                .Where(t => t.VehicleId == driverId) // Assuming VehicleId corresponds to the driver's ID
+                .ToListAsync();
+        }
+
         public async Task AddTripAsync(Trip trip)
         {
             await _context.Trips.AddAsync(trip);
