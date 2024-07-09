@@ -38,9 +38,7 @@ public class ProjectController : ControllerBase
             ProjectName = pvm.ProjectName,
             JobNo = pvm.JobNo,
             TaskCode = pvm.TaskCode,
-            ActivityCode = pvm.ActivityCode,
-            HalfDayRate = pvm.HalfDayRate,
-            FullDayRate = pvm.FullDayRate
+            ActivityCode = pvm.ActivityCode
         };
 
         try
@@ -77,8 +75,6 @@ public class ProjectController : ControllerBase
             existingProject.JobNo = pvm.JobNo;
             existingProject.TaskCode = pvm.TaskCode;
             existingProject.ActivityCode = pvm.ActivityCode;
-                existingProject.HalfDayRate = pvm.HalfDayRate;
-                existingProject.FullDayRate = pvm.FullDayRate;
 
             await _projectRepository.UpdateProjectAsync(existingProject);
 
