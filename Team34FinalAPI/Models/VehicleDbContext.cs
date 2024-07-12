@@ -47,18 +47,51 @@ namespace Team34FinalAPI.Models
                 new VehicleFuelType { Id = 2, FuelName = "Diesel" }
                 );
 
-            modelBuilder.Entity<InsuranceCover>().HasData(
+    /*
+            modelBuilder.Entity<InsuranceCover>(entity =>
+            {
+                entity.HasKey(i => i.InsuranceCoverID);
+                entity.Property(i => i.InsuranceCoverName);
+                entity.Property(i => i.StartDate);
+                entity.Property(i => i.EndDate);
+                entity.Property(i => i.CoverageType);
+                entity.Property(i => i.PremiumAmount);
+                entity.Property(i => i.ContactInfo);
+                entity.Property(i => i.CreatedDate);
+                entity.Property(i => i.ModifiedDate);
+                entity.Property(i => i.ContractFileName); 
+                entity.Property(i => i.ContractContentType);
+                entity.Property(i => i.ContractData);
+            });
+            
+       
+        
 
-                new InsuranceCover { InsuranceCoverId = 1, InsuranceCoverName = " By Seun" },
-                new InsuranceCover { InsuranceCoverId = 2, InsuranceCoverName = "Comprehensive " },
-                new InsuranceCover { InsuranceCoverId = 3, InsuranceCoverName = "Third Party Only" },
-                new InsuranceCover { InsuranceCoverId = 4, InsuranceCoverName = " Outsurance " });
+
+            /*            modelBuilder.Entity<Service>(entity =>
+            {
+                entity.HasKey(f => f.ServiceID);
+                entity.HasAlternateKey(f => f.VehicleID);
+                entity.Property(f => f.VehicleMakeName).IsRequired();
+                entity.Property(f => f.VehicleModelName).IsRequired();
+                entity.Property(f => f.AdminName).IsRequired();
+                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(256);
+                entity.Property(f => f.Description).IsRequired();
+                entity.Property(f => f.ServiceDate).IsRequired();
+            });*/
 
             modelBuilder.Entity<Status>().HasData(
                 new Status { Id = 1, Name = "Available " },
                 new Status { Id = 2, Name = " Booked " },
                 new Status { Id = 3, Name = " In For Service " }
                 );
+
+            modelBuilder.Entity<InsuranceCover>().HasData(
+
+           new InsuranceCover { InsuranceCoverId = 1, InsuranceCoverName = " By Seun" },
+           new InsuranceCover { InsuranceCoverId = 2, InsuranceCoverName = "Comprehensive " },
+           new InsuranceCover { InsuranceCoverId = 3, InsuranceCoverName = " Third-party " });
+
 
             modelBuilder.Entity<LicenseDisk>().HasData(
                 new LicenseDisk { Id = 1, VehicleID = 1, LicenseExpiryDate = new DateTime(2024, 12, 31) },
@@ -83,30 +116,51 @@ namespace Team34FinalAPI.Models
                 new LicenseDisk { Id = 20, VehicleID = 20, LicenseExpiryDate = new DateTime(2028, 12, 14) }
             );
 
+            // Configure the one-to-many relationship between Vehicle and InsuranceCover
+            
+
+            // Configure other relationships as needed
+            modelBuilder.Entity<Vehicle>()
+                .HasMany(v => v.Trips)
+                .WithOne(t => t.Vehicle)
+                .HasForeignKey(t => t.VehicleId);
+
+            modelBuilder.Entity<Vehicle>()
+                .HasMany(v => v.Bookings)
+                .WithOne(b => b.Vehicle)
+                .HasForeignKey(b => b.VehicleId);
+
+            
+
+
+
+
+
             modelBuilder.Entity<Vehicle>().HasData(
-                new Vehicle { VehicleID = 1, Name = "Hyundai 1", VehicleModelID = 1, VehicleMakeID = 7, Description = "i20", DateAcquired = new DateTime(2024, 2,16), RegistrationNumber = "LN 68 YM GP", InsuranceCoverID = 2, VIN = "MALBG512LPM254886", ColourID = 2, FuelTypeID = 1, EngineNo = "G4LFPV302509", LicenseExpiryDate = new DateTime(2024, 12, 31), StatusID = 1 },
-                new Vehicle { VehicleID = 2, Name = "Toyota 1", VehicleModelID = 2, VehicleMakeID = 11, Description = "Extra Cab 2.4 GD-6 RB SRX 6MT ", DateAcquired = new DateTime(2019, 1,26 ), RegistrationNumber = "JF 72 WJ GP", InsuranceCoverID = 3, VIN = "AHTJB8DC404730166", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC598667", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
-                new Vehicle { VehicleID = 3, Name = "Toyota 2",VehicleModelID = 2, VehicleMakeID = 11, Description = "Extra Cab 2.4 GD-6 RB SRX 6MT", DateAcquired = new DateTime(2020, 12, 4), RegistrationNumber = "JT 99 LF GP", InsuranceCoverID = 2, VIN = "AHTJB3DCX04490835", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC765766", LicenseExpiryDate = new DateTime(2022, 11, 30), StatusID = 1 },
-                new Vehicle { VehicleID = 4, Name = "Toyota 3",VehicleModelID = 2, VehicleMakeID = 11, Description = "DC HILUX 2.4 GD-6 RAIDER 4X4 A/T", DateAcquired = new DateTime(2024, 7, 24), RegistrationNumber = "LR 01 CT GP", InsuranceCoverID = 2, VIN = "AHTKB3CD802676867", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD364709", LicenseExpiryDate = new DateTime(2028, 5, 31), StatusID = 1 },
-                new Vehicle { VehicleID = 5, Name = "Toyota 4", VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD6 RB SRX MT (Z50) 2019", DateAcquired = new DateTime(2019, 3, 29), RegistrationNumber = "HY 06 DR GP", InsuranceCoverID = 3, VIN = "AHTJB8DB104579407", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC503748", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
-                new Vehicle { VehicleID = 6, Name = "Toyota 5", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, Raider 2.7 D, 4X4, ROPS ", DateAcquired = new DateTime(2012, 2, 24), RegistrationNumber = "BT 11 SL GP", InsuranceCoverID = 3, VIN = "AHTFR22G906054497", ColourID = 2, FuelTypeID = 1, EngineNo = "2KD5635798", LicenseExpiryDate = new DateTime(2028, 2, 28), StatusID = 1 },
+                new Vehicle { VehicleID = 1, Name = "Hyundai 1", VehicleModelID = 1, VehicleMakeID = 7, Description = "i20", DateAcquired = new DateTime(2024, 2,16), RegistrationNumber = "LN 68 YM GP", InsuranceCoverID = 1 , VIN = "MALBG512LPM254886", ColourID = 2, FuelTypeID = 1, EngineNo = "G4LFPV302509", LicenseExpiryDate = new DateTime(2024, 12, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 2, Name = "Toyota 1", VehicleModelID = 2, VehicleMakeID = 11, Description = "Extra Cab 2.4 GD-6 RB SRX 6MT ", DateAcquired = new DateTime(2019, 1,26 ), RegistrationNumber = "JF 72 WJ GP", InsuranceCoverID = 1, VIN = "AHTJB8DC404730166", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC598667", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
+                new Vehicle { VehicleID = 3, Name = "Toyota 2",VehicleModelID = 2, VehicleMakeID = 11, Description = "Extra Cab 2.4 GD-6 RB SRX 6MT", DateAcquired = new DateTime(2020, 12, 4), RegistrationNumber = "JT 99 LF GP", InsuranceCoverID = 1, VIN = "AHTJB3DCX04490835", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC765766", LicenseExpiryDate = new DateTime(2022, 11, 30), StatusID = 1 },
+                new Vehicle { VehicleID = 4, Name = "Toyota 3",VehicleModelID = 2, VehicleMakeID = 11, Description = "DC HILUX 2.4 GD-6 RAIDER 4X4 A/T", DateAcquired = new DateTime(2024, 7, 24), RegistrationNumber = "LR 01 CT GP", InsuranceCoverID = 1, VIN = "AHTKB3CD802676867", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD364709", LicenseExpiryDate = new DateTime(2028, 5, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 5, Name = "Toyota 4", VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD6 RB SRX MT (Z50) 2019", DateAcquired = new DateTime(2019, 3, 29), RegistrationNumber = "HY 06 DR GP", InsuranceCoverID = 1, VIN = "AHTJB8DB104579407", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC503748", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
+                new Vehicle { VehicleID = 6, Name = "Toyota 5", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, Raider 2.7 D, 4X4, ROPS ", DateAcquired = new DateTime(2012, 2, 24), RegistrationNumber = "BT 11 SL GP", InsuranceCoverID = 1, VIN = "AHTFR22G906054497", ColourID = 2, FuelTypeID = 1, EngineNo = "2KD5635798", LicenseExpiryDate = new DateTime(2028, 2, 28), StatusID = 1 },
                 new Vehicle { VehicleID = 7, Name = "Toyota 6", VehicleModelID = 7, VehicleMakeID = 11, Description = "DC", DateAcquired = new DateTime(2005, 6, 30), RegistrationNumber = "WZV 941 GP", InsuranceCoverID = 3, VIN = "AHTEZ39G207010469", ColourID = 7, FuelTypeID = 7, EngineNo = "1KD7486383", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 6 },
-                new Vehicle { VehicleID = 8, Name = "Toyota 7", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, 4X4 ( With Canopy ) ", DateAcquired = new DateTime(2016, 11, 18), RegistrationNumber = "FN 57 RR GP", InsuranceCoverID = 3, VIN = "AHTKB3CD302604992", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0195958", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1},
-                new Vehicle { VehicleID = 9, Name = "Toyota 8", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, 4x4", DateAcquired = new DateTime(2016, 11, 18), RegistrationNumber = "FN 57 ST GP", InsuranceCoverID = 3, VIN = "AHTK3CD202605213", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0207661", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
-                new Vehicle { VehicleID = 10, Name = "Toyota 9",VehicleModelID = 2, VehicleMakeID = 11, Description = "2.8 GD-6DC, 4x4 Auto ( With Canopy ) ", DateAcquired = new DateTime(2017, 4, 11), RegistrationNumber = "FV 25 XR GP", InsuranceCoverID = 3, VIN = "AHTHA3CD403417011", ColourID = 2, FuelTypeID = 2, EngineNo = "1GD0252789", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
-                new Vehicle { VehicleID = 11, Name = "Toyota 10",VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD-6RB, SRX 4x2 ", DateAcquired = new DateTime(2017, 6, 22), RegistrationNumber = "FX 22 YD GP", InsuranceCoverID = 3, VIN = "AHTJB8DB504573626", ColourID = 2, FuelTypeID = 1, EngineNo = "2GD0284816", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1 },
-                new Vehicle { VehicleID = 12, Name = "Toyota 11", VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD-6RB, SRX 4x2 ", DateAcquired = new DateTime(2017, 6, 22), RegistrationNumber = "FX 23 BX GP", InsuranceCoverID = 3, VIN = "AHTJB8DB304573608", ColourID = 2, FuelTypeID = 1, EngineNo = "2GD0284247", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
-                new Vehicle { VehicleID = 13, Name = "Toyota 12",VehicleModelID = 2, VehicleMakeID = 11, Description = " DC 2.4 GD-6RB SR MT ", DateAcquired = new DateTime(2022, 5, 27), RegistrationNumber = "KP 05 MC GP", InsuranceCoverID = 2, VIN = "AHTJB3DD504527511", ColourID = 2, FuelTypeID = 1, EngineNo = "2GDC910427", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1 },
-                new Vehicle { VehicleID = 14, Name = "Toyota 13", VehicleModelID = 2, VehicleMakeID = 11, Description = " DC 2.4 GD6 RB RAI MT ( With Canopy ) ", DateAcquired = new DateTime(2022, 11, 1), RegistrationNumber = "KW 51 TL GP", InsuranceCoverID = 2, VIN = "AHTJB3DD304529631", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD036238", LicenseExpiryDate = new DateTime(2024, 4, 30), StatusID = 1 },
-                new Vehicle { VehicleID = 15, Name = "Toyota 14",VehicleModelID = 2, VehicleMakeID = 11, Description = " Extra Cab HiluxXC 2.4 GD6 RBRAI 6MT ( A1P )  ", DateAcquired = new DateTime(2023, 4, 1), RegistrationNumber = "LB 93 JV GP", InsuranceCoverID = 2, VIN = "AHTJB3DC104496782", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD138062", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1},
-                new Vehicle { VehicleID = 16, Name = "Toyota 15",VehicleModelID = 2, VehicleMakeID = 11, Description = "1.8 XR CVT ", DateAcquired = new DateTime(2022, 10, 19), RegistrationNumber = "KV 84 DV GP ", InsuranceCoverID = 2, VIN = "AHTKFBAG500614236", ColourID = 2, FuelTypeID = 2, EngineNo = "2ZRW975634", LicenseExpiryDate = new DateTime(2023, 9, 30), StatusID = 1 },
+                new Vehicle { VehicleID = 8, Name = "Toyota 7", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, 4X4 ( With Canopy ) ", DateAcquired = new DateTime(2016, 11, 18), RegistrationNumber = "FN 57 RR GP", InsuranceCoverID = 1, VIN = "AHTKB3CD302604992", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0195958", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1},
+                new Vehicle { VehicleID = 9, Name = "Toyota 8", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, 4x4", DateAcquired = new DateTime(2016, 11, 18), RegistrationNumber = "FN 57 ST GP", InsuranceCoverID = 1, VIN = "AHTK3CD202605213", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0207661", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 10, Name = "Toyota 9",VehicleModelID = 2, VehicleMakeID = 11, Description = "2.8 GD-6DC, 4x4 Auto ( With Canopy ) ", DateAcquired = new DateTime(2017, 4, 11), RegistrationNumber = "FV 25 XR GP", InsuranceCoverID = 1, VIN = "AHTHA3CD403417011", ColourID = 2, FuelTypeID = 2, EngineNo = "1GD0252789", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 11, Name = "Toyota 10",VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD-6RB, SRX 4x2 ", DateAcquired = new DateTime(2017, 6, 22), RegistrationNumber = "FX 22 YD GP", InsuranceCoverID = 1, VIN = "AHTJB8DB504573626", ColourID = 2, FuelTypeID = 1, EngineNo = "2GD0284816", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 12, Name = "Toyota 11", VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD-6RB, SRX 4x2 ", DateAcquired = new DateTime(2017, 6, 22), RegistrationNumber = "FX 23 BX GP", InsuranceCoverID = 1, VIN = "AHTJB8DB304573608", ColourID = 2, FuelTypeID = 1, EngineNo = "2GD0284247", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
+                new Vehicle { VehicleID = 13, Name = "Toyota 12",VehicleModelID = 2, VehicleMakeID = 11, Description = " DC 2.4 GD-6RB SR MT ", DateAcquired = new DateTime(2022, 5, 27), RegistrationNumber = "KP 05 MC GP", InsuranceCoverID = 1, VIN = "AHTJB3DD504527511", ColourID = 2, FuelTypeID = 1, EngineNo = "2GDC910427", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 14, Name = "Toyota 13", VehicleModelID = 2, VehicleMakeID = 11, Description = " DC 2.4 GD6 RB RAI MT ( With Canopy ) ", DateAcquired = new DateTime(2022, 11, 1), RegistrationNumber = "KW 51 TL GP", InsuranceCoverID = 1, VIN = "AHTJB3DD304529631", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD036238", LicenseExpiryDate = new DateTime(2024, 4, 30), StatusID = 1 },
+                new Vehicle { VehicleID = 15, Name = "Toyota 14",VehicleModelID = 2, VehicleMakeID = 11, Description = " Extra Cab HiluxXC 2.4 GD6 RBRAI 6MT ( A1P )  ", DateAcquired = new DateTime(2023, 4, 1), RegistrationNumber = "LB 93 JV GP", InsuranceCoverID = 1, VIN = "AHTJB3DC104496782", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD138062", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1},
+                new Vehicle { VehicleID = 16, Name = "Toyota 15",VehicleModelID = 2, VehicleMakeID = 11, Description = "1.8 XR CVT ", DateAcquired = new DateTime(2022, 10, 19), RegistrationNumber = "KV 84 DV GP ", InsuranceCoverID = 1, VIN = "AHTKFBAG500614236", ColourID = 2, FuelTypeID = 2, EngineNo = "2ZRW975634", LicenseExpiryDate = new DateTime(2023, 9, 30), StatusID = 1 },
                 new Vehicle { VehicleID = 17, Name = "Toyota S1",VehicleModelID = 2, VehicleMakeID = 11, Description = "DC 2.8 GD-6RB, 4x2", DateAcquired = new DateTime(2020, 1, 1), RegistrationNumber = " HH 91 VZ GP ", InsuranceCoverID = 1, VIN = "AHTGA3DD900968871", ColourID = 2, FuelTypeID = 2, EngineNo = "1GD0374210", LicenseExpiryDate = new DateTime(2022, 8, 31), StatusID = 1 },
                 new Vehicle { VehicleID = 18, Name = "Toyota S2", VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD-6RB, SRX 4x2 ", DateAcquired = new DateTime(2021, 1, 1), RegistrationNumber = " FV 69 WP GP ", InsuranceCoverID = 1, VIN = "", ColourID = 2, FuelTypeID = 2, EngineNo = "", LicenseExpiryDate = new DateTime(2028, 6, 1), StatusID = 1 },
                 new Vehicle { VehicleID = 19, Name = "Toyota S3",VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD-6RB, SRX 4x2", DateAcquired = new DateTime(2005, 7, 9), RegistrationNumber = "HC 85 FY GP", InsuranceCoverID = 1, VIN = "AHTJB8DBX04575081", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0329959", LicenseExpiryDate = new DateTime(2027, 8, 1), StatusID = 1 },
-                new Vehicle { VehicleID = 20, Name = "Isuzu 1",VehicleModelID = 2, VehicleMakeID = 9, Description = " DC DMAX 2.2", DateAcquired = new DateTime(2021, 1, 1), RegistrationNumber = " ND 836-010", InsuranceCoverID = 1, VIN = "ACVNRCHR3K1070230", ColourID = 2, FuelTypeID = 1, EngineNo = "4JK1VT8141", LicenseExpiryDate = new DateTime(2028, 12, 14), StatusID = 1 }
+                new Vehicle { VehicleID = 20, Name = "Isuzu 1",VehicleModelID = 2, VehicleMakeID = 9, Description = " DC DMAX 2.2", DateAcquired = new DateTime(2021, 1, 1), RegistrationNumber = " ND 836-010", VIN = "ACVNRCHR3K1070230", InsuranceCoverID = 1, ColourID = 2, FuelTypeID = 1, EngineNo = "4JK1VT8141", LicenseExpiryDate = new DateTime(2028, 12, 14), StatusID = 1  }
 
             );
 
+           
 
             modelBuilder.Entity<VehicleMake>().HasData(
                 new VehicleMake { VehicleMakeID = 1, Name = "Audi" },
@@ -136,18 +190,16 @@ namespace Team34FinalAPI.Models
 
 
 
-            modelBuilder.Entity<Service>().HasData(
-                new Service { ServiceID = 1, VehicleID = 1, Description = " The brake was not working", ServiceDate = new DateTime(2022, 1, 1) },
-                new Service { ServiceID = 2, VehicleID = 2, Description = " The windows were not closing ",ServiceDate = new DateTime(2023, 1, 1) }
-            );
-
-            modelBuilder.Entity<ServiceHistory>().HasData(
-                new ServiceHistory { Id = 1, VehicleID = 1, ServiceDate = new DateTime(2022, 1, 1) },
-                new ServiceHistory { Id = 2, VehicleID = 2, ServiceDate = new DateTime(2023, 1, 1) }
-            );
 
             modelBuilder.Entity<VehicleChecklist>(entity =>
             {
+                entity.HasKey(v => v.Id);
+                entity.HasAlternateKey(v => v.VehicleId);
+                entity.HasAlternateKey(v => v.VehicleMakeId);
+                entity.HasAlternateKey(v => v.VehicleModelId);
+                entity.HasAlternateKey(v => v.RegistrationNumber);
+                entity.Property(v => v.OpeningKms).IsRequired();
+                entity.Property(v => v.ClosingKms).IsRequired();
                 entity.OwnsOne(v => v.ExteriorChecks);
                 entity.OwnsOne(v => v.InteriorChecks);
                 entity.OwnsOne(v => v.UnderTheHoodChecks);
@@ -155,7 +207,19 @@ namespace Team34FinalAPI.Models
                 entity.OwnsOne(v => v.SafetyEquipment);
                 entity.OwnsOne(v => v.Documentation);
             });
-                
+
+            modelBuilder.Entity<Service>(entity =>
+            {
+                entity.HasKey(f => f.ServiceID);
+                entity.HasAlternateKey(f => f.VehicleID);
+                entity.Property(f => f.VehicleMakeName).IsRequired();
+                entity.Property(f => f.VehicleModelName).IsRequired();
+                entity.Property(f => f.AdminName).IsRequired();
+                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(256);
+                entity.Property(f => f.Description).IsRequired();
+                entity.Property(f => f.ServiceDate).IsRequired();
+            });
+
         }
 
     }
