@@ -108,6 +108,13 @@ namespace Team34FinalAPI.Models
             return await query.ToArrayAsync();
         }
 
+        public async Task AddChecklistAsync( VehicleChecklist checklist)
+        {
+            _context.VehicleChecklists.Add(checklist);
+            await _context.SaveChangesAsync();
+        }
+
+
         public async Task<VehicleModel[]> GetAllVehicleModelAsync()
         {
             IQueryable<VehicleModel> query = _context.VehicleModel.Include(vm => vm.VehicleMake);

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
@@ -383,7 +383,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
-        [HttpGet("GetAllVehicleChecklist")]
+        [HttpGet("GetAllChecklists")]
         public async Task<IActionResult> GetAllVehicleChecklist()
         {
             try
@@ -398,11 +398,30 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [HttpPost("PostChecklist")]
+        public async Task<IActionResult> VehicleChecklist([FromBody] VehicleChecklist checklist)
+        {
+            if (checklist == null) return BadRequest("Checklist is required.");
+
+            try
+            {
+                await _vehicleRepository.AddChecklistAsync(checklist);
+                return Ok(new { message = "Checklist submitted successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (ex)
+                return StatusCode(500, "Internal Server Error: Unable to submit checklist.");
+            }
+        }
+
+        /*
+
         [HttpPost("VehicleChecklist")]
         public async Task<IActionResult> VehicleChecklist([FromBody] VehicleChecklist checklist)
         {
             if (checklist == null) return BadRequest("Checklist is required.");
             return Ok(new { message = "Checklist submitted successfully." });
-        }
+        } */
     }
 }

@@ -4,7 +4,8 @@ namespace Team34FinalAPI.Models
     public interface IVehicleRepository
     {
         Task<bool> SaveChangesAsync();
-        Task AddVehicleAsync(VehicleViewModel vehicleModel);  
+        Task AddVehicleAsync(VehicleViewModel vehicleModel);
+        Task AddChecklistAsync(VehicleChecklist checklist);
         void Delete<T>(T entity) where T : class;
 
         void AddVehicleMake(VehicleMake vehicleMake);
