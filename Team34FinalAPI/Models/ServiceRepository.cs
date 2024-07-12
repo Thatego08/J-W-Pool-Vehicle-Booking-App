@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 
 namespace Team34FinalAPI.Models
@@ -12,27 +14,32 @@ namespace Team34FinalAPI.Models
             _context = context;
         }
 
-
-        public void Add<T>(T entity) where T : class
+        public async Task<IEnumerable<Service>> GetAllServicesAsync()
         {
-            _context.Add(entity);
+            return await _context.VehicleService.Include(s => s.VehicleID).ToListAsync();
         }
 
-        public async Task<Service[]> GetAllServicesAsync()
+        public async Task<Service> GetServiceByIdAsync( int serviceId)
         {
-            IQueryable<Service> query = _context.VehicleService;
-            return await query.ToArrayAsync();
+            return await _context.VehicleService.Include(s => s.AdminName).FirstOrDefaultAsync(s => s.ServiceID == serviceId);
         }
 
-
-        public async Task<Service> GetServiceAsync(int serviceId)
+        public async Task<IEnumerable<Service>> GetServiceByAdminAsync(int adminId)
         {
-            return await _context.VehicleService.FirstOrDefaultAsync(s => s.ServiceID == serviceId);
+            return await _context.VehicleService.Include(s => s.VehicleID).
+                Include(s => s.VehicleMakeName).Include(s => s.VehicleModelName).
+                Include(s => s.AdminName).
+                Include(s => s.AdminEmail).ToListAsync();
+        }
+
+        public async Task CreateService(Service service)
+        {
+            await _context.VehicleService.AddAsync(service);
         }
 
         public async Task<bool> SaveChangesAsync()
         {
-            return await _context.SaveChangesAsync() > 0;
+            return (await _context.SaveChangesAsync()) > 0;
         }
     }
 }

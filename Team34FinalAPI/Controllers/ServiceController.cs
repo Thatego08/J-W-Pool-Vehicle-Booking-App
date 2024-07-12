@@ -1,77 +1,94 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace Team34FinalAPI.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
     public class ServiceController : ControllerBase
     {
-        private readonly IServiceRepository _serviceRepository;
+        private readonly VehicleDbContext _context;
 
-        
-
-        [HttpGet]
-        [Route("GetAllServices")] // Return list of vehicles
-        public async Task<IActionResult> GetAllServices()
+        public ServiceController(VehicleDbContext context)
         {
-            try
-            {
-                var results = await _serviceRepository.GetAllServicesAsync();
-                return Ok(results);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "Internal Server Error");
-            }
+            _context = context;
         }
 
-        [HttpGet]
-        [Route("GetService/{serviceId}")] // Corrected route template
-        public async Task<IActionResult> GetServiceAsync(int serviceId)
+        // GET: api/service
+        [HttpGet("GetServices")]
+        public async Task<ActionResult<IEnumerable<ServiceDto>>> GetAllServices()
         {
-            try
+            var services = await _context.VehicleService.ToListAsync();
+            var serviceDtos = services.Select(service => new ServiceDto
             {
-                var results = await _serviceRepository.GetServiceAsync(serviceId);
+                ServiceID = service.ServiceID,
+                VehicleID = service.VehicleID,
+                AdminName = service.AdminName,
+                AdminEmail = service.AdminEmail,
+                VehicleModelName = service.VehicleModelName,
+                VehicleMakeName = service.VehicleMakeName,
+                Description = service.Description,
+                ServiceDate = service.ServiceDate
+            }).ToList();
 
-                if (results == null) return NotFound("Service does not exist");
-                return Ok(results);
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "Internal Server Error");
-            }
+            return Ok(serviceDtos);
         }
 
-        [HttpPost]
-        [Route("AddService")]
-        public async Task<IActionResult> AddService(ServiceViewModel svm)
+        // GET: api/service/{id}
+        [HttpGet("GetService/{serviceId}")]
+        public async Task<ActionResult<ServiceDto>> GetServiceById(int id)
+        {
+            var service = await _context.VehicleService.FindAsync(id);
+            if (service == null)
+            {
+                return NotFound();
+            }
+
+            var serviceDto = new ServiceDto
+            {
+                ServiceID = service.ServiceID,
+                VehicleID = service.VehicleID,
+                AdminName = service.AdminName,
+                AdminEmail = service.AdminEmail,
+                VehicleModelName = service.VehicleModelName,
+                VehicleMakeName = service.VehicleMakeName,
+                Description = service.Description,
+                ServiceDate = service.ServiceDate
+            };
+
+            return Ok(serviceDto);
+        }
+
+        // POST: api/service
+        [HttpPost("CreateService")]
+        public async Task<ActionResult<ServiceDto>> CreateService(ServiceDto serviceDto)
         {
             var service = new Service
             {
-                ServiceID = svm.VehicleServiceID,
-                VehicleID = svm.VehicleID,
-                ServiceDate = svm.ServiceDate,
-                 Description = svm.Description,
-
-
+                VehicleID = serviceDto.VehicleID,
+                AdminName = serviceDto.AdminName,
+                AdminEmail = serviceDto.AdminEmail,
+                VehicleModelName = serviceDto.VehicleModelName,
+                VehicleMakeName = serviceDto.VehicleMakeName,
+                Description = serviceDto.Description,
+                ServiceDate = serviceDto.ServiceDate
             };
 
-            try
-            {
-                _serviceRepository.Add(service);
-                await _serviceRepository.SaveChangesAsync();
-            }
-            catch (Exception)
-            {
-                return BadRequest("Invalid transaction");
-            }
+            _context.VehicleService.Add(service);
+            await _context.SaveChangesAsync();
 
-            return Ok(service);
+            serviceDto.ServiceID = service.ServiceID;
+
+            return CreatedAtAction(nameof(GetServiceById), new { id = service.ServiceID }, serviceDto);
         }
 
-       
+
     }
 }
