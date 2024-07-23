@@ -8,6 +8,7 @@ namespace Team34FinalAPI.Models
 
         public DbSet<Trip> Trips { get; set; }
         public DbSet<TripMedia> TripMedia { get; set; }
+        public DbSet<RefuelVehicle> RefuelVehicles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,6 +20,13 @@ namespace Team34FinalAPI.Models
                 .HasMany(t => t.TripMedia)
                 .WithOne(m => m.Trip)
                 .HasForeignKey(m => m.TripId);
+
+
+            // Configure the relationship between Trip and RefuelVehicle
+            modelBuilder.Entity<Trip>()
+               .HasMany(t => t.RefuelVehicles)
+               .WithOne(rv => rv.Trip)
+               .HasForeignKey(rv => rv.TripId);
 
             // Configure the relationship between Trip and Vehicle
             modelBuilder.Entity<Trip>()
