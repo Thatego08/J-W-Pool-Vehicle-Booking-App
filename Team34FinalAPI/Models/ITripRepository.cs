@@ -7,8 +7,14 @@ namespace Team34FinalAPI.Models
     {
         Task<IEnumerable<Trip>> GetAllTripsAsync();
         Task<Trip> GetTripByIdAsync(int tripId);
-        Task<IEnumerable<Trip>> GetTripsByDriverIdAsync(int driverId);
+      
         Task AddTripAsync(Trip trip);
         Task<bool> SaveChangesAsync();
+        void Delete<T>(T entity) where T : class;
+        Task<Trip> CreateTripAsync(Trip trip);
+        Task AddRefuelVehicleAsync(int tripId, RefuelVehicle refuelVehicle);
+        Task<RefuelVehicle> GetRefuelVehicleByIdAsync(int tripId, int refuelVehicleId);
+        Task UpdateRefuelVehicleAsync(RefuelVehicle refuelVehicle);
+        Task DeleteRefuelVehicleAsync(RefuelVehicle refuelVehicle);
     }
 }
