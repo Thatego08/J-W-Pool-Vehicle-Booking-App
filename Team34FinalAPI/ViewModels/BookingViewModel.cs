@@ -9,6 +9,6 @@
         public DateTime EndDate { get; set; }
 
         public string VehicleName { get; set; }
-        public string? ProjectName { get; set; }
+        public int? ProjectNumber { get; set; }
     }
 }

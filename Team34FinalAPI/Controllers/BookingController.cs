@@ -64,8 +64,8 @@ namespace Team34FinalAPI.Controllers
             if (vehicle == null) return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} does not exist.");
 
             // Fetch the project based on the provided project name
-            var project = await _context.Projects.SingleOrDefaultAsync(p => p.ProjectName == bookingViewModel.ProjectName);
-            if (project == null) return BadRequest($"Project with name {bookingViewModel.ProjectName} does not exist.");
+            var project = await _context.Projects.SingleOrDefaultAsync(p => p.ProjectNumber == bookingViewModel.ProjectNumber);
+            if (project == null) return BadRequest($"Project with name {bookingViewModel.ProjectNumber} does not exist.");
 
             // Map BookingViewModel to Booking model
             var booking = new Booking
@@ -171,7 +171,7 @@ namespace Team34FinalAPI.Controllers
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
                 VehicleName = b.Vehicle.Name,
-                ProjectName = b.Project?.ProjectName
+                ProjectNumber = b.Project?.ProjectNumber
             }).ToList();
         }
 
@@ -185,7 +185,7 @@ namespace Team34FinalAPI.Controllers
                 StartDate = booking.StartDate,
                 EndDate = booking.EndDate,
                 VehicleName = booking.Vehicle.Name,
-                ProjectName = booking.Project?.ProjectName
+                ProjectNumber = booking.Project?.ProjectNumber
             };
         }
     }

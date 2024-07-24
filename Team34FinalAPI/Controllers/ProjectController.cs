@@ -34,13 +34,12 @@ public class ProjectController : ControllerBase
 
         var project = new Project
         {
-            //ProjectID = pvm.ProjectID,
-            ProjectName = pvm.ProjectName,
+            ProjectID = pvm.ProjectID,
+            ProjectNumber = pvm.ProjectNumber,
             JobNo = pvm.JobNo,
             TaskCode = pvm.TaskCode,
             ActivityCode = pvm.ActivityCode,
-            HalfDayRate = pvm.HalfDayRate,
-            FullDayRate = pvm.FullDayRate
+          
         };
 
         try
@@ -57,8 +56,8 @@ public class ProjectController : ControllerBase
     }
 
     [HttpPut]
-    [Route("EditProject/{projID}")]
-    public async Task<IActionResult> EditProject(int projID, [FromBody] ProjectViewModel pvm)
+    [Route("EditProject/{ProjectID}")]
+    public async Task<IActionResult> EditProject(int ProjectID, [FromBody] ProjectViewModel pvm)
     {
         if (pvm == null)
         {
@@ -67,18 +66,16 @@ public class ProjectController : ControllerBase
 
         try
         {
-            var existingProject = await _projectRepository.GetProjectAsync(projID);
+            var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
             if (existingProject == null)
             {
                 return NotFound("Project does not exist.");
             }
-                //existingProject.ProjectID = pvm.ProjectID;
-            existingProject.ProjectName = pvm.ProjectName;
+            existingProject.ProjectID = pvm.ProjectID;
+            existingProject.ProjectNumber = pvm.ProjectNumber;
             existingProject.JobNo = pvm.JobNo;
             existingProject.TaskCode = pvm.TaskCode;
             existingProject.ActivityCode = pvm.ActivityCode;
-                existingProject.HalfDayRate = pvm.HalfDayRate;
-                existingProject.FullDayRate = pvm.FullDayRate;
 
             await _projectRepository.UpdateProjectAsync(existingProject);
 
@@ -108,12 +105,12 @@ public class ProjectController : ControllerBase
     }
 
     [HttpGet]
-    [Route("GetProject/{projID}")]
-    public async Task<IActionResult> GetProject(int projID)
+    [Route("GetProject/{ProjectID}")]
+    public async Task<IActionResult> GetProject(int ProjectID)
     {
         try
         {
-            var result = await _projectRepository.GetProjectAsync(projID);
+            var result = await _projectRepository.GetProjectAsync(ProjectID);
 
             if (result == null)
             {
@@ -130,12 +127,12 @@ public class ProjectController : ControllerBase
     }
 
     [HttpDelete]
-    [Route("DeleteProject/{projID}")]
-    public async Task<IActionResult> DeleteProject(int projID)
+    [Route("DeleteProject/{ProjectID}")]
+    public async Task<IActionResult> DeleteProject(int ProjectID)
     {
         try
         {
-            var existingProject = await _projectRepository.GetProjectAsync(projID);
+            var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
 
             if (existingProject == null)
             {

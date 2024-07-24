@@ -14,6 +14,7 @@ using DinkToPdf.Contracts;
 using DinkToPdf;
 using OfficeOpenXml;
 using Team34FinalAPI.Models;
+using Team34FinalAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,9 @@ builder.Logging.AddDebug();
 
 
 //Config DbContexts
+//Configure BookingDbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //Configure BookingDbContext
 builder.Services.AddDbContext<BookingDbContext>(options =>
@@ -166,6 +170,7 @@ builder.Services.AddScoped<IInspectionListRepository, InspectionRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IRateRepo, RateRepoService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
