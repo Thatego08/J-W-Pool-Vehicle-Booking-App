@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Team34FinalAPI.Models
 {
@@ -12,11 +13,12 @@ namespace Team34FinalAPI.Models
         public int TripId { get; set; }
 
         [ForeignKey("TripId")]
+        [JsonIgnore]
         public Trip Trip { get; set; } // Navigation property
         public string Description { get; set; }
-        public string FileName { get; set; }
+        public string? FileName { get; set; }
         public byte[] FileContent { get; set; }
-        public string MediaType { get; set; }
+        public string? MediaType { get; set; }
 
 
     }

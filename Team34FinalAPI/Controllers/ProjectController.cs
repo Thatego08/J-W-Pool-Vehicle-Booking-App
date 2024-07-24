@@ -38,8 +38,8 @@ public class ProjectController : ControllerBase
             ProjectNumber = pvm.ProjectNumber,
             JobNo = pvm.JobNo,
             TaskCode = pvm.TaskCode,
-            ActivityCode = pvm.ActivityCode,
-          
+            ActivityCode = pvm.ActivityCode
+
         };
 
         try

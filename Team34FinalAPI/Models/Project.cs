@@ -4,6 +4,7 @@
     {
         public int ProjectID { get; set; }
         public int ProjectNumber { get; set; }
+
         public int JobNo { get; set; }
         public int TaskCode { get; set; }
         public string Description { get; set; }
