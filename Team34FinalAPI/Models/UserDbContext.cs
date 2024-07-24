@@ -15,7 +15,6 @@ namespace Team34FinalAPI.Models
         public override DbSet<User> Users { get; set; } //DbSet for User entity
 
         public DbSet<Project> Projects { get; set; }
-        public DbSet<Rate> Rates { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; } //DbSet for Audit log entity
 
         public DbSet<Feedback> Feedbacks { get; set; } //DbSet for Feedback entity

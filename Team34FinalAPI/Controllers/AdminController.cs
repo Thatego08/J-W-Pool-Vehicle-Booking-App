@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Team34FinalAPI.Models;
 
 namespace Team34FinalAPI.Controllers
@@ -10,11 +11,12 @@ namespace Team34FinalAPI.Controllers
     {
         // Initialize Repo 
         private readonly IAdminRepo _adminRepo;
+        private readonly IConfiguration _configuration;
 
         public AdminController(IAdminRepo adminRepo, IConfiguration configuration)
         {
             _adminRepo = adminRepo;
-
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -35,11 +37,11 @@ namespace Team34FinalAPI.Controllers
 
         [HttpGet]
         [Route("getAllAdmins/{UserName}")]
-        public async Task<IActionResult> GetAdmin(string UserName)
+        public async Task<IActionResult> GetAdmin(string userName)
         {
             try
             {
-                var admin = await _adminRepo.GetAdmin(UserName);
+                var admin = await _adminRepo.GetAdmin(userName);
                 if (admin == null)
                 {
                     return NotFound("Not able to locate admin");
@@ -100,12 +102,12 @@ namespace Team34FinalAPI.Controllers
 
         [HttpGet]
         [Route("deleteAdmin/{UserName}")]
-        public async Task<IActionResult> DeleteAdmin(string UserName)
+        public async Task<IActionResult> DeleteAdmin(string userName)
         {
             try
             {
                 var message = "Successfully Removed Admin";
-                var added = await _adminRepo.DeleteAdmin(UserName);
+                var added = await _adminRepo.DeleteAdmin(userName);
                 if (!added)
                 {
                     message = "Received Data but Failed to Delete";
