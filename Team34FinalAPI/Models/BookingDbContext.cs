@@ -60,6 +60,7 @@ namespace Team34FinalAPI.Models
                 entity.HasKey(p => p.ProjectID);
                 entity.Property(p => p.ProjectNumber).IsRequired().HasMaxLength(100);
                 entity.Property(p => p.JobNo).IsRequired();
+                entity.Property(p => p.Description).IsRequired();
                 entity.Property(p => p.TaskCode).IsRequired();
                 entity.Property(p => p.ActivityCode).IsRequired();
 
@@ -68,12 +69,11 @@ namespace Team34FinalAPI.Models
 
             modelBuilder.Entity<Project>().HasData(
 
-
-            new Project { ProjectID = 1, ProjectNumber = 120, JobNo = 1001, TaskCode = 2001, ActivityCode = 3001,  },
-            new Project { ProjectID = 2, ProjectNumber = 128, JobNo = 1002, TaskCode = 2002, ActivityCode = 3002,  },
-            new Project { ProjectID = 3, ProjectNumber = 129, JobNo = 1003, TaskCode = 2003, ActivityCode = 3003,  },
-            new Project { ProjectID = 4, ProjectNumber = 130, JobNo = 1004, TaskCode = 2004, ActivityCode = 3004,  },
-            new Project { ProjectID = 5, ProjectNumber = 131, JobNo = 1005, TaskCode = 2005, ActivityCode = 3005,  }
+            new Project { ProjectID = 1, ProjectNumber = 120, Description = "Mpumalanga Star Project", JobNo = 1001, TaskCode = 2001, ActivityCode = 3001,  },
+            new Project { ProjectID = 2, ProjectNumber = 128, Description = "Mpumalanga Star Project", JobNo = 1002, TaskCode = 2002, ActivityCode = 3002,  },
+            new Project { ProjectID = 3, ProjectNumber = 129, Description = "Mpumalanga Star Project", JobNo = 1003, TaskCode = 2003, ActivityCode = 3003,  },
+            new Project { ProjectID = 4, ProjectNumber = 130, Description = "Mpumalanga Star Project", JobNo = 1004, TaskCode = 2004, ActivityCode = 3004,  },
+            new Project { ProjectID = 5, ProjectNumber = 131, Description = "Mpumalanga Star Project",JobNo = 1005, TaskCode = 2005, ActivityC
 
         );
             
