@@ -120,10 +120,10 @@ namespace Team34FinalAPI.Models
             
 
             // Configure other relationships as needed
-            modelBuilder.Entity<Vehicle>()
-                .HasMany(v => v.Trips)
-                .WithOne(t => t.Vehicle)
-                .HasForeignKey(t => t.VehicleId);
+            //modelBuilder.Entity<Vehicle>()
+               // .HasMany(v => v.Trips)
+               // .WithOne(t => t.Vehicle)
+                //.HasForeignKey(t => t.VehicleId);
 
             modelBuilder.Entity<Vehicle>()
                 .HasMany(v => v.Bookings)

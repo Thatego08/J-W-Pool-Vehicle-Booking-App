@@ -22,10 +22,7 @@ namespace Team34FinalAPI.Models
             //Explicitly mapping tables
             modelBuilder.Entity<Booking>().ToTable("Booking");
             modelBuilder.Entity<Project>().ToTable("Project");
-            modelBuilder.Entity<Project>().Property(p => p.HalfDayRate).HasColumnType("decimal(18,2)");
-            modelBuilder.Entity<Project>().Property(p => p.FullDayRate).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Vehicle>().ToTable("Vehicles");
-            modelBuilder.Entity<Booking>().Property(b => b.RateType).IsRequired();
 
             // Configure the relationship between Project and Booking
             modelBuilder.Entity<Project>()
@@ -41,12 +38,7 @@ namespace Team34FinalAPI.Models
                 .HasForeignKey(r => r.ProjectID)
                 .OnDelete(DeleteBehavior.Cascade); // or DeleteBehavior.Restrict if you want to prevent deletion
 
-            // RateType seed data
-            modelBuilder.Entity<RateType>().HasData(
-                new RateType { RateTypeID = 1, TypeName = "HalfDay" },
-                new RateType { RateTypeID = 2, TypeName = "FullDay" },
-                new RateType { RateTypeID = 3, TypeName = "Kilometer" }
-                );
+            
                 //Inspection List stuff
 
                 // Seed data for the InspectionChecklist
@@ -61,18 +53,6 @@ namespace Team34FinalAPI.Models
 
             //End of my adjustments
 
-
-            //Rate config
-            modelBuilder.Entity<Rate>(entity =>
-            {
-                entity.HasKey(r => r.RateId);
-                entity.Property(r => r.RateType).IsRequired();
-                entity.Property(r => r.RateValue).HasColumnType("decimal(18,2)"); // Ensure column type is set
-                entity.HasOne(r => r.Project)
-                      .WithMany(p => p.Rates) // Assuming a Rate belongs to a Project
-                      .HasForeignKey(r => r.ProjectId)
-                      .OnDelete(DeleteBehavior.Cascade);
-            });
 
             //Project config 
             modelBuilder.Entity<Project>(entity =>

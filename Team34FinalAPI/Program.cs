@@ -179,7 +179,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 // Commented out EmailService to avoid conflict
 // builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IEmailService, BrevoEmailService>();
+//builder.Services.AddScoped<IEmailService, BrevoEmailService>();
 // Booking reminder register
 //builder.Services.AddHostedService<BookingReminderService>();
 
