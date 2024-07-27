@@ -1,4 +1,6 @@
-﻿namespace Team34FinalAPI.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Team34FinalAPI.ViewModels
 {
     public class ServiceViewModel
     {
@@ -9,7 +11,7 @@
 
         public string AdminName { get; set; }
 
-
+        [EmailAddress]
         public string AdminEmail { get; set; }
 
         public string VehicleModelName { get; set; }
