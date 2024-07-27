@@ -4,32 +4,44 @@ using System.Xml.Schema;
 
 namespace Team34FinalAPI.Models
 {
-    public class VehicleChecklist
+    public class PostChecklist
     {
-        public int Id { get; set; }
-        public int VehicleId { get; set; } //foreign key
-        public Vehicle Vehicle { get; set; }
 
+        public int PostId { get; set; }
+        public int VehicleId { get; set; } //foreign key
+
+        public Vehicle Vehicle { get; set; }   
         public string UserName { get; set; }
 
-        public decimal OpeningKms {  get; set; }
+        public bool ReturnVehicle { get; set; }   //checklist will only be submitted if this has been checked regardless of other checkboxes 
 
 
-        public ExteriorChecks ExteriorChecks { get; set; }
+        public decimal OpeningKms { get; set; }
+        public decimal ClosingKms { get; set; }
 
-        public InteriorChecks InteriorChecks { get; set; }
+        [NotMapped]
+        public decimal DistanceTravelled
+        {
+            get
+            {
+                return ClosingKms - OpeningKms;
+            }
+        }
+        public PostExteriorChecks ExteriorChecks { get; set; }
 
-        public UnderTheHoodChecks UnderTheHoodChecks { get; set; }
+        public PostInteriorChecks InteriorChecks { get; set; }
 
-        public FunctionalTests FunctionalTests { get; set; }
+        public PostUnderTheHoodChecks UnderTheHoodChecks { get; set; }
 
-        public SafetyEquipment SafetyEquipment { get; set; }
+        public PostFunctionalTests FunctionalTests { get; set; }
 
-        public Documentation Documentation { get; set; }
+        public PostSafetyEquipment SafetyEquipment { get; set; }
+
+        public PostDocumentation Documentation { get; set; }
 
     }
 
-    public class ExteriorChecks
+    public class PostExteriorChecks
     {
         public bool Mirrors { get; set; }
         public bool OilWaterLeaks { get; set; }
@@ -45,7 +57,7 @@ namespace Team34FinalAPI.Models
     }
 
 
-    public class InteriorChecks
+    public class PostInteriorChecks
     {
         public bool Horn { get; set; }
         public bool Seatbelt { get; set; }
@@ -54,12 +66,12 @@ namespace Team34FinalAPI.Models
         public bool Windscreen { get; set; }
     }
 
-    public class UnderTheHoodChecks
+    public class PostUnderTheHoodChecks
     {
         public bool FuelLevel { get; set; }
     }
 
-    public class FunctionalTests
+    public class PostFunctionalTests
     {
         public bool Indicator { get; set; }
         public bool ReverseHooter { get; set; }
@@ -67,7 +79,7 @@ namespace Team34FinalAPI.Models
         public bool Handbrake { get; set; }
     }
 
-    public class SafetyEquipment
+    public class PostSafetyEquipment
     {
         public bool FireExtinguisher { get; set; }
         public bool InspectionValid { get; set; }
@@ -75,11 +87,11 @@ namespace Team34FinalAPI.Models
         public bool JackWheelPresent { get; set; }
     }
 
-    public class Documentation
+    public class PostDocumentation
     {
         public bool LicenseDisks { get; set; }
         public bool CheckedBySecurity { get; set; }
     }
 
-
 }
+

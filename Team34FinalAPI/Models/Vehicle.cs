@@ -38,12 +38,15 @@ namespace Team34FinalAPI.Models
         
         public ICollection<Booking> Bookings { get; set; }
 
-        public virtual LicenseDisk LicenseDisk { get; set; }
+        public LicenseDisk LicenseDisk { get; set; }
        
-        public virtual InsuranceCover InsuranceCover { get; set; }
-        public virtual Colour Colour { get; set; }
-        public virtual VehicleFuelType FuelType { get; set; }
-        public virtual VehicleMake VehicleMake { get; set; }
-        public virtual VehicleModel VehicleModel { get; set; }
+        public InsuranceCover InsuranceCover { get; set; }
+        public Colour Colour { get; set; }
+        public VehicleFuelType FuelType { get; set; }
+        public VehicleMake VehicleMake { get; set; }
+        public  VehicleModel VehicleModel { get; set; }
+
+        public Status Status { get; set; }
+
     }
 }
