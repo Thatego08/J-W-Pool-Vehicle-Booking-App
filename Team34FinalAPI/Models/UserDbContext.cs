@@ -11,7 +11,7 @@ namespace Team34FinalAPI.Models
         { }
 
         public DbSet<Driver> Drivers { get; set; } // DbSet for Driver entity
-
+        public DbSet<Admin> Admins { get; set; } // DbSet for Admin entity
         public override DbSet<User> Users { get; set; } //DbSet for User entity
 
         public DbSet<Project> Projects { get; set; }

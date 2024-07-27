@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Data;
 using Team34FinalAPI.Models;
+using Team34FinalAPI.ViewModels;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -11,117 +16,103 @@ namespace Team34FinalAPI.Controllers
     {
         // Initialize Repo 
         private readonly IAdminRepo _adminRepo;
-        private readonly IConfiguration _configuration;
-
-        public AdminController(IAdminRepo adminRepo, IConfiguration configuration)
+        private readonly ILogger<AdminController> _logger;
+        private readonly UserManager<User> _userManager;
+        public AdminController(IAdminRepo adminRepo, UserManager<User> userManager, ILogger<AdminController> logger)
         {
             _adminRepo = adminRepo;
-            _configuration = configuration;
+            _userManager = userManager;
+            _logger = logger;
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("getAllAdmins")]
         public async Task<IActionResult> GetAllAdmin()
         {
             try
             {
-                return Ok(await _adminRepo.GetAllAdminAsync());
+                var results = await _adminRepo.GetAllAdminsAsync();
+                return Ok(results);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Notify  Admins
-                return BadRequest("An Error Occoured , Please Try Again Later");
+                return StatusCode(500, "Internal Server Error. Please Contact Support");
             }
         }
 
+
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [Route("UpdateAdmin/{userName}")]
+        public async Task<ActionResult<AdminViewModel>> UpdateAdmin(string userName, AdminViewModel adminModel)
+        {
+            try
+            {
+                var existingAdmin = await _adminRepo.GetAdminAsync(userName);
+                if (existingAdmin == null) return NotFound($"The admin does not exist");
+
+                existingAdmin.Name = adminModel.Name;
+                existingAdmin.Surname = adminModel.Surname;
+                existingAdmin.Email = adminModel.Email;
+                existingAdmin.PhoneNumber = adminModel.PhoneNumber;
+
+                if (await _adminRepo.SaveChangesAync())
+                {
+                    return Ok(existingAdmin);
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal server error. Please contact support");
+            }
+            return BadRequest("Your request is invalid");
+        }
+
+        [Authorize(Roles = "Driver,Admin")]
 
         [HttpGet]
-        [Route("getAllAdmins/{UserName}")]
-        public async Task<IActionResult> GetAdmin(string userName)
+        [Route("SearchAdmin/{userName}")]
+        public async Task<IActionResult> GetAdminAsync(string userName)
         {
             try
             {
-                var admin = await _adminRepo.GetAdmin(userName);
-                if (admin == null)
-                {
-                    return NotFound("Not able to locate admin");
-                }
-                return Ok(admin);
+                var results = await _adminRepo.GetAdminAsync(userName);
+                if (results == null) return NotFound("Admin does not exist. Enter a valid admin");
+                return Ok(results);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Notify  Admins
-                return BadRequest("An Error Occoured , Please Try Again Later");
+                return StatusCode(500, "Internal server error. Please contact support");
             }
         }
 
-
-        [HttpPost]
-        [Route("addAmin")]
-        public async Task<IActionResult> AddAdmin([FromBody] User user)
-        {
-            try
-            {
-                var message = "Successfully Added Admin User";
-                var added = await _adminRepo.AddAdmin(user);
-
-                if (!added)
-                {
-                    message = "Received Data but Failed to Add , Please check the time idk";
-                }
-                return Ok(message);
-            }
-            catch (Exception ex)
-            {
-                // Notify  Admins
-                return BadRequest("An Error Occoured , Please Try Again Later");
-            }
-        }
-
-        [HttpPost]
-        [Route("updateAdmin")]
-        public async Task<IActionResult> UpdateAdmin([FromBody] User user)
-        {
-            try
-            {
-                var message = "Successfully Updated Admin User";
-                var added = await _adminRepo.UpdateAdmin(user);
-                if (!added)
-                {
-                    message = "Received Data but Failed to Update, Please check the time idk";
-                }
-                return Ok(message);
-            }
-            catch (Exception ex)
-            {
-                // Notify user
-                return StatusCode(500, "Internal Server Error. Please contact support.");
-            }
-        }
-
-
+        [Authorize(Roles = "Admin")]
         [HttpGet]
-        [Route("deleteAdmin/{UserName}")]
+        [Route("DeleteAdmin/{userName}")]
         public async Task<IActionResult> DeleteAdmin(string userName)
         {
             try
             {
-                var message = "Successfully Removed Admin";
-                var added = await _adminRepo.DeleteAdmin(userName);
-                if (!added)
-                {
-                    message = "Received Data but Failed to Delete";
-                }
-                return Ok(message);
+                var existingAdmin = await _adminRepo.GetAdminAsync(userName);
+                if (existingAdmin == null) return NotFound($"The admin does not exist");
+                _adminRepo.Delete(existingAdmin);
+
+                if (await _adminRepo.SaveChangesAync())
+                    return Ok(existingAdmin);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Notify user
-                return StatusCode(500, "Internal Server Error. Please contact support.");
+                return StatusCode(500, "Internal server error. Please contact support");
             }
+            return BadRequest("Your request is invalid");
+        }
+        private string GenerateUsername(string firstName, string lastName)
+        {
+            string firstPart = firstName.Length >= 4 ? firstName.Substring(0, 4) : firstName;
+            string lastPart = lastName.Length >= 2 ? lastName.Substring(0, 2) : lastName;
+            return firstPart + lastPart;
         }
 
-
-    
-}
+    }
 }

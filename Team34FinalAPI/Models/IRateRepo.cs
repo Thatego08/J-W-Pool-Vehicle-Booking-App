@@ -1,11 +1,12 @@
-﻿namespace Team34FinalAPI.Models
+﻿using Team34FinalAPI.ViewModels;
+
+namespace Team34FinalAPI.Models
 {
     public interface IRateRepo
     {
-        Task<bool> CreateRate(Rate rate); // C
-        Task<Rate> GetRate(int RateID); // R - one
-        Task<bool> UpdateRate(Rate rate); // U
-                                          // 
-        Task<Rate> AddRateAsync(Rate rate);
+        Task<IEnumerable<RateViewModel>> GetAllRatesAsync();
+        Task<Rate> GetRateByIdAsync(int rateId);
+        Task<Rate> CreateRateAsync(Rate rate);
+        Task<Rate> UpdateRateAsync(Rate rate);
     }
 }
