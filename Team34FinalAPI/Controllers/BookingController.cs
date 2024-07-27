@@ -66,8 +66,10 @@ namespace Team34FinalAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<BookingViewModel>> PostBookingAsync(BookingViewModel bookingViewModel)
         {
+
             _logger.LogInformation("Entering PostBookingAsync with data: {@BookingViewModel}", bookingViewModel);
             try
+
             {
                 // Validate vehicle
                 _logger.LogInformation("Finding vehicle: {VehicleName}", bookingViewModel.VehicleName);
@@ -269,8 +271,11 @@ namespace Team34FinalAPI.Controllers
                 Event = b.Event,
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
+
                 VehicleName = b.Vehicle?.Name,
-                ProjectName = b.Project?.ProjectName
+              
+                ProjectNumber = b.Project?.ProjectNumber
+
             }).ToList();
 
             return Ok(bookingViewModels);
@@ -316,9 +321,13 @@ namespace Team34FinalAPI.Controllers
                 Event = booking.Event,
                 StartDate = booking.StartDate,
                 EndDate = booking.EndDate,
+
                 VehicleName = booking.Vehicle?.Name ?? "Unknown Vehicle", // Handle null vehicle
-                ProjectName = booking.Project?.ProjectName ?? "No Project", // Handle null project
+              
                 RateType = booking.RateType
+      
+                ProjectNumber = booking.Project?.ProjectNumber
+
             };
         }
     }

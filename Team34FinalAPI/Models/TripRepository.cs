@@ -23,20 +23,26 @@ namespace Team34FinalAPI.Models
             return await _context.Trips.Include(t => t.TripMedia).FirstOrDefaultAsync(t => t.TripId == tripId);
         }
 
-        public async Task<IEnumerable<Trip>> GetTripsByDriverIdAsync(int driverId)
-        {
-            return await _context.Trips
-                .Include(t => t.TripMedia)
-                .Where(t => t.VehicleId == driverId) // Assuming VehicleId corresponds to the driver's ID
-                .ToListAsync();
-        }
 
         public async Task AddTripAsync(Trip trip)
         {
             await _context.Trips.AddAsync(trip);
         }
 
-        public async Task<bool> SaveChangesAsync()
+        public async Task<Trip> CreateTripAsync(Trip trip)
+        {
+            _context.Trips.Add(trip);
+            await _context.SaveChangesAsync();
+            return trip;
+        }
+        public void Delete<T>(T entity) where T : class
+        {
+            _context.Remove(entity);
+        }
+
+       
+    
+public async Task<bool> SaveChangesAsync()
         {
             return (await _context.SaveChangesAsync()) > 0;
         }

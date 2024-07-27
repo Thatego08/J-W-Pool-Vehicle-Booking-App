@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
 
+using Team34FinalAPI.Tools;
+using System.Linq.Expressions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+
 namespace Team34FinalAPI.Controllers
 {
     [ApiController]
@@ -16,13 +22,15 @@ namespace Team34FinalAPI.Controllers
     public class TripController : ControllerBase
     {
         private readonly TripDbContext _context;
+        private readonly ITripRepository _tripRepository;
 
-        public TripController(TripDbContext context)
+        public TripController(TripDbContext context, ITripRepository tripRepository)
         {
             _context = context;
+            _tripRepository = tripRepository;
         }
 
-        [Authorize(Roles = "Driver,Admin")]
+      
         [HttpPost("createTrip")]
         public async Task<IActionResult> CreateTrip([FromForm] TripViewModel tvm)
         {
@@ -36,6 +44,9 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest("TripViewModel cannot be null");
             }
 
+            // Get the current logged-in user's username
+            var userName = User.Identity.Name;
+
             var trip = new Trip
             {
                 VehicleId = tvm.VehicleId,
@@ -43,14 +54,16 @@ namespace Team34FinalAPI.Controllers
                 FuelAmount = tvm.FuelAmount,
                 Comment = tvm.Comment,
                 TravelStart = tvm.TravelStart,
-                TravelEnd = tvm.TravelEnd
+                TravelEnd = tvm.TravelEnd,
+                RegistrationNumber = tvm.RegistrationNumber,
+                UserName = userName // Assign the username
             };
 
             // Initialize TripMedia collection if it's null
             trip.TripMedia = new List<TripMedia>();
 
-            // Handle file uploads
-            if (tvm.MediaFiles != null)
+            // Handle file uploads if there are any
+            if (tvm.MediaFiles != null && tvm.MediaFiles.Any())
             {
                 foreach (var file in tvm.MediaFiles)
                 {
@@ -62,7 +75,7 @@ namespace Team34FinalAPI.Controllers
                         var tripMedia = new TripMedia
                         {
                             Trip = trip,
-                            Description = tvm.MediaDescription,
+                            Description = tvm.MediaDescription, // Nullable description
                             FileName = file.FileName,
                             FileContent = fileBytes,
                             MediaType = file.ContentType
@@ -91,7 +104,8 @@ namespace Team34FinalAPI.Controllers
             return Ok(trip);
         }
 
-        [Authorize(Roles = "Driver,Admin")]
+
+        [Authorize(Roles = "Driver")]
         [HttpPut("UpdateTrip/{id}")]
         public async Task<IActionResult> UpdateTrip(int id, [FromForm] TripViewModel tvm)
         {
@@ -121,6 +135,7 @@ namespace Team34FinalAPI.Controllers
             trip.Comment = tvm.Comment;
             trip.TravelStart = tvm.TravelStart;
             trip.TravelEnd = tvm.TravelEnd;
+            trip.RegistrationNumber = tvm.RegistrationNumber;
 
             try
             {
@@ -149,7 +164,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(trips);
         }
 
-        [Authorize(Roles = "Driver,Admin")]
+       
         [HttpGet("GetTripById/{id}")]
         public async Task<IActionResult> GetTripById(int id)
         {
@@ -163,26 +178,61 @@ namespace Team34FinalAPI.Controllers
             return Ok(trip);
         }
 
-        [Authorize(Roles = "Driver,Admin")]
-        [HttpGet("GetTripsByDriver/{driverId}")]
-    public async Task<IActionResult> GetTripsByDriver(int driverId)
-    {
-        var trips = await _context.Trips
-            .Include(t => t.TripMedia)
-            .Where(t => t.VehicleId == driverId)
-            .ToListAsync();
-
-        if (trips == null || !trips.Any())
+        [Authorize(Roles = "Driver")]
+        [HttpGet("GetPreviousTripsByUserName/{userName}")]
+        public async Task<IActionResult> GetPreviousTripsByUserName(string userName)
         {
-            return NotFound($"No trips found for driver with ID {driverId}");
+            var currentUserName = User.Identity.Name; // Extract the username from the token
+
+            if (currentUserName != userName)
+            {
+                return Unauthorized("You are not authorized to view other users' trips.");
+            }
+
+            var trips = await _context.Trips
+                .Include(t => t.TripMedia)
+                .Where(t => t.UserName == userName)
+                .ToListAsync();
+
+            if (trips == null || !trips.Any())
+            {
+                return NotFound($"No trips found for user {userName}");
+            }
+
+            return Ok(trips);
         }
 
-        return Ok(trips);
-    }
+        private bool TripExists(int id)
+        {
+            return _context.Trips.Any(e => e.TripId == id);
+        }
 
-    private bool TripExists(int id)
-    {
-        return _context.Trips.Any(e => e.TripId == id);
+
+        [HttpDelete]
+        [Route("DeleteTrip/{TripId}")]
+        public async Task<IActionResult> DeleteTrip(int TripId)
+        {
+            try
+            {
+                var existingTrip = await _tripRepository.GetTripByIdAsync(TripId);
+                if (existingTrip == null)
+                    return NotFound($"The trip with ID {TripId} does not exist");
+
+                _tripRepository.Delete(existingTrip);
+
+                if (await _tripRepository.SaveChangesAsync())
+                    return Ok(existingTrip);
+
+                return StatusCode(500, "Failed to delete trip");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+
+      
     }
-}
 }

@@ -14,7 +14,8 @@ using DinkToPdf.Contracts;
 using DinkToPdf;
 using OfficeOpenXml;
 using System.IO;
-
+using Team34FinalAPI.Models;
+using Team34FinalAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +87,9 @@ builder.Logging.AddDebug();
 
 
 //Config DbContexts
+//Configure BookingDbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //Configure BookingDbContext
 builder.Services.AddDbContext<BookingDbContext>(options =>
@@ -95,6 +99,7 @@ builder.Services.AddDbContext<BookingDbContext>(options =>
 // Configure TripDbContext
 builder.Services.AddDbContext<TripDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Configure VehicleDbContext
 builder.Services.AddDbContext<VehicleDbContext>(options =>
@@ -166,8 +171,10 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IInspectionListRepository, InspectionRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+builder.Services.AddScoped<IRefuelVehicleRepository, RefuelVehicleRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IRateRepo, RateRepoService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 // Commented out EmailService to avoid conflict

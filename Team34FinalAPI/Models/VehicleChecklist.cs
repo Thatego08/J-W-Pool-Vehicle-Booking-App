@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Schema;
 
 namespace Team34FinalAPI.Models
@@ -19,7 +20,14 @@ namespace Team34FinalAPI.Models
         public decimal OpeningKms { get; set; }
         public decimal ClosingKms {  get; set; }
 
-        public decimal DistanceTravelled {  get; set; }
+        [NotMapped]
+        public decimal DistanceTravelled
+        {
+            get
+            {
+                return ClosingKms - OpeningKms;
+            }
+        }
         public ExteriorChecks ExteriorChecks { get; set; }
 
         public InteriorChecks InteriorChecks { get; set; }

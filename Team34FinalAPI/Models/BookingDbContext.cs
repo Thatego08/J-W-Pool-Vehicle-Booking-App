@@ -13,6 +13,7 @@ namespace Team34FinalAPI.Models
         public DbSet<Vehicle> Vehicles { get; set; } // Add this line
 
         public DbSet<Project> Projects { get; set; }
+
         public DbSet<Event> Events { get; set; }
         public DbSet<InspectionList> InspectionLists { get; set; }
 
@@ -33,10 +34,23 @@ namespace Team34FinalAPI.Models
                 .HasForeignKey(b => b.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade); // or DeleteBehavior.Restrict if you want to prevent deletion
 
-            //Inspection List stuff
+            // Configure the relationship between Project and Rate
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.Rates)
+                .WithOne(r => r.Project)
+                .HasForeignKey(r => r.ProjectID)
+                .OnDelete(DeleteBehavior.Cascade); // or DeleteBehavior.Restrict if you want to prevent deletion
 
-            // Seed data for the InspectionChecklist
-            modelBuilder.Entity<InspectionList>().HasData(
+            // RateType seed data
+            modelBuilder.Entity<RateType>().HasData(
+                new RateType { RateTypeID = 1, TypeName = "HalfDay" },
+                new RateType { RateTypeID = 2, TypeName = "FullDay" },
+                new RateType { RateTypeID = 3, TypeName = "Kilometer" }
+                );
+                //Inspection List stuff
+
+                // Seed data for the InspectionChecklist
+                modelBuilder.Entity<InspectionList>().HasData(
                 new InspectionList { ChecklistID = 1, Item = "Windscreen", IsCompleted = false },
                 new InspectionList { ChecklistID = 2, Item = "Tires", IsCompleted = false },
                 new InspectionList { ChecklistID = 3, Item = "Lights", IsCompleted = false },
@@ -64,24 +78,29 @@ namespace Team34FinalAPI.Models
             modelBuilder.Entity<Project>(entity =>
             {
                 entity.HasKey(p => p.ProjectID);
-                entity.Property(p => p.ProjectName).IsRequired().HasMaxLength(100);
+                entity.Property(p => p.ProjectNumber).IsRequired().HasMaxLength(100);
                 entity.Property(p => p.JobNo).IsRequired();
                 entity.Property(p => p.TaskCode).IsRequired();
                 entity.Property(p => p.ActivityCode).IsRequired();
-                entity.Property(p => p.HalfDayRate).IsRequired();
-                entity.Property(p => p.FullDayRate).IsRequired();
+
             });
 
 
             modelBuilder.Entity<Project>().HasData(
-            new Project { ProjectID = 1, ProjectName = "Construction Project", JobNo = 1001, TaskCode = 2001, ActivityCode = 3001, HalfDayRate= 150, FullDayRate= 300},
-            new Project {ProjectID = 2, ProjectName = "Mining Project", JobNo = 1002, TaskCode = 2002, ActivityCode = 3002, HalfDayRate = 200, FullDayRate = 400 },
-            new Project {ProjectID = 3, ProjectName = "Bridge Building Project", JobNo = 1003, TaskCode = 2003, ActivityCode = 3003, HalfDayRate = 180, FullDayRate = 360 },
-            new Project {ProjectID = 4, ProjectName = "City Infrastructure Project", JobNo = 1004, TaskCode = 2004, ActivityCode = 3004, HalfDayRate = 250, FullDayRate = 500 },
-            new Project {ProjectID = 5, ProjectName = "Impact Analysis Project", JobNo = 1005, TaskCode = 2005, ActivityCode = 3005, HalfDayRate = 120, FullDayRate = 240 },
-            new Project { ProjectID = 6, ProjectName = "None", JobNo = 1006, TaskCode = 2006, ActivityCode = 3006, HalfDayRate = 0, FullDayRate = 0 }
+
+
+            new Project { ProjectID = 1, ProjectNumber = 120, JobNo = 1001, TaskCode = 2001, ActivityCode = 3001,  },
+            new Project { ProjectID = 2, ProjectNumber = 128, JobNo = 1002, TaskCode = 2002, ActivityCode = 3002,  },
+            new Project { ProjectID = 3, ProjectNumber = 129, JobNo = 1003, TaskCode = 2003, ActivityCode = 3003,  },
+            new Project { ProjectID = 4, ProjectNumber = 130, JobNo = 1004, TaskCode = 2004, ActivityCode = 3004,  },
+            new Project { ProjectID = 5, ProjectNumber = 131, JobNo = 1005, TaskCode = 2005, ActivityCode = 3005,  }
 
         );
+            
+
+
+
+
 
         }
     }
