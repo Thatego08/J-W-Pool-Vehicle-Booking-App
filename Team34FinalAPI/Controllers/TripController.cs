@@ -1,5 +1,4 @@
-﻿using iText.Kernel.Counter.Context;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -8,12 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
-
-using Team34FinalAPI.Tools;
-using System.Linq.Expressions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authorization;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -30,7 +23,6 @@ namespace Team34FinalAPI.Controllers
             _tripRepository = tripRepository;
         }
 
-      
         [HttpPost("createTrip")]
         public async Task<IActionResult> CreateTrip([FromForm] TripViewModel tvm)
         {
@@ -49,7 +41,7 @@ namespace Team34FinalAPI.Controllers
 
             var trip = new Trip
             {
-                VehicleId = tvm.VehicleId,
+                Name = tvm.Name, // Use Name instead of VehicleId
                 Location = tvm.Location,
                 FuelAmount = tvm.FuelAmount,
                 Comment = tvm.Comment,
@@ -104,7 +96,6 @@ namespace Team34FinalAPI.Controllers
             return Ok(trip);
         }
 
-
         [Authorize(Roles = "Driver")]
         [HttpPut("UpdateTrip/{id}")]
         public async Task<IActionResult> UpdateTrip(int id, [FromForm] TripViewModel tvm)
@@ -129,7 +120,7 @@ namespace Team34FinalAPI.Controllers
             }
 
             // Update trip properties
-            trip.VehicleId = tvm.VehicleId;
+            trip.Name = tvm.Name; // Use Name instead of VehicleId
             trip.Location = tvm.Location;
             trip.FuelAmount = tvm.FuelAmount;
             trip.Comment = tvm.Comment;
@@ -164,7 +155,6 @@ namespace Team34FinalAPI.Controllers
             return Ok(trips);
         }
 
-       
         [HttpGet("GetTripById/{id}")]
         public async Task<IActionResult> GetTripById(int id)
         {
@@ -207,7 +197,6 @@ namespace Team34FinalAPI.Controllers
             return _context.Trips.Any(e => e.TripId == id);
         }
 
-
         [HttpDelete]
         [Route("DeleteTrip/{TripId}")]
         public async Task<IActionResult> DeleteTrip(int TripId)
@@ -230,9 +219,5 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-
-
-      
     }
 }

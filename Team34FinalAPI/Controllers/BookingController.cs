@@ -90,17 +90,18 @@ namespace Team34FinalAPI.Controllers
                 int? projectId = null;
                 string? eventName = null;
 
-                if (!string.IsNullOrEmpty(bookingViewModel.ProjectName))
+                if (bookingViewModel.ProjectNumber.HasValue)
                 {
-                    _logger.LogInformation("Finding project: {ProjectName}", bookingViewModel.ProjectName);
-                    var project = await _context.Projects.SingleOrDefaultAsync(p => p.ProjectName == bookingViewModel.ProjectName);
+                    _logger.LogInformation("Finding project: {ProjectNumber}", bookingViewModel.ProjectNumber.Value);
+                    var project = await _context.Projects.SingleOrDefaultAsync(p => p.ProjectNumber == bookingViewModel.ProjectNumber.Value);
                     if (project == null)
                     {
-                        _logger.LogWarning("Project with name {ProjectName} does not exist.", bookingViewModel.ProjectName);
-                        return BadRequest($"Project with name {bookingViewModel.ProjectName} does not exist.");
+                        _logger.LogWarning("Project with number {ProjectNumber} does not exist.", bookingViewModel.ProjectNumber.Value);
+                        return BadRequest($"Project with number {bookingViewModel.ProjectNumber.Value} does not exist.");
                     }
                     projectId = project.ProjectID;
                 }
+
                 else if (!string.IsNullOrEmpty(bookingViewModel.Event))
                 {
                     eventName = bookingViewModel.Event;
@@ -119,8 +120,7 @@ namespace Team34FinalAPI.Controllers
                     StartDate = bookingViewModel.StartDate,
                     EndDate = bookingViewModel.EndDate,
                     VehicleId = vehicle.VehicleID,
-                    ProjectId = projectId,
-                    RateType = bookingViewModel.RateType
+                    ProjectId = projectId
                 };
 
                 _logger.LogInformation("Booking details before adding: {@Booking}", booking);
@@ -195,10 +195,10 @@ namespace Team34FinalAPI.Controllers
 
             // Find the associated Project
             Project project = null;
-            if (!string.IsNullOrEmpty(bookingViewModel.ProjectName))
+            if (bookingViewModel.ProjectNumber.HasValue)
             {
                 project = await _context.Projects
-                                        .FirstOrDefaultAsync(p => p.ProjectName == bookingViewModel.ProjectName);
+                                        .FirstOrDefaultAsync(p => p.ProjectNumber == bookingViewModel.ProjectNumber);
                 if (project == null) return BadRequest("Invalid Project");
             }
 
@@ -209,8 +209,7 @@ namespace Team34FinalAPI.Controllers
             booking.EndDate = bookingViewModel.EndDate;
             booking.Vehicle = vehicle ?? booking.Vehicle;
             booking.Project = project ?? booking.Project;
-            booking.RateType = bookingViewModel.RateType;
-
+            
             _context.Entry(booking).State = EntityState.Modified;
 
             try
@@ -288,7 +287,8 @@ namespace Team34FinalAPI.Controllers
             foreach (var booking in bookings)
             {
                 var vehicleName = booking.Vehicle?.Name ?? "Unknown Vehicle";
-                var projectName = booking.Project?.ProjectName ?? "No Project";
+                var projectNumber = booking.Project?.ProjectNumber != null ? (int?)booking.Project.ProjectNumber : null;
+
 
                 var bookingViewModel = new BookingViewModel
                 {
@@ -298,11 +298,10 @@ namespace Team34FinalAPI.Controllers
                     StartDate = booking.StartDate,
                     EndDate = booking.EndDate,
                     VehicleName = vehicleName,
-                    ProjectName = projectName,
-                    RateType = booking.RateType
+                    ProjectNumber = projectNumber
                 };
 
-                Console.WriteLine($"BookingID: {booking.BookingID}, RateType: {bookingViewModel.RateType}");
+                Console.WriteLine($"BookingID: {booking.BookingID}");
 
                 bookingViewModels.Add(bookingViewModel);
             }
@@ -324,7 +323,6 @@ namespace Team34FinalAPI.Controllers
 
                 VehicleName = booking.Vehicle?.Name ?? "Unknown Vehicle", // Handle null vehicle
               
-                RateType = booking.RateType
       
                 ProjectNumber = booking.Project?.ProjectNumber
 

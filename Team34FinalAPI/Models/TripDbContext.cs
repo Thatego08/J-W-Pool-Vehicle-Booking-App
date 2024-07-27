@@ -31,11 +31,11 @@ namespace Team34FinalAPI.Models
 
 
             // Configure the relationship between Trip and Vehicle
-            modelBuilder.Entity<Trip>()
-                .HasOne<Vehicle>(t => t.Vehicle)
-                .WithMany() // Assuming a vehicle can have multiple trips
-                .HasForeignKey(t => t.VehicleId)
-                .IsRequired();
+            //modelBuilder.Entity<Trip>()
+              //  .HasOne<Vehicle>(t => t.Vehicle)
+               // .WithMany() // Assuming a vehicle can have multiple trips
+               // .HasForeignKey(t => t.VehicleId)
+               // .IsRequired();
 
             // Ignore the Vehicle entity to avoid creating its table
             modelBuilder.Ignore<Vehicle>();

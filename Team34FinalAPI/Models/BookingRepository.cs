@@ -22,7 +22,7 @@ namespace Team34FinalAPI.Models
 
                 foreach (var booking in bookings)
                 {
-                    Console.WriteLine($"BookingID: {booking.BookingID}, RateType: {booking.RateType}");
+                    Console.WriteLine($"BookingID: {booking.BookingID}");
                 }
 
                 return bookings;
@@ -43,7 +43,7 @@ namespace Team34FinalAPI.Models
                     .Include(b => b.Project)
                     .FirstOrDefaultAsync(b => b.BookingID == id);
 
-                Console.WriteLine($"BookingID: {booking.BookingID}, RateType: {booking.RateType}");
+                Console.WriteLine($"BookingID: {booking.BookingID}");
 
                 return booking;
             }

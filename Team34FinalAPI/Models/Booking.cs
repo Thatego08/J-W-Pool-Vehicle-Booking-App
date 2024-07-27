@@ -22,7 +22,6 @@ namespace Team34FinalAPI.Models
         
         public Project? Project { get; set; }
         public bool ReminderSent { get; set; } // New property
-        [Required]
-        public string RateType { get; set; } // New property
+       
     }
 }

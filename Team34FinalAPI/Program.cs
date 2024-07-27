@@ -185,12 +185,12 @@ builder.Services.AddScoped<IRateRepo, RateRepoService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
-
 // Configure MailJet settings
 builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
 
 // Register the MailJetService
 builder.Services.AddScoped<IEmailService, MailJetService>();
+
 
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
