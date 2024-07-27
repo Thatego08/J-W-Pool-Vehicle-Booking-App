@@ -37,6 +37,7 @@ public class ProjectController : ControllerBase
             ProjectID = pvm.ProjectID,
             ProjectNumber = pvm.ProjectNumber,
             JobNo = pvm.JobNo,
+            Description = pvm.Description,
             TaskCode = pvm.TaskCode,
             ActivityCode = pvm.ActivityCode
 
@@ -73,6 +74,7 @@ public class ProjectController : ControllerBase
             }
             existingProject.ProjectID = pvm.ProjectID;
             existingProject.ProjectNumber = pvm.ProjectNumber;
+            existingProject.Description = pvm.Description;
             existingProject.JobNo = pvm.JobNo;
             existingProject.TaskCode = pvm.TaskCode;
             existingProject.ActivityCode = pvm.ActivityCode;

@@ -12,9 +12,15 @@ using System.Text;
 using Team34FinalAPI.Services;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using Microsoft.AspNetCore.Builder;
 using OfficeOpenXml;
-using Team34FinalAPI.Models;
 using Team34FinalAPI.Data;
+using Mailjet.Client;
+using Mailjet.Client.Resources;
+using Newtonsoft.Json.Linq;
+using User = Team34FinalAPI.Models.User;
+using Org.BouncyCastle.Crypto.Tls;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -173,8 +179,12 @@ builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IRateRepo, RateRepoService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Configure MailJet settings
+builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
+
+// Register the MailJetService
+builder.Services.AddScoped<IEmailService, MailJetService>();
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
@@ -183,6 +193,78 @@ builder.Services.AddLogging();
 
 var app = builder.Build();
 
+//Mail Configs
+
+// Temporary logging to check the API credentials
+
+var mailJetSettings = builder.Configuration.GetSection("MailJet");
+var apiKey = mailJetSettings["ApiKey"];
+var secretKey = mailJetSettings["SecretKey"];
+var senderEmail = mailJetSettings["SenderEmail"];
+var senderName = mailJetSettings["SenderName"];
+
+
+Console.WriteLine($"API Key: {apiKey}");
+Console.WriteLine($"Secret Key: {secretKey}");
+Console.WriteLine($"Sender Email: {senderEmail}");
+Console.WriteLine($"Sender Name: {senderName}");
+
+// Validate configuration values
+if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey) ||
+    string.IsNullOrEmpty(senderEmail) || string.IsNullOrEmpty(senderName))
+{
+    throw new Exception("MailJet settings are not properly configured.");
+}
+
+
+// Create Mailjet client
+var client = new MailjetClient(apiKey, secretKey);
+
+
+var request = new MailjetRequest
+{
+    Resource = Send.Resource,
+}
+.Property(Send.FromEmail, senderEmail)
+.Property(Send.FromName, senderName)
+.Property(Send.Subject, "Test Email")
+.Property(Send.HtmlPart, "This is a test email.")
+.Property(Send.Recipients, new JArray
+{
+    new JObject
+    {
+        {"Email", "www.sabzayj7@gmailcom"}
+    }
+})
+.Property(Send.SandboxMode, false); // Enable sandbox mode
+
+/*var response = await client.PostAsync(request);
+if (!response.IsSuccessStatusCode)
+{
+    var errorMessage = response.GetErrorMessage();
+    Console.WriteLine($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
+    throw new Exception($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
+}*/
+
+try
+{
+    var response = await client.PostAsync(request);
+    if (!response.IsSuccessStatusCode)
+    {
+        var errorMessage = response.GetErrorMessage();
+        Console.WriteLine($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
+        throw new Exception($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
+    }
+
+    Console.WriteLine("Email sent successfully.");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Exception: {ex.Message}");
+    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+}
+
+//Console.WriteLine("Email sent successfully.");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
