@@ -10,7 +10,8 @@ namespace Team34FinalAPI.Models
         }
 
         public DbSet<Booking> Bookings { get; set; }
-        
+        public DbSet<Vehicle> Vehicles { get; set; } // Add this line
+
         public DbSet<Project> Projects { get; set; }
 
         public DbSet<Event> Events { get; set; }
@@ -21,7 +22,10 @@ namespace Team34FinalAPI.Models
             //Explicitly mapping tables
             modelBuilder.Entity<Booking>().ToTable("Booking");
             modelBuilder.Entity<Project>().ToTable("Project");
+            modelBuilder.Entity<Project>().Property(p => p.HalfDayRate).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Project>().Property(p => p.FullDayRate).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Vehicle>().ToTable("Vehicles");
+            modelBuilder.Entity<Booking>().Property(b => b.RateType).IsRequired();
 
             // Configure the relationship between Project and Booking
             modelBuilder.Entity<Project>()
@@ -57,6 +61,19 @@ namespace Team34FinalAPI.Models
 
             //End of my adjustments
 
+
+            //Rate config
+            modelBuilder.Entity<Rate>(entity =>
+            {
+                entity.HasKey(r => r.RateId);
+                entity.Property(r => r.RateType).IsRequired();
+                entity.Property(r => r.RateValue).HasColumnType("decimal(18,2)"); // Ensure column type is set
+                entity.HasOne(r => r.Project)
+                      .WithMany(p => p.Rates) // Assuming a Rate belongs to a Project
+                      .HasForeignKey(r => r.ProjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
             //Project config 
             modelBuilder.Entity<Project>(entity =>
             {
@@ -70,6 +87,7 @@ namespace Team34FinalAPI.Models
 
 
             modelBuilder.Entity<Project>().HasData(
+
 
             new Project { ProjectID = 1, ProjectNumber = 120, JobNo = 1001, TaskCode = 2001, ActivityCode = 3001,  },
             new Project { ProjectID = 2, ProjectNumber = 128, JobNo = 1002, TaskCode = 2002, ActivityCode = 3002,  },
@@ -87,5 +105,4 @@ namespace Team34FinalAPI.Models
         }
     }
 
-    
 }
