@@ -7,8 +7,8 @@
         public string? Event { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-
         public string VehicleName { get; set; }
         public int? ProjectNumber { get; set; }
+
     }
 }

@@ -9,6 +9,8 @@
         public int TaskCode { get; set; }
         public string Description { get; set; }
         public int ActivityCode { get; set; }
+        public decimal HalfDayRate { get; set; } // New property
+        public decimal FullDayRate { get; set; } // New property
 
         // This line establishes the one-to-many relationship
         public ICollection<Booking> Bookings { get; set; }

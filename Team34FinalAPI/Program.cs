@@ -1,4 +1,5 @@
 using Team34FinalAPI.Models;
+using Team34FinalAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,11 +10,12 @@ using System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Team34FinalAPI.Services;
 using DinkToPdf.Contracts;
 using DinkToPdf;
 using Microsoft.AspNetCore.Builder;
 using OfficeOpenXml;
+using System.IO;
+using Team34FinalAPI.Models;
 using Team34FinalAPI.Data;
 using Mailjet.Client;
 using Mailjet.Client.Resources;
@@ -42,7 +44,6 @@ builder.Services.AddControllers();
  
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
 
 
 //My Changes For Jwt Auth for Login purposes
@@ -75,6 +76,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 //Inspection List exporting
 var context = new CustomAssemblyLoadContext();
 context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "wkhtmltox.dll"));
@@ -100,9 +102,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
 // Configure TripDbContext
 builder.Services.AddDbContext<TripDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Configure VehicleDbContext
 builder.Services.AddDbContext<VehicleDbContext>(options =>
@@ -174,17 +178,20 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IInspectionListRepository, InspectionRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
+builder.Services.AddScoped<IRefuelVehicleRepository, RefuelVehicleRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IRateRepo, RateRepoService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+
 // Configure MailJet settings
 builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
 
 // Register the MailJetService
 builder.Services.AddScoped<IEmailService, MailJetService>();
+
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 

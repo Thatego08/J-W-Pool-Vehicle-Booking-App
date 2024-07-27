@@ -10,6 +10,7 @@ namespace Team34FinalAPI.Models
 
         public int VehicleId { get; set; } // Foreign key
         public Vehicle Vehicle { get; set; } // Navigation property
+       
         public string Location { get; set; }
         public decimal FuelAmount { get; set; }
         public string Comment { get; set; }
