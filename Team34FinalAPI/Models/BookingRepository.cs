@@ -13,19 +13,47 @@ namespace Team34FinalAPI.Models
 
         public async Task<IEnumerable<Booking>> GetBookingsAsync()
         {
-            return await _context.Bookings
-                .Include(b => b.Vehicle)
-                .Include(b => b.Project)
-                .ToListAsync();
+            try
+            {
+                var bookings = await _context.Bookings
+                                             .Include(b => b.Vehicle)
+                                             .Include(b => b.Project)
+                                             .ToListAsync();
+
+                foreach (var booking in bookings)
+                {
+                    Console.WriteLine($"BookingID: {booking.BookingID}, RateType: {booking.RateType}");
+                }
+
+                return bookings;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetBookingsAsync: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<Booking> GetBookingByIdAsync(int id)
         {
-            return await _context.Bookings
-                .Include(b => b.Vehicle)
-                .Include(b => b.Project)
-                .FirstOrDefaultAsync(b => b.BookingID == id);
+            try
+            {
+                var booking = await _context.Bookings
+                    .Include(b => b.Vehicle)
+                    .Include(b => b.Project)
+                    .FirstOrDefaultAsync(b => b.BookingID == id);
+
+                Console.WriteLine($"BookingID: {booking.BookingID}, RateType: {booking.RateType}");
+
+                return booking;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetBookingByIdAsync: {ex.Message}");
+                throw;
+            }
         }
+
 
         public async Task<Booking> AddBookingAsync(Booking booking)
         {
@@ -36,9 +64,10 @@ namespace Team34FinalAPI.Models
 
         public async Task UpdateBookingAsync(Booking booking)
         {
-            _context.Entry(booking).State = EntityState.Modified;
+            _context.Bookings.Update(booking);
             await _context.SaveChangesAsync();
         }
+
 
         public async Task DeleteBookingAsync(int id)
         {
@@ -55,13 +84,28 @@ namespace Team34FinalAPI.Models
             return _context.Bookings.Any(e => e.BookingID == id);
         }
 
-        public async Task<IEnumerable<Booking>> GetBookingsByVehicleIdAsync(int vehicleId)
+        public async Task<IEnumerable<Booking>> GetBookingsByUserNameAsync(string username)
+        {
+            var lowerUsername = username.ToLower(); // Convert username to lowercase
+
+            // Ensure the context has a longer timeout
+            _context.Database.SetCommandTimeout(180); // Set timeout to 3 minutes
+
+            return await _context.Bookings
+                .AsNoTracking()
+                .Include(b => b.Vehicle)
+                .Include(b => b.Project)
+                .Where(b => b.UserName.ToLower() == lowerUsername) // Compare using lowercase
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Booking>> GetUpcomingBookingsAsync(DateTime fromTime)
         {
             return await _context.Bookings
                 .Include(b => b.Vehicle)
-                .Include(b => b.Project)
-                .Where(b => b.VehicleId == vehicleId)
+                .Where(b => b.StartDate <= fromTime && !b.ReminderSent)
                 .ToListAsync();
         }
+
     }
 }

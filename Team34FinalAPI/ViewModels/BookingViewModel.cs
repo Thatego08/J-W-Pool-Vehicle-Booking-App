@@ -10,5 +10,6 @@
 
         public string VehicleName { get; set; }
         public string? ProjectName { get; set; }
+        public string RateType { get; set; } //New Property
     }
 }

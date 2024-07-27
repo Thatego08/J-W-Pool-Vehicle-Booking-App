@@ -1,4 +1,5 @@
 using Team34FinalAPI.Models;
+using Team34FinalAPI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,11 +10,11 @@ using System;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Team34FinalAPI.Services;
 using DinkToPdf.Contracts;
 using DinkToPdf;
 using OfficeOpenXml;
-using Team34FinalAPI.Models;
+using System.IO;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +36,6 @@ builder.Services.AddControllers();
  
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-
 
 
 //My Changes For Jwt Auth for Login purposes
@@ -68,6 +68,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
 //Inspection List exporting
 var context = new CustomAssemblyLoadContext();
 context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "wkhtmltox.dll"));
@@ -89,6 +90,7 @@ builder.Logging.AddDebug();
 //Configure BookingDbContext
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Configure TripDbContext
 builder.Services.AddDbContext<TripDbContext>(options =>
@@ -168,8 +170,11 @@ builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-
+// Commented out EmailService to avoid conflict
+// builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailService, BrevoEmailService>();
+// Booking reminder register
+//builder.Services.AddHostedService<BookingReminderService>();
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
