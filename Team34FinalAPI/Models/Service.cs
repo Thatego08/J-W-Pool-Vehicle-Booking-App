@@ -10,12 +10,9 @@ namespace Team34FinalAPI.Models
 
         public string AdminName { get; set; }
 
-
+        [EmailAddress]
         public string AdminEmail { get; set; }
 
-        public string VehicleModelName {  get; set; }
-
-        public string VehicleMakeName {  get; set; }
 
         public string Description { get; set; } //Additional Details
 
