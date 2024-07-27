@@ -1,13 +1,17 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Team34FinalAPI.Models
 {
     public class RefuelVehicle
     {
+        [Key]
         public int RefuelVehicleId { get; set; }
-        public int TripId { get; set; }  // Foreign key to Trip
 
-        // RefuelVehicle specific fields
+        [ForeignKey("Trip")]
+        public int? TripId { get; set; } // Make TripId nullable
+
         public string RadiatorWaterLevel { get; set; }
         public string Battery { get; set; }
         public string OilLevel { get; set; }
@@ -20,7 +24,9 @@ namespace Team34FinalAPI.Models
         public string SpareWheelCondition { get; set; }
         public string Comments { get; set; }
 
-        // Navigation property
+        public decimal FuelQuantity { get; set; }
+        public decimal FuelCost { get; set; }
+
         [JsonIgnore]
         public Trip Trip { get; set; }
     }

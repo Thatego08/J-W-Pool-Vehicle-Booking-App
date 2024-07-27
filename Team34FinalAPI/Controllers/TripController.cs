@@ -30,7 +30,7 @@ namespace Team34FinalAPI.Controllers
             _tripRepository = tripRepository;
         }
 
-        [Authorize(Roles = "Driver")]
+      
         [HttpPost("createTrip")]
         public async Task<IActionResult> CreateTrip([FromForm] TripViewModel tvm)
         {
@@ -135,6 +135,7 @@ namespace Team34FinalAPI.Controllers
             trip.Comment = tvm.Comment;
             trip.TravelStart = tvm.TravelStart;
             trip.TravelEnd = tvm.TravelEnd;
+            trip.RegistrationNumber = tvm.RegistrationNumber;
 
             try
             {
@@ -163,7 +164,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(trips);
         }
 
-        [Authorize(Roles = "Driver,Admin")]
+       
         [HttpGet("GetTripById/{id}")]
         public async Task<IActionResult> GetTripById(int id)
         {
@@ -232,40 +233,6 @@ namespace Team34FinalAPI.Controllers
 
 
 
-       
-        [HttpPost("{tripId}/RefuelVehicle")]
-        public async Task<IActionResult> AddRefuelVehicle(int tripId, [FromBody] RefuelVehicle refuelVehicle)
-        {
-            var trip = await _context.Trips.FindAsync(tripId);
-            if (trip == null)
-            {
-                return NotFound($"Trip with ID {tripId} not found.");
-            }
-
-            refuelVehicle.TripId = tripId;
-
-            _context.RefuelVehicles.Add(refuelVehicle);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetRefuelVehicle), new { tripId, refuelVehicleId = refuelVehicle.RefuelVehicleId }, refuelVehicle);
-        }
-
-
-        [HttpGet("{tripId}/RefuelVehicle/{refuelVehicleId}")]
-        public async Task<IActionResult> GetRefuelVehicle(int tripId, int refuelVehicleId)
-        {
-            var refuelVehicle = await _context.RefuelVehicles
-                .Where(rv => rv.TripId == tripId && rv.RefuelVehicleId == refuelVehicleId)
-                .FirstOrDefaultAsync();
-
-            if (refuelVehicle == null)
-            {
-                return NotFound($"RefuelVehicle with ID {refuelVehicleId} for Trip ID {tripId} not found.");
-            }
-
-            return Ok(refuelVehicle);
-        }
-
-        // Similar methods for Update and Delete operations
+      
     }
 }

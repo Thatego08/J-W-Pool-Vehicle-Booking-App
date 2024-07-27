@@ -14,7 +14,7 @@ namespace Team34FinalAPI.Models
         {
             modelBuilder.Entity<Trip>().ToTable("Trips");
             modelBuilder.Entity<TripMedia>().ToTable("TripMedia");
-
+            modelBuilder.Entity<RefuelVehicle>().ToTable("RefuelVehicles");
             // Configure the relationship between Trip and TripMedia
             modelBuilder.Entity<Trip>()
                 .HasMany(t => t.TripMedia)
@@ -24,9 +24,11 @@ namespace Team34FinalAPI.Models
 
             // Configure the relationship between Trip and RefuelVehicle
             modelBuilder.Entity<Trip>()
-               .HasMany(t => t.RefuelVehicles)
-               .WithOne(rv => rv.Trip)
-               .HasForeignKey(rv => rv.TripId);
+         .HasMany(t => t.RefuelVehicles)
+         .WithOne(rv => rv.Trip)
+         .HasForeignKey(rv => rv.TripId);
+            // This will make TripId optional
+
 
             // Configure the relationship between Trip and Vehicle
             modelBuilder.Entity<Trip>()
@@ -37,6 +39,14 @@ namespace Team34FinalAPI.Models
 
             // Ignore the Vehicle entity to avoid creating its table
             modelBuilder.Ignore<Vehicle>();
+
+            modelBuilder.Entity<RefuelVehicle>()
+        .Property(rv => rv.FuelQuantity)
+        .HasPrecision(18, 2); // Adjust precision and scale as needed
+
+            modelBuilder.Entity<Trip>()
+                .Property(t => t.FuelAmount)
+                .HasPrecision(18, 2); // Adjust precision and scale as needed
         }
     }
 }
