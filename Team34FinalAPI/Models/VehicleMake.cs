@@ -5,5 +5,8 @@
         public int VehicleMakeID { get; set; }
 
         public string Name { get; set; }
+
+        
+
     }
 }

@@ -22,8 +22,10 @@ namespace Team34FinalAPI.Models
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<VehicleMake> VehicleMake { get; set; }
         public DbSet<VehicleModel> VehicleModel { get; set; }
-        public DbSet<Service> VehicleService { get; set; }
+        public DbSet<Service> Service { get; set; }
         public DbSet<ServiceHistory> ServiceHistory { get; set; }
+
+        public DbSet<PostChecklist> PostChecklist { get; set; }
 
         public DbSet<VehicleChecklist> VehicleChecklists { get; set; }
 
@@ -47,39 +49,7 @@ namespace Team34FinalAPI.Models
                 new VehicleFuelType { Id = 2, FuelName = "Diesel" }
                 );
 
-    /*
-            modelBuilder.Entity<InsuranceCover>(entity =>
-            {
-                entity.HasKey(i => i.InsuranceCoverID);
-                entity.Property(i => i.InsuranceCoverName);
-                entity.Property(i => i.StartDate);
-                entity.Property(i => i.EndDate);
-                entity.Property(i => i.CoverageType);
-                entity.Property(i => i.PremiumAmount);
-                entity.Property(i => i.ContactInfo);
-                entity.Property(i => i.CreatedDate);
-                entity.Property(i => i.ModifiedDate);
-                entity.Property(i => i.ContractFileName); 
-                entity.Property(i => i.ContractContentType);
-                entity.Property(i => i.ContractData);
-            });
-            
-       
-        
-
-
-            /*            modelBuilder.Entity<Service>(entity =>
-            {
-                entity.HasKey(f => f.ServiceID);
-                entity.HasAlternateKey(f => f.VehicleID);
-                entity.Property(f => f.VehicleMakeName).IsRequired();
-                entity.Property(f => f.VehicleModelName).IsRequired();
-                entity.Property(f => f.AdminName).IsRequired();
-                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(256);
-                entity.Property(f => f.Description).IsRequired();
-                entity.Property(f => f.ServiceDate).IsRequired();
-            });*/
-
+    
             modelBuilder.Entity<Status>().HasData(
                 new Status { Id = 1, Name = "Available " },
                 new Status { Id = 2, Name = " Booked " },
@@ -130,20 +100,53 @@ namespace Team34FinalAPI.Models
                 .WithOne(b => b.Vehicle)
                 .HasForeignKey(b => b.VehicleId);
 
-            
+            // Foreign key configurations to avoid cycles or multiple cascade paths
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.VehicleModel)
+                .WithMany()
+                .HasForeignKey(v => v.VehicleModelID)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.VehicleMake)
+                .WithMany()
+                .HasForeignKey(v => v.VehicleMakeID)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            // Add similar configurations for other foreign keys if needed
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.Colour)
+                .WithMany()
+                .HasForeignKey(v => v.ColourID)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.FuelType)
+                .WithMany()
+                .HasForeignKey(v => v.FuelTypeID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.InsuranceCover)
+                .WithMany()
+                .HasForeignKey(v => v.InsuranceCoverID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Vehicle>()
+                .HasOne(v => v.Status)
+                .WithMany()
+                .HasForeignKey(v => v.StatusID)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
             modelBuilder.Entity<Vehicle>().HasData(
-                new Vehicle { VehicleID = 1, Name = "Hyundai 1", VehicleModelID = 1, VehicleMakeID = 7, Description = "i20", DateAcquired = new DateTime(2024, 2,16), RegistrationNumber = "LN 68 YM GP", InsuranceCoverID = 1 , VIN = "MALBG512LPM254886", ColourID = 2, FuelTypeID = 1, EngineNo = "G4LFPV302509", LicenseExpiryDate = new DateTime(2024, 12, 31), StatusID = 1 },
+                new Vehicle { VehicleID = 1, Name = "Hyundai 1", VehicleModelID = 7, VehicleMakeID = 7, Description = "i20", DateAcquired = new DateTime(2024, 2, 16), RegistrationNumber = "LN 68 YM GP", InsuranceCoverID = 1, VIN = "MALBG512LPM254886", ColourID = 2, FuelTypeID = 1, EngineNo = "G4LFPV302509", LicenseExpiryDate = new DateTime(2024, 12, 31), StatusID = 1 },
                 new Vehicle { VehicleID = 2, Name = "Toyota 1", VehicleModelID = 2, VehicleMakeID = 11, Description = "Extra Cab 2.4 GD-6 RB SRX 6MT ", DateAcquired = new DateTime(2019, 1,26 ), RegistrationNumber = "JF 72 WJ GP", InsuranceCoverID = 1, VIN = "AHTJB8DC404730166", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC598667", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
                 new Vehicle { VehicleID = 3, Name = "Toyota 2",VehicleModelID = 2, VehicleMakeID = 11, Description = "Extra Cab 2.4 GD-6 RB SRX 6MT", DateAcquired = new DateTime(2020, 12, 4), RegistrationNumber = "JT 99 LF GP", InsuranceCoverID = 1, VIN = "AHTJB3DCX04490835", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC765766", LicenseExpiryDate = new DateTime(2022, 11, 30), StatusID = 1 },
                 new Vehicle { VehicleID = 4, Name = "Toyota 3",VehicleModelID = 2, VehicleMakeID = 11, Description = "DC HILUX 2.4 GD-6 RAIDER 4X4 A/T", DateAcquired = new DateTime(2024, 7, 24), RegistrationNumber = "LR 01 CT GP", InsuranceCoverID = 1, VIN = "AHTKB3CD802676867", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDD364709", LicenseExpiryDate = new DateTime(2028, 5, 31), StatusID = 1 },
                 new Vehicle { VehicleID = 5, Name = "Toyota 4", VehicleModelID = 2, VehicleMakeID = 11, Description = " SC 2.4 GD6 RB SRX MT (Z50) 2019", DateAcquired = new DateTime(2019, 3, 29), RegistrationNumber = "HY 06 DR GP", InsuranceCoverID = 1, VIN = "AHTJB8DB104579407", ColourID = 2, FuelTypeID = 2, EngineNo = "2GDC503748", LicenseExpiryDate = new DateTime(2023, 8, 31), StatusID = 1},
                 new Vehicle { VehicleID = 6, Name = "Toyota 5", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, Raider 2.7 D, 4X4, ROPS ", DateAcquired = new DateTime(2012, 2, 24), RegistrationNumber = "BT 11 SL GP", InsuranceCoverID = 1, VIN = "AHTFR22G906054497", ColourID = 2, FuelTypeID = 1, EngineNo = "2KD5635798", LicenseExpiryDate = new DateTime(2028, 2, 28), StatusID = 1 },
-                new Vehicle { VehicleID = 7, Name = "Toyota 6", VehicleModelID = 7, VehicleMakeID = 11, Description = "DC", DateAcquired = new DateTime(2005, 6, 30), RegistrationNumber = "WZV 941 GP", InsuranceCoverID = 3, VIN = "AHTEZ39G207010469", ColourID = 7, FuelTypeID = 7, EngineNo = "1KD7486383", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 6 },
+                new Vehicle { VehicleID = 7, Name = "Toyota 6", VehicleModelID = 7, VehicleMakeID = 11, Description = "DC", DateAcquired = new DateTime(2005, 6, 30), RegistrationNumber = "WZV 941 GP", InsuranceCoverID = 3, VIN = "AHTEZ39G207010469", ColourID = 7, FuelTypeID = 1, EngineNo = "1KD7486383", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
                 new Vehicle { VehicleID = 8, Name = "Toyota 7", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, 4X4 ( With Canopy ) ", DateAcquired = new DateTime(2016, 11, 18), RegistrationNumber = "FN 57 RR GP", InsuranceCoverID = 1, VIN = "AHTKB3CD302604992", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0195958", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1},
                 new Vehicle { VehicleID = 9, Name = "Toyota 8", VehicleModelID = 2, VehicleMakeID = 11, Description = "DC, 4x4", DateAcquired = new DateTime(2016, 11, 18), RegistrationNumber = "FN 57 ST GP", InsuranceCoverID = 1, VIN = "AHTK3CD202605213", ColourID = 2, FuelTypeID = 2, EngineNo = "2GD0207661", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
                 new Vehicle { VehicleID = 10, Name = "Toyota 9",VehicleModelID = 2, VehicleMakeID = 11, Description = "2.8 GD-6DC, 4x4 Auto ( With Canopy ) ", DateAcquired = new DateTime(2017, 4, 11), RegistrationNumber = "FV 25 XR GP", InsuranceCoverID = 1, VIN = "AHTHA3CD403417011", ColourID = 2, FuelTypeID = 2, EngineNo = "1GD0252789", LicenseExpiryDate = new DateTime(2023, 10, 31), StatusID = 1 },
@@ -189,17 +192,14 @@ namespace Team34FinalAPI.Models
                 );
 
 
-
+            //PreChecklist
 
             modelBuilder.Entity<VehicleChecklist>(entity =>
             {
                 entity.HasKey(v => v.Id);
-                entity.HasAlternateKey(v => v.VehicleId);
-                entity.HasAlternateKey(v => v.VehicleMakeId);
-                entity.HasAlternateKey(v => v.VehicleModelId);
-                entity.HasAlternateKey(v => v.RegistrationNumber);
-                entity.Property(v => v.OpeningKms).IsRequired();
-                entity.Property(v => v.ClosingKms).IsRequired();
+                entity.HasIndex(v => v.VehicleId).IsUnique();  // Changed from AlternateKey to Index for FK
+                entity.HasAlternateKey(v => v.UserName);
+                entity.Property(v => v.OpeningKms);
                 entity.OwnsOne(v => v.ExteriorChecks);
                 entity.OwnsOne(v => v.InteriorChecks);
                 entity.OwnsOne(v => v.UnderTheHoodChecks);
@@ -208,17 +208,39 @@ namespace Team34FinalAPI.Models
                 entity.OwnsOne(v => v.Documentation);
             });
 
+
+            //PostChecklist
+            modelBuilder.Entity<PostChecklist>(entity =>
+            {
+                entity.HasKey(v => v.PostId);
+                entity.HasIndex(v => v.VehicleId).IsUnique();  // Changed from AlternateKey to Index for FK
+                entity.Property(v => v.UserName);
+                entity.Property<bool>(v => v.ReturnVehicle);
+                entity.Property<decimal>(v => v.OpeningKms);
+                entity.Property<decimal>(v => v.ClosingKms);
+                entity.OwnsOne(v => v.ExteriorChecks);
+                entity.OwnsOne(v => v.InteriorChecks);
+                entity.OwnsOne(v => v.UnderTheHoodChecks);
+                entity.OwnsOne(v => v.FunctionalTests);
+                entity.OwnsOne(v => v.SafetyEquipment);
+                entity.OwnsOne(v => v.Documentation);
+
+            });
+
             modelBuilder.Entity<Service>(entity =>
             {
                 entity.HasKey(f => f.ServiceID);
                 entity.HasAlternateKey(f => f.VehicleID);
-                entity.Property(f => f.VehicleMakeName).IsRequired();
-                entity.Property(f => f.VehicleModelName).IsRequired();
                 entity.Property(f => f.AdminName).IsRequired();
-                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(256);
+                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(25);
                 entity.Property(f => f.Description).IsRequired();
                 entity.Property(f => f.ServiceDate).IsRequired();
             });
+
+
+            modelBuilder.Entity<Service>().HasData(
+                new Service { ServiceID = 1, VehicleID = 1, AdminEmail = "u22492161@tuks.co.za", AdminName = "Busi", Description = " Doors not closing", ServiceDate = new DateTime(2024, 7, 25)}
+                );
 
         }
 

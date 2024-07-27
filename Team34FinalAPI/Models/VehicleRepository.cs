@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
+using Org.BouncyCastle.Crypto;
 
 namespace Team34FinalAPI.Models
 {
@@ -55,22 +56,39 @@ namespace Team34FinalAPI.Models
             _context.Remove(entity);
         }
 
-        public async Task<Vehicle[]> GetAllVehiclesAsync()
+        public async Task<IEnumerable<Vehicle>> GetAllVehiclesAsync()
         {
-            IQueryable<Vehicle> query = _context.Vehicles.
-                Include(v => v.InsuranceCover).Include(v => v.VehicleMake).Include(v => v.VehicleModel).Include(v => v.FuelType).Include(v => v.Colour); 
+            IQueryable<Vehicle> query = _context.Vehicles
+                .Include(v => v.InsuranceCover)
+                .Include(v => v.VehicleMake)
+                .Include(v => v.VehicleModel)
+                .Include(v => v.FuelType)
+                .Include(v => v.Colour)
+                .Include(v => v.Status)
+                .Include(v => v.LicenseDisk);
             return await query.ToArrayAsync();
         }
 
         public async Task<Vehicle> GetVehicleAsync(int vehicleId)
         {
-            return await _context.Vehicles.Include(v => v.InsuranceCover)
-        .Include(v => v.Colour)
-        .Include(v => v.FuelType)
-        .Include(v => v.VehicleMake)
-        .Include(v => v.VehicleModel).
-                FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
+            return await _context.Vehicles
+             .Include(v => v.InsuranceCover)
+             .Include(v => v.Colour)
+             .Include(v => v.FuelType)
+             .Include(v => v.VehicleMake)
+             .Include(v => v.VehicleModel)
+             .Include(v => v.Status)
+             .Include(v => v.LicenseDisk)
+             .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
         }
+
+        public async Task<IEnumerable<Vehicle>> GetAvailableVehicles()
+        {
+            return await _context.Vehicles
+                .Where(v => v.StatusID == 1) // Assuming StatusId = 1 means available
+                .ToListAsync();
+        }
+
 
         public async Task<InsuranceCover[]> GetInsuranceCoverAsync()
         {
@@ -102,16 +120,9 @@ namespace Team34FinalAPI.Models
             return await query.ToArrayAsync();
         }
 
-        public async Task<VehicleChecklist[]> GetAllVehicleChecklistAsync()
+        public async Task<IEnumerable<VehicleChecklist>> GetChecklistsAsync()
         {
-            IQueryable<VehicleChecklist> query = _context.VehicleChecklists;
-            return await query.ToArrayAsync();
-        }
-
-        public async Task AddChecklistAsync( VehicleChecklist checklist)
-        {
-            _context.VehicleChecklists.Add(checklist);
-            await _context.SaveChangesAsync();
+            return await _context.VehicleChecklists.ToListAsync();
         }
 
 
@@ -151,6 +162,42 @@ namespace Team34FinalAPI.Models
         public void AddVehicleModel(VehicleModel vehicleModel)
         {
             _context.Add(vehicleModel);
+        }
+
+        /*Task<Colour> GetColourAsync(int colourId);
+        Task<InsuranceCover> GetInsuranceAsync(int Id);
+        Task<VehicleFuelType> GetFuelAsync(int Id);
+        Task<VehicleMake> GetMakeAsync(int Id);
+        Task<VehicleModel> GetModelAsync(int Id); */
+
+        public async Task<Colour> GetColourAsync(int colourId)
+        {
+            return await _context.Colour
+             .FirstOrDefaultAsync(v => v.Id == colourId);
+        }
+
+        public async Task<InsuranceCover> GetInsuranceAsync(int Id)
+        {
+            return await _context.InsuranceCover
+             .FirstOrDefaultAsync(v => v.InsuranceCoverId == Id);
+        }
+
+        public async Task<VehicleFuelType> GetFuelAsync(int Id)
+        {
+            return await _context.FuelTypes
+             .FirstOrDefaultAsync(v => v.Id == Id);
+        }
+
+        public async Task<VehicleMake> GetMakeAsync(int Id)
+        {
+            return await _context.VehicleMake
+             .FirstOrDefaultAsync(v => v.VehicleMakeID == Id);
+        }
+
+        public async Task<VehicleModel> GetModelAsync(int Id)
+        {
+            return await _context.VehicleModel.Include(v => v.VehicleModelName)
+             .FirstOrDefaultAsync(v => v.VehicleModelID == Id);
         }
 
 
