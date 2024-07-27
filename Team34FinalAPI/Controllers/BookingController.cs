@@ -6,9 +6,7 @@ using Team34FinalAPI.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-
+using Microsoft.Extensions.Logging;
 using Team34FinalAPI.Services;
 
 namespace Team34FinalAPI.Controllers
@@ -23,7 +21,7 @@ namespace Team34FinalAPI.Controllers
         private readonly ILogger<BookingController> _logger;
         private readonly IEmailService _emailService;
 
-        public BookingController(IBookingRepository bookingRepository, BookingDbContext context, VehicleDbContext vehicleContext , ILogger<BookingController> logger, IEmailService emailService)
+        public BookingController(IBookingRepository bookingRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
         {
             _bookingRepository = bookingRepository;
             _context = context;
@@ -34,6 +32,7 @@ namespace Team34FinalAPI.Controllers
 
         // Get all bookings
         [HttpGet]
+        [Route("GetAllBookings")]
         public async Task<IActionResult> GetBookings()
         {
             try
@@ -44,14 +43,13 @@ namespace Team34FinalAPI.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetBookings: {ex.Message}");
+                _logger.LogError(ex, "Error in GetBookings");
                 return StatusCode(500, "Internal server error");
             }
         }
 
-
         // Get specific Booking
-        [HttpGet("{id}")]
+        [HttpGet("GetBooking{id}")]
         public async Task<ActionResult<BookingViewModel>> GetBookingById(int id)
         {
             var booking = await _bookingRepository.GetBookingByIdAsync(id);
@@ -59,17 +57,15 @@ namespace Team34FinalAPI.Controllers
             {
                 return NotFound();
             }
-            return Ok(booking);
+            return Ok(MapToViewModel(booking));
         }
 
         // Updated Post method, to include 'Send Booking Confirmation'
-        [HttpPost]
+        [HttpPost("AddBooking")]
         public async Task<ActionResult<BookingViewModel>> PostBookingAsync(BookingViewModel bookingViewModel)
         {
-
             _logger.LogInformation("Entering PostBookingAsync with data: {@BookingViewModel}", bookingViewModel);
             try
-
             {
                 // Validate vehicle
                 _logger.LogInformation("Finding vehicle: {VehicleName}", bookingViewModel.VehicleName);
@@ -101,15 +97,14 @@ namespace Team34FinalAPI.Controllers
                     }
                     projectId = project.ProjectID;
                 }
-
                 else if (!string.IsNullOrEmpty(bookingViewModel.Event))
                 {
                     eventName = bookingViewModel.Event;
                 }
                 else
                 {
-                    _logger.LogWarning("Either ProjectName or Event must be provided.");
-                    return BadRequest("Either ProjectName or Event must be provided.");
+                    _logger.LogWarning("Either ProjectNumber or Event must be provided.");
+                    return BadRequest("Either ProjectNumber or Event must be provided.");
                 }
 
                 // Create booking
@@ -152,64 +147,66 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-
-        //Testing confirmation
-        [HttpPost("test-email")]
-        public async Task<IActionResult> TestEmail()
-        {
-            try
-            {
-                await _emailService.SendEmailAsync("test@example.com", "Test Email", "This is a test email.");
-                return Ok("Email sent successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error sending test email");
-                return StatusCode(500, "Internal server error: " + ex.Message);
-            }
-        }
-
-
         // Edit booking
-        [HttpPut("{id}")]
+        [HttpPut("EditBooking")]
         public async Task<IActionResult> PutBookingAsync(int id, BookingViewModel bookingViewModel)
         {
-            // If booking Id in url does not match booking id in request body, return Bad request response 400
-            if (id != bookingViewModel.BookingID) return BadRequest();
+            // Log the request data
+            _logger.LogInformation("Entering PutBookingAsync with ID: {Id} and data: {@BookingViewModel}", id, bookingViewModel);
 
-            // Find the existing booking
+            // Validate the ID in the request body
+            if (id != bookingViewModel.BookingID)
+            {
+                _logger.LogWarning("ID in URL does not match ID in body.");
+                return BadRequest("ID in URL does not match ID in body.");
+            }
+
+            // Fetch the existing booking
             var booking = await _context.Bookings
                                         .Include(b => b.Vehicle)
                                         .Include(b => b.Project)
                                         .FirstOrDefaultAsync(b => b.BookingID == id);
-            if (booking == null) return NotFound();
+            if (booking == null)
+            {
+                _logger.LogWarning("Booking with ID {Id} not found.", id);
+                return NotFound();
+            }
 
-            // Find the associated Vehicle
-            Vehicle vehicle = null;
+            // Validate and update the vehicle if needed
             if (!string.IsNullOrEmpty(bookingViewModel.VehicleName))
             {
-                vehicle = await _context.Vehicles
-                                        .FirstOrDefaultAsync(v => v.Name == bookingViewModel.VehicleName);
-                if (vehicle == null) return BadRequest("Invalid Vehicle");
+                var vehicle = await _context.Vehicles
+                                            .FirstOrDefaultAsync(v => v.Name == bookingViewModel.VehicleName);
+                if (vehicle == null)
+                {
+                    _logger.LogWarning("Vehicle with name {VehicleName} does not exist.", bookingViewModel.VehicleName);
+                    return BadRequest("Invalid Vehicle");
+                }
+                booking.Vehicle = vehicle;
             }
 
-            // Find the associated Project
-            Project project = null;
+            // Validate and update the project if needed
             if (bookingViewModel.ProjectNumber.HasValue)
             {
-                project = await _context.Projects
-                                        .FirstOrDefaultAsync(p => p.ProjectNumber == bookingViewModel.ProjectNumber);
-                if (project == null) return BadRequest("Invalid Project");
+                var project = await _context.Projects
+                                            .FirstOrDefaultAsync(p => p.ProjectNumber == bookingViewModel.ProjectNumber.Value);
+                if (project == null)
+                {
+                    _logger.LogWarning("Project with number {ProjectNumber} does not exist.", bookingViewModel.ProjectNumber.Value);
+                    return BadRequest("Invalid Project");
+                }
+                booking.Project = project;
             }
 
-            // Update booking properties
+            // Update booking details
             booking.UserName = bookingViewModel.UserName;
             booking.Event = bookingViewModel.Event;
             booking.StartDate = bookingViewModel.StartDate;
             booking.EndDate = bookingViewModel.EndDate;
-            booking.Vehicle = vehicle ?? booking.Vehicle;
-            booking.Project = project ?? booking.Project;
-            
+
+            // Log the booking details before saving
+            _logger.LogInformation("Updated booking details: {@Booking}", booking);
+
             _context.Entry(booking).State = EntityState.Modified;
 
             try
@@ -218,42 +215,37 @@ namespace Team34FinalAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Return 404 Not found response if booking does not exist
-                if (!BookingExists(id)) return NotFound();
+                if (!BookingExists(id))
+                {
+                    _logger.LogWarning("Booking with ID {Id} not found during update.", id);
+                    return NotFound();
+                }
                 throw;
             }
 
-            // Return 204 No Content response indicating that the update was successful
             return NoContent();
         }
 
-        // Helper method to check if a booking exists by Id
+
         private bool BookingExists(int id)
         {
             return _context.Bookings.Any(e => e.BookingID == id);
         }
 
-
         // Delete Booking
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteBooking{id}")]
         public async Task<IActionResult> DeleteBookingAsync(int id)
         {
-            // Find booking to be deleted by Id
             var booking = await _bookingRepository.GetBookingByIdAsync(id);
             if (booking == null) return NotFound();
 
-
-            // Remove booking from context
             await _bookingRepository.DeleteBookingAsync(id);
 
-            // Return 204 No Content response indicating that the deletion was successful
             return NoContent();
         }
 
-
-
         // Search booking history by username
-        [HttpGet("history/{username}")]
+        [HttpGet("SearchBookingHistory/{username}")]
         public async Task<ActionResult<IEnumerable<BookingViewModel>>> SearchBookingHistoryAsync(string username)
         {
             var bookings = await _bookingRepository.GetBookingsByUserNameAsync(username);
@@ -270,11 +262,8 @@ namespace Team34FinalAPI.Controllers
                 Event = b.Event,
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
-
                 VehicleName = b.Vehicle?.Name,
-              
                 ProjectNumber = b.Project?.ProjectNumber
-
             }).ToList();
 
             return Ok(bookingViewModels);
@@ -289,7 +278,6 @@ namespace Team34FinalAPI.Controllers
                 var vehicleName = booking.Vehicle?.Name ?? "Unknown Vehicle";
                 var projectNumber = booking.Project?.ProjectNumber != null ? (int?)booking.Project.ProjectNumber : null;
 
-
                 var bookingViewModel = new BookingViewModel
                 {
                     BookingID = booking.BookingID,
@@ -301,15 +289,11 @@ namespace Team34FinalAPI.Controllers
                     ProjectNumber = projectNumber
                 };
 
-                Console.WriteLine($"BookingID: {booking.BookingID}");
-
                 bookingViewModels.Add(bookingViewModel);
             }
 
             return bookingViewModels;
         }
-
-
 
         private BookingViewModel MapToViewModel(Booking booking)
         {
@@ -320,12 +304,8 @@ namespace Team34FinalAPI.Controllers
                 Event = booking.Event,
                 StartDate = booking.StartDate,
                 EndDate = booking.EndDate,
-
-                VehicleName = booking.Vehicle?.Name ?? "Unknown Vehicle", // Handle null vehicle
-              
-      
+                VehicleName = booking.Vehicle?.Name ?? "Unknown Vehicle",
                 ProjectNumber = booking.Project?.ProjectNumber
-
             };
         }
     }
