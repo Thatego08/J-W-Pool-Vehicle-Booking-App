@@ -2,11 +2,11 @@
 {
     public class RateViewModel
     {
-        public int RateTypeID { get; set; }
+        public string RateTypeName { get; set; }
         public decimal RateValue { get; set; }
-        public int ProjectID { get; set; }
+        public int ProjectNumber { get; set; }
         public string? ApplicableTimePeriod { get; set; }
         public string? Conditions { get; set; }
-        
+
     }
 }

@@ -2,63 +2,54 @@
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.Data;
 using Team34FinalAPI.Models;
+using Team34FinalAPI.ViewModels;
 
 namespace Team34FinalAPI.Services
 {
     public class RateRepoService : IRateRepo
     {
-        private readonly AppDbContext _db;
+        private readonly AppDbContext _context;
 
-        public RateRepoService(AppDbContext db)
+        public RateRepoService(AppDbContext context)
         {
-            _db = db;
+            _context = context;
         }
 
-        public async Task<bool> CreateRate(Rate rate)
+        public async Task<IEnumerable<RateViewModel>> GetAllRatesAsync()
         {
-            try
-            {
-                await _db.Rates.AddAsync(rate);
-                await _db.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.WriteLine($"Error creating rate: {ex.Message}");
-                return false;
-            }
-        }
-
-        public async Task<Rate> GetRate(int rateId)
-        {
-            return await _db.Rates
-                .Include(r => r.Project)
+            return await _context.Rates
                 .Include(r => r.RateType)
-                .FirstOrDefaultAsync(r => r.RateID == rateId);
+                .Include(r => r.Project)
+                .Select(r => new RateViewModel
+                {
+                 
+                    RateTypeName = r.RateType.RateTypeName,
+                    RateValue = r.RateValue,
+                    ProjectNumber = r.Project.ProjectNumber,
+                    ApplicableTimePeriod = r.ApplicableTimePeriod,
+                    Conditions = r.Conditions
+                })
+                .ToListAsync();
         }
 
-        public async Task<bool> UpdateRate(Rate rate)
+        public async Task<Rate> GetRateByIdAsync(int rateId)
         {
-            try
-            {
-                _db.Rates.Update(rate);
-                await _db.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.WriteLine($"Error updating rate: {ex.Message}");
-                return false;
-            }
+            return await _context.Rates.FindAsync(rateId);
         }
 
-        public async Task<Rate> AddRateAsync(Rate rate)
+        public async Task<Rate> CreateRateAsync(Rate rate)
         {
-            _db.Rates.Add(rate);
-            await _db.SaveChangesAsync();
+            _context.Rates.Add(rate);
+            await _context.SaveChangesAsync();
             return rate;
         }
+
+        public async Task<Rate> UpdateRateAsync(Rate rate)
+        {
+            _context.Rates.Update(rate);
+            await _context.SaveChangesAsync();
+            return rate;
+        }
+
     }
 }

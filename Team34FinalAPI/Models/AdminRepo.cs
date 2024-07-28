@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 using System;
 
 namespace Team34FinalAPI.Models
 {
-    public class AdminRepo
+    public class AdminRepo : IAdminRepo
     {
         private readonly UserDbContext _userDbContext;
 
@@ -11,73 +13,37 @@ namespace Team34FinalAPI.Models
         {
             _userDbContext = userDbContext;
         }
-        public async Task<User[]> GetAllAdminAsync()
+
+        public async Task<User[]> GetAllAdminsAsync()
         {
-            // Query ApplicationUser with Admin role
             IQueryable<User> query = _userDbContext.Users
-                .OfType<User>()
                 .Where(u => _userDbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Admin").Id));
 
             return await query.ToArrayAsync();
         }
 
-        public async Task<User> GetAdmin(string userName)
+        public async Task<User> GetAdminAsync(string userName)
         {
-            // Query for a specific Admin by username
             var admin = await _userDbContext.Users
-                .OfType<User>()
-                .Where(u => u.UserName == userName && _userDbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Admin").Id))
+                .Where(a => a.UserName == userName && _userDbContext.UserRoles.Any(ur => ur.UserId == a.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Admin").Id))
                 .FirstOrDefaultAsync();
 
             return admin;
         }
 
-        public async Task<bool> AddAdmin(User user)
+        public void Add<T>(T entity) where T : class
         {
-            try
-            {
-                await _userDbContext.Users.AddAsync(user);
-                await _userDbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            _userDbContext.Add(entity);
         }
 
-        public async Task<bool> UpdateAdmin(User user)
+        public void Delete<T>(T entity) where T : class
         {
-            try
-            {
-                _userDbContext.Users.Update(user);
-                await _userDbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            _userDbContext.Remove(entity);
         }
 
-        public async Task<bool> DeleteAdmin(string userName)
+        public async Task<bool> SaveChangesAync()
         {
-            try
-            {
-                var admin = await GetAdmin(userName);
-                if (admin != null)
-                {
-                    _userDbContext.Users.Remove(admin);
-                    await _userDbContext.SaveChangesAsync();
-                    return true;
-                }
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return (await _userDbContext.SaveChangesAsync()) > 0;
         }
     }
-
-        }
+}

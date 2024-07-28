@@ -6,7 +6,7 @@ namespace Team34FinalAPI.Models
     {
         [Key]
         public int RateTypeID { get; set; }
-        public string TypeName { get; set; }
+        public string RateTypeName { get; set; }
 
         public ICollection<Rate> Rates { get; set; }
     }
