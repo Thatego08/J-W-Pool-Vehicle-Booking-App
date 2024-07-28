@@ -16,33 +16,35 @@ namespace Team34FinalAPI.Models
 
         public async Task<User[]> GetAllAdminsAsync()
         {
-            // Query ApplicationUser with Admin role
             IQueryable<User> query = _userDbContext.Users
-                .Where(u => _userDbContext.UserRoles
-                    .Any(ur => ur.UserId == u.Id &&
-                               ur.RoleId == _userDbContext.Roles
-                               .SingleOrDefault(r => r.Name == "Admin").Id));
+
+                .Where(u => _userDbContext.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Admin").Id));
+
+               
 
             return await query.ToArrayAsync();
         }
 
         public async Task<User> GetAdminAsync(string userName)
         {
-            // Query for a specific Admin by username
             var admin = await _userDbContext.Users
-                .Where(a => a.UserName == userName &&
-                            _userDbContext.UserRoles
-                            .Any(ur => ur.UserId == a.Id &&
-                                       ur.RoleId == _userDbContext.Roles
-                                       .SingleOrDefault(r => r.Name == "Admin").Id))
+
+                .Where(a => a.UserName == userName && _userDbContext.UserRoles.Any(ur => ur.UserId == a.Id && ur.RoleId == _userDbContext.Roles.SingleOrDefault(r => r.Name == "Admin").Id))
+
                 .FirstOrDefaultAsync();
 
             return admin;
         }
 
-        public void Delete(User admin)
+
+        public void Add<T>(T entity) where T : class
         {
-            _userDbContext.Remove(admin);
+            _userDbContext.Add(entity);
+        }
+
+        public void Delete<T>(T entity) where T : class
+        {
+            _userDbContext.Remove(entity);
         }
 
         public async Task<bool> SaveChangesAync()
@@ -50,14 +52,6 @@ namespace Team34FinalAPI.Models
             return (await _userDbContext.SaveChangesAsync()) > 0;
         }
 
-        Task<IEnumerable<User>> IAdminRepo.GetAllAdminsAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Update(User admin)
-        {
-            throw new NotImplementedException();
-        }
+      
     }
 }

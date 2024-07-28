@@ -24,10 +24,11 @@ namespace Team34FinalAPI.Controllers
             _userManager = userManager;
             _logger = logger;
         }
+
         [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("getAllAdmins")]
-        public async Task<IActionResult> GetAllAdmin()
+        public async Task<IActionResult> GetAllAdmins()
         {
             try
             {
@@ -39,7 +40,6 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error. Please Contact Support");
             }
         }
-
 
 
         [Authorize(Roles = "Admin")]
@@ -69,7 +69,8 @@ namespace Team34FinalAPI.Controllers
             return BadRequest("Your request is invalid");
         }
 
-        [Authorize(Roles = "Driver,Admin")]
+
+        [Authorize(Roles = "Admin")]
 
         [HttpGet]
         [Route("SearchAdmin/{userName}")]
@@ -80,15 +81,66 @@ namespace Team34FinalAPI.Controllers
                 var results = await _adminRepo.GetAdminAsync(userName);
                 if (results == null) return NotFound("Admin does not exist. Enter a valid admin");
                 return Ok(results);
+
             }
             catch (Exception)
             {
                 return StatusCode(500, "Internal server error. Please contact support");
             }
+            return BadRequest("Your request is invalid");
         }
 
+
+        [HttpPost("RegisterAdmin")]
+        public async Task<IActionResult> RegisterAdmin(AdminViewModel avm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            string username = GenerateUsername(avm.Name, avm.Surname);
+
+            var admin = new User
+            {
+                UserName = username,
+                Name = avm.Name,
+                Surname = avm.Surname,
+                Email = avm.Email,
+                PhoneNumber = avm.PhoneNumber,
+                Role = "Admin"
+            };
+
+            try
+            {
+
+                var result = await _userManager.CreateAsync(admin, avm.Password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(admin, "Admin");
+                    return Ok("User registered successfully. Your Username is: " + username);
+                }
+                else
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return BadRequest(ModelState);
+                }
+
+            }
+            catch (Exception)
+            {
+                _logger.LogError("Error registering admin: {Error}", ex.Message);
+                return BadRequest("Failed to register admin. Please retry.");
+            }
+        }
+
+
         [Authorize(Roles = "Admin")]
-        [HttpGet]
+        [HttpDelete]
+
         [Route("DeleteAdmin/{userName}")]
         public async Task<IActionResult> DeleteAdmin(string userName)
         {
@@ -106,7 +158,10 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support");
             }
             return BadRequest("Your request is invalid");
+
         }
+
+
         private string GenerateUsername(string firstName, string lastName)
         {
             string firstPart = firstName.Length >= 4 ? firstName.Substring(0, 4) : firstName;

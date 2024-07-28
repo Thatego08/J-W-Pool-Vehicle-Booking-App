@@ -94,7 +94,7 @@ builder.Logging.AddDebug();
 
 
 //Config DbContexts
-//Configure BookingDbContext
+//Configure AppDbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -173,6 +173,7 @@ builder.Services.AddAuthorization(options =>
 //Add repositories and services
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IAdminRepo, AdminRepo>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
