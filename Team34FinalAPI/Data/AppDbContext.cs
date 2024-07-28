@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 using Team34FinalAPI.Models;
 
 namespace Team34FinalAPI.Data
@@ -24,7 +25,16 @@ namespace Team34FinalAPI.Data
                 .HasOne(r => r.RateType)
                 .WithMany(rt => rt.Rates)
                 .HasForeignKey(r => r.RateTypeID);
+
+            builder.Entity<RateType>().HasData(
+               new RateType { RateTypeID = 1, RateTypeName = "half-day rate" },
+               new RateType { RateTypeID = 2, RateTypeName = "full-day rate" },
+               new RateType { RateTypeID = 3, RateTypeName = "kilometer rate" }
+           );
+
         }
+
+
     }
 }
 
