@@ -42,7 +42,6 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("UpdateAdmin/{userName}")]
@@ -82,12 +81,15 @@ namespace Team34FinalAPI.Controllers
                 var results = await _adminRepo.GetAdminAsync(userName);
                 if (results == null) return NotFound("Admin does not exist. Enter a valid admin");
                 return Ok(results);
+
             }
             catch (Exception)
             {
                 return StatusCode(500, "Internal server error. Please contact support");
             }
+            return BadRequest("Your request is invalid");
         }
+
 
         [HttpPost("RegisterAdmin")]
         public async Task<IActionResult> RegisterAdmin(AdminViewModel avm)
@@ -111,6 +113,7 @@ namespace Team34FinalAPI.Controllers
 
             try
             {
+
                 var result = await _userManager.CreateAsync(admin, avm.Password);
                 if (result.Succeeded)
                 {
@@ -125,8 +128,9 @@ namespace Team34FinalAPI.Controllers
                     }
                     return BadRequest(ModelState);
                 }
+
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _logger.LogError("Error registering admin: {Error}", ex.Message);
                 return BadRequest("Failed to register admin. Please retry.");
@@ -136,6 +140,7 @@ namespace Team34FinalAPI.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpDelete]
+
         [Route("DeleteAdmin/{userName}")]
         public async Task<IActionResult> DeleteAdmin(string userName)
         {
@@ -153,6 +158,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support");
             }
             return BadRequest("Your request is invalid");
+
         }
 
 
