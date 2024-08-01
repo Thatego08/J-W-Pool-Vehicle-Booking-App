@@ -630,27 +630,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error: Unable to retrieve insurance covers.");
             }
         }
-
-        [HttpPost("AddInsuranceCover")]
-        public async Task<IActionResult> AddInsuranceCover([FromBody] InsuranceCover insurance)
-        {
-            try
-            {
-                if (insurance == null)
-                {
-                    return BadRequest("Insurance cover is required.");
-                }
-
-                _vehicleRepository.AddInsuranceCover(insurance);
-                await _vehicleRepository.SaveChangesAsync();
-                return CreatedAtAction(nameof(AddInsuranceCover), insurance);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception (ex)
-                return StatusCode(500, "Internal Server Error: Unable to add insurance cover.");
-            }
-        }
+       
 
         [HttpGet("GetInsurance/{insuranceId}")]
         public async Task<IActionResult> GetInsuranceAsync(int insuranceId)
@@ -669,6 +649,28 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error: Unable to retrieve the insurance cover.");
             }
         }
+
+        [HttpPost("AddInsuranceCover")]
+        public async Task<IActionResult> AddInsuranceCover([FromBody] InsuranceCover insurance)
+        {
+            try
+            {
+                if (insurance == null)
+                {
+                    return BadRequest("Insurance Cover is required.");
+                }
+
+                _vehicleRepository.AddInsuranceCover(insurance);
+                await _vehicleRepository.SaveChangesAsync();
+                return CreatedAtAction(nameof(AddInsuranceCover), insurance);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (ex)
+                return StatusCode(500, "Internal Server Error: Unable to add colour.");
+            }
+        }
+
 
         [HttpPut]
         [Route("EditInsurance/{insuranceId}")] // Corrected route template
@@ -693,7 +695,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error");
             }
             return BadRequest("Your request is invalid");
-        }
+        } 
 
         [HttpDelete("DeleteInsurance/{insuranceId}")]
         public async Task<IActionResult> DeleteInsurance(int insuranceId)
@@ -714,7 +716,7 @@ namespace Team34FinalAPI.Controllers
             catch (Exception)
             {
                 // Log the exception (ex)
-                return StatusCode(500, "Internal Server Error: Unable to delete theinsurance cover.");
+                return StatusCode(500, "Internal Server Error: Unable to delete the  insurance cover.");
             }
         }
 
