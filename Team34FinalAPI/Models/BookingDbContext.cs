@@ -45,6 +45,17 @@ namespace Team34FinalAPI.Models
                 new InspectionList { ChecklistID = 5, Item = "Mirrors", IsCompleted = false },
                 new InspectionList { ChecklistID = 6, Item = "Lights", IsCompleted = false }
             );
+
+            // Seed data for Projects
+            modelBuilder.Entity<Project>().HasData(
+                new Project { ProjectID = 1, ProjectNumber = 120, JobNo = 1000, TaskCode = 2000, Description = "None", ActivityCode = 3000 },
+                new Project { ProjectID = 2, ProjectNumber = 121, JobNo = 1001, TaskCode = 2001, Description = "Mpumalanga Star Project", ActivityCode = 3001 },
+                new Project { ProjectID = 3, ProjectNumber = 122, JobNo = 1002, TaskCode = 2002, Description = "Gauteng Star Project", ActivityCode = 3002 },
+                new Project { ProjectID = 4, ProjectNumber = 123, JobNo = 1003, TaskCode = 2003, Description = "Limpopo Star Project", ActivityCode = 3003 },
+                new Project { ProjectID = 5, ProjectNumber = 124, JobNo = 1004, TaskCode = 2004, Description = "Western Cape Star Project", ActivityCode = 3004 },
+                new Project { ProjectID = 6, ProjectNumber = 125, JobNo = 1005, TaskCode = 2005, Description = "Free State Star Project", ActivityCode = 3005 }
+            );
         }
+
     }
 }
