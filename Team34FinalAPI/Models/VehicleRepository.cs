@@ -86,6 +86,13 @@ namespace Team34FinalAPI.Models
         {
             return await _context.Vehicles
                 .Where(v => v.StatusID == 1) // Assuming StatusId = 1 means available
+                .Include(v => v.InsuranceCover)
+                .Include(v => v.VehicleMake)
+                .Include(v => v.VehicleModel)
+                .Include(v => v.FuelType)
+                .Include(v => v.Colour)
+                .Include(v => v.Status)
+                .Include(v => v.LicenseDisk)
                 .ToListAsync();
         }
 

@@ -56,11 +56,15 @@ namespace Team34FinalAPI.Models
                 new Status { Id = 3, Name = " In For Service " }
                 );
 
+            
+
             modelBuilder.Entity<InsuranceCover>().HasData(
 
            new InsuranceCover { InsuranceCoverId = 1, InsuranceCoverName = " By Seun" },
            new InsuranceCover { InsuranceCoverId = 2, InsuranceCoverName = "Comprehensive " },
            new InsuranceCover { InsuranceCoverId = 3, InsuranceCoverName = " Third-party " });
+
+           
 
 
             modelBuilder.Entity<LicenseDisk>().HasData(
