@@ -46,7 +46,7 @@ namespace Team34FinalAPI.Models
         public VehicleMake VehicleMake { get; set; }
         public  VehicleModel VehicleModel { get; set; }
 
-        public Status Status { get; set; }
+        public Status? Status { get; set; }
 
     }
 }

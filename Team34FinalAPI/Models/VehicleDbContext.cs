@@ -49,14 +49,16 @@ namespace Team34FinalAPI.Models
                 new VehicleFuelType { Id = 2, FuelName = "Diesel" }
                 );
 
-    
-            modelBuilder.Entity<Status>().HasData(
-                new Status { Id = 1, Name = "Available " },
-                new Status { Id = 2, Name = " Booked " },
-                new Status { Id = 3, Name = " In For Service " }
-                );
 
-            
+            modelBuilder.Entity<Status>().HasData(
+       new Status { Id = 1, Name = "Available" },
+       new Status { Id = 2, Name = "Booked" },
+       new Status { Id = 3, Name = "In For Service" },
+       new Status { Id = 4, Name = "Cancelled" },
+       new Status { Id = 5, Name = "Active" },
+       new Status { Id = 6, Name = "Complete" },
+       new Status { Id = 7, Name = "In-Progress" }
+   );
 
             modelBuilder.Entity<InsuranceCover>().HasData(
 

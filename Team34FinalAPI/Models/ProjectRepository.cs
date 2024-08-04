@@ -39,6 +39,11 @@ namespace Team34FinalAPI.Models
             _logger.LogInformation("Changes saved to database.");
         }
 
+        public async Task<Project> GetProjectByNumberAsync(int projectNumber)
+        {
+            return await _context.Projects.SingleOrDefaultAsync(p => p.ProjectNumber == projectNumber);
+        }
+
         public async Task UpdateProjectAsync(Project project)
         {
             if (project == null) throw new ArgumentNullException(nameof(project));

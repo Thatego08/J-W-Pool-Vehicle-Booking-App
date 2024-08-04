@@ -21,7 +21,12 @@ namespace Team34FinalAPI.Models
         public int? ProjectId { get; set; }
         
         public Project? Project { get; set; }
+
+        public string Type { get; set; }
         public bool ReminderSent { get; set; } // New property
-       
+
+        public int? StatusId { get; set; }
+        public Status? Status { get; set; }
+
     }
 }

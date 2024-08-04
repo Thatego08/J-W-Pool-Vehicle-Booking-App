@@ -14,5 +14,8 @@
         Task<Project> GetProjectAsync(int ProjectID);
 
         Task UpdateProjectAsync(Project project);
+
+
+        Task<Project> GetProjectByNumberAsync(int projectNumber);
     }
 }

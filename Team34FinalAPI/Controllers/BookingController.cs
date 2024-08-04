@@ -16,14 +16,18 @@ namespace Team34FinalAPI.Controllers
     public class BookingController : ControllerBase
     {
         private readonly IBookingRepository _bookingRepository;
+        private readonly IProjectRepository _projectRepository;
+        private readonly IVehicleRepository _vehicleRepository;
         private readonly BookingDbContext _context;
         private readonly VehicleDbContext _vehicleContext;
         private readonly ILogger<BookingController> _logger;
         private readonly IEmailService _emailService;
 
-        public BookingController(IBookingRepository bookingRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
+        public BookingController(IBookingRepository bookingRepository, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
         {
             _bookingRepository = bookingRepository;
+            _projectRepository = projectRepository;
+            _vehicleRepository = vehicleRepository;
             _context = context;
             _vehicleContext = vehicleContext;
             _logger = logger;
@@ -61,10 +65,100 @@ namespace Team34FinalAPI.Controllers
         }
 
         // Updated Post method, to include 'Send Booking Confirmation'
-        [HttpPost("AddBooking")]
+        [HttpPost]
+        [Route("AddBooking")]
         public async Task<ActionResult<BookingViewModel>> PostBookingAsync(BookingViewModel bookingViewModel)
         {
+            //Add Booking Adjustments
+
             _logger.LogInformation("Entering PostBookingAsync with data: {@BookingViewModel}", bookingViewModel);
+            try
+            {
+                // Validate vehicle
+                _logger.LogInformation("Finding vehicle: {VehicleName}", bookingViewModel.VehicleName);
+                var vehicle = await _vehicleRepository.GetVehicleByNameAsync(bookingViewModel.VehicleName);
+                if (vehicle == null)
+                {
+                    _logger.LogWarning("Vehicle with name {VehicleName} does not exist.", bookingViewModel.VehicleName);
+                    return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} does not exist.");
+                }
+
+                if (vehicle.StatusID == 2 || vehicle.StatusID == 3)
+                {
+                    _logger.LogWarning("Vehicle with name {VehicleName} is not available for booking.", bookingViewModel.VehicleName);
+                    return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} is not available for booking.");
+                }
+
+                // Validate project or event
+                int? projectId = null;
+                string? eventName = null;
+
+                if (bookingViewModel.ProjectNumber.HasValue)
+                {
+                    _logger.LogInformation("Finding project: {ProjectNumber}", bookingViewModel.ProjectNumber.Value);
+                    var project = await _projectRepository.GetProjectByNumberAsync(bookingViewModel.ProjectNumber.Value);
+                    if (project == null)
+                    {
+                        _logger.LogWarning("Project with number {ProjectNumber} does not exist.", bookingViewModel.ProjectNumber.Value);
+                        return BadRequest($"Project with number {bookingViewModel.ProjectNumber.Value} does not exist.");
+                    }
+                    projectId = project.ProjectID;
+                }
+                else if (!string.IsNullOrEmpty(bookingViewModel.Event))
+                {
+                    eventName = bookingViewModel.Event;
+                }
+                else
+                {
+                    _logger.LogWarning("Either ProjectNumber or Event must be provided.");
+                    return BadRequest("Either ProjectNumber or Event must be provided.");
+                }
+
+                // Create booking
+                var booking = new Booking
+                {
+                    UserName = bookingViewModel.UserName,
+                    Event = bookingViewModel.Event,
+                    Type = bookingViewModel.Type,
+                    StartDate = bookingViewModel.StartDate,
+                    EndDate = bookingViewModel.EndDate,
+                    VehicleId = vehicle.VehicleID,
+                    ProjectId = projectId,
+                    StatusId = 2
+                };
+
+                _logger.LogInformation("Booking details before adding: {@Booking}", booking);
+
+                vehicle.StatusID = 2;
+
+                _logger.LogInformation("Adding booking to the repository.");
+                await _bookingRepository.AddBookingAsync(booking);
+
+                _logger.LogInformation("Updating vehicle status.");
+                await _vehicleRepository.UpdateVehicleAsync(vehicle);
+
+                bookingViewModel.BookingID = booking.BookingID;
+
+                var message = $"Dear {booking.UserName},<br/><br/>Your booking has been confirmed for {booking.StartDate} with the vehicle {vehicle.Name}.<br/><br/>Thank you,<br/>Jones and Wagener International";
+
+                _logger.LogInformation("Sending confirmation email to {UserName}", booking.UserName);
+                await _emailService.SendEmailAsync(booking.UserName, "Booking Confirmation", message);
+
+                _logger.LogInformation("Booking created with ID {BookingID}", booking.BookingID);
+                return CreatedAtAction(nameof(GetBookingById), new { id = booking.BookingID }, bookingViewModel);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "DbUpdateException in PostBookingAsync: {InnerExceptionMessage}", ex.InnerException?.Message ?? ex.Message);
+                return StatusCode(500, $"Internal server error: {ex.InnerException?.Message ?? ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception in PostBookingAsync");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
+            /*_logger.LogInformation("Entering PostBookingAsync with data: {@BookingViewModel}", bookingViewModel);
             try
             {
                 // Validate vehicle
@@ -143,7 +237,7 @@ namespace Team34FinalAPI.Controllers
             {
                 _logger.LogError(ex, "Error in PostBookingAsync");
                 return StatusCode(500, "Internal server error: " + ex.Message);
-            }
+            }*/
         }
 
 

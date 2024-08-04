@@ -65,7 +65,40 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        //Add Vehicle Adjustment
         [HttpPost("AddVehicle")]
+        public async Task<IActionResult> AddVehicle([FromBody] VehicleViewModel vehicleViewModel)
+        {
+            try
+            {
+                var vehicle = new Vehicle
+                {
+                    Name = vehicleViewModel.Name,
+                    Description = vehicleViewModel.Description,
+                    VehicleMakeID = vehicleViewModel.VehicleMakeID,
+                    VehicleModelID = vehicleViewModel.VehicleModelID,
+                    DateAcquired = vehicleViewModel.DateAcquired,
+                    LicenseExpiryDate = vehicleViewModel.LicenseExpiryDate,
+                    RegistrationNumber = vehicleViewModel.RegistrationNumber,
+                    InsuranceCoverID = vehicleViewModel.InsuranceCoverID,
+                    VIN = vehicleViewModel.VIN,
+                    EngineNo = vehicleViewModel.EngineNo,
+                    ColourID = vehicleViewModel.ColourID,
+                    FuelTypeID = vehicleViewModel.FuelTypeID,
+                    StatusID = vehicleViewModel.StatusID
+                };
+
+                await _vehicleRepository.AddVehicleAsync(vehicle);
+                return Ok("Vehicle added successfully!");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error adding vehicle: {ex.Message}");
+            }
+        }
+
+
+        /*[HttpPost("AddVehicle")]
         public async Task<IActionResult> AddVehicle([FromBody] VehicleViewModel vehicleViewModel)
         {
             try
@@ -79,40 +112,8 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
-        /*
-        [HttpPost]
-        [Route("AddVehicle")]
-        public async Task<IActionResult> AddVehicle(VehicleViewModel vvm)
-        {
-            var vehicle = new Vehicle
-            {
-                Name = vvm.Name,
-                Description = vvm.Description,
-                DateAcquired = vvm.DateAcquired,
-                RegistrationNumber = vvm.RegistrationNumber,
-                VehicleMakeID = vvm.VehicleMakeID,
-                VehicleModelID = vvm.VehicleModelID,
-                ColourID = vvm.ColourID,
-                EngineNo = vvm.EngineNo,
-                FuelTypeID = vvm.FuelTypeID,
-                InsuranceCoverID = vvm.InsuranceCoverID,
-                LicenseExpiryDate = vvm.LicenseExpiryDate,
-                StatusID = vvm.StatusID,
-                VIN = vvm.VIN
-            };
-
-            try
-            {
-                _vehicleRepository.Add(vehicle);
-                await _vehicleRepository.SaveChangesAsync();
-            }
-            catch (Exception)
-            {
-                return BadRequest("Invalid transaction");
-            }
-
-            return Ok(vehicle);
-        } */
+        */
+       
 
 
         [HttpPut]

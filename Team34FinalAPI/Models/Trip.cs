@@ -19,5 +19,7 @@ namespace Team34FinalAPI.Models
         public ICollection<TripMedia> TripMedia { get; set; }
         public string UserName { get; set; }
         public ICollection<RefuelVehicle> RefuelVehicles { get; set; }
+
+        public bool HasAccidents { get; internal set; }
     }
 }

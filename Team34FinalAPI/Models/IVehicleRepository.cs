@@ -31,6 +31,12 @@ namespace Team34FinalAPI.Models
         Task<VehicleFuelType> GetFuelAsync(int Id);
         Task<VehicleMake> GetMakeAsync(int Id);
         Task<VehicleModel> GetModelAsync(int Id);
+        Task AddVehicleAsync(Vehicle vehicle);
 
+        //Additions
+
+
+        Task<Vehicle> GetVehicleByNameAsync(string name);
+        Task UpdateVehicleAsync(Vehicle vehicle);
     }
 }
