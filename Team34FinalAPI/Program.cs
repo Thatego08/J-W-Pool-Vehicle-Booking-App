@@ -185,6 +185,7 @@ builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IRateRepo, RateRepoService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ReportService, ReportService>();
 
 // Configure MailJet settings
 builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));

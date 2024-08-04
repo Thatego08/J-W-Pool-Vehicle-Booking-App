@@ -16,7 +16,12 @@ namespace Team34FinalAPI.Models
         {
             _context = context;
         }
-        
+
+        public async Task AddVehicleAsync(Vehicle vehicle)
+        {
+            await _context.Vehicles.AddAsync(vehicle);
+            await _context.SaveChangesAsync();
+        }
 
         public async Task AddVehicleAsync(VehicleViewModel vvm)
         {
@@ -54,6 +59,18 @@ namespace Team34FinalAPI.Models
         public void Delete<T>(T entity) where T : class
         {
             _context.Remove(entity);
+        }
+
+        //Additions
+        public async Task<Vehicle> GetVehicleByNameAsync(string name)
+        {
+            return await _context.Vehicles.SingleOrDefaultAsync(v => v.Name == name);
+        }
+
+        public async Task UpdateVehicleAsync(Vehicle vehicle)
+        {
+            _context.Vehicles.Update(vehicle);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Vehicle>> GetAllVehiclesAsync()

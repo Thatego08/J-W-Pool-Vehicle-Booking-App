@@ -130,7 +130,7 @@ namespace Team34FinalAPI.Controllers
                 }
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _logger.LogError("Error registering admin: {Error}", ex.Message);
                 return BadRequest("Failed to register admin. Please retry.");

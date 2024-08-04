@@ -27,34 +27,38 @@ public class ProjectController : ControllerBase
     [Route("AddProject")]
     public async Task<IActionResult> AddProject([FromBody] ProjectViewModel pvm)
     {
-        if (pvm == null)
-        {
-            return BadRequest("Project model is null.");
-        }
+            try
+            {
+                if (pvm == null)
+                {
+                    _logger.LogWarning("ProjectViewModel is null.");
+                    return BadRequest("Project model is null.");
+                }
 
-        var project = new Project
-        {
-            ProjectID = pvm.ProjectID,
-            ProjectNumber = pvm.ProjectNumber,
-            JobNo = pvm.JobNo,
-            Description = pvm.Description,
-            TaskCode = pvm.TaskCode,
-            ActivityCode = pvm.ActivityCode
+                var project = new Project
+                {
+                    ProjectNumber = pvm.ProjectNumber,
+                    JobNo = pvm.JobNo,
+                    Description = pvm.Description,
+                    TaskCode = pvm.TaskCode,
+                    ActivityCode = pvm.ActivityCode,
+                    StatusId = pvm.StatusId
+                };
 
-        };
+                _logger.LogInformation("Adding project: {@Project}", project);
 
-        try
-        {
-            await _projectRepository.AddProjectAsync(project);
+                await _projectRepository.AddProjectAsync(project);
                 await _projectRepository.SaveChangesAsync();
-            return Ok("Project added successfully.");
+
+                _logger.LogInformation("Project added successfully with ID: {ProjectID}", project.ProjectID);
+                return Ok("Project added successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding project");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while adding the project.");
-            return StatusCode(500, "Internal server error, contact support.");
-        }
-    }
 
     [HttpPut]
     [Route("EditProject/{ProjectID}")]
