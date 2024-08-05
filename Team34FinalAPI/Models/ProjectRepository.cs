@@ -55,6 +55,10 @@ namespace Team34FinalAPI.Models
         {
             return await _context.Projects.ToArrayAsync();
         }
+        public async Task<IEnumerable<Project>> GetProjectsAsync()
+        {
+            return await _context.Projects.ToListAsync();
+        }
 
         public async Task<Project> GetProjectAsync(int projectID)
         {
