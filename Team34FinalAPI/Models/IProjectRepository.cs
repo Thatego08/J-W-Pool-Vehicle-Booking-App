@@ -13,6 +13,7 @@
         Task<Project[]> GetAllProjectsAsync();
         Task<Project> GetProjectAsync(int ProjectID);
 
+        Task<IEnumerable<Project>> GetProjectsAsync();
         Task UpdateProjectAsync(Project project);
 
 

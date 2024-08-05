@@ -94,7 +94,25 @@ public class ProjectController : ControllerBase
         }
     }
 
-    [HttpGet]
+        [HttpGet]
+        [Route("projectNumbers")]
+        public async Task<ActionResult<IEnumerable<int>>> GetProjectNumbers()
+        {
+            try
+            {
+                var projects = await _projectRepository.GetProjectsAsync();
+                var projectNumbers = projects.Select(p => p.ProjectNumber).ToList();
+                return Ok(projectNumbers);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        [HttpGet]
     [Route("GetAllProjects")]
     public async Task<IActionResult> GetAllProjects()
     {
