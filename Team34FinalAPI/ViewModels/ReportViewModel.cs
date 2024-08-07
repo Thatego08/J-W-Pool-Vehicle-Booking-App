@@ -35,5 +35,11 @@
             public string Status { get; set; }
             public int Count { get; set; }
         }
+
+        public class VehicleMakeReportViewModel
+        {
+            public string Make { get; set; }
+            public int Count { get; set; }
+        }
     }
 }

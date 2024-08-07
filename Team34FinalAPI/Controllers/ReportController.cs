@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using static Team34FinalAPI.Report_DTO_s.ReportData;
+﻿using Microsoft.AspNetCore.Mvc;
 using Team34FinalAPI.Services;
-using Microsoft.Extensions.Logging;
+using static Team34FinalAPI.Report_DTO_s.ReportData;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -26,30 +24,38 @@ namespace Team34FinalAPI.Controllers
             return Ok(report);
         }
 
-      /*  [HttpGet]
-        [Route("booking-types")]
-        public async Task<ActionResult<List<BookingTypeReportDto>>> GetBookingTypeReport()
+        [HttpGet]
+        [Route("vehicle-make")]
+        public async Task<IActionResult> GetVehicleMakeReport()
         {
-            var report = await _reportService.GetBookingTypeReport();
+            var report = await _reportService.GetVehicleMakeReportAsync();
             return Ok(report);
         }
-*/
-       /* [HttpGet]
-        [Route("trips")]
-        public async Task<ActionResult<TripReportDto>> GetTripReport()
-        {
-            var report = await _reportService.GetTripReport();
-            return Ok(report);
-        }
-*/
-       /* [HttpGet]
 
-        [Route("booking-status")]
-        public async Task<ActionResult<List<BookingStatusReportDto>>> GetBookingStatusReport()
-        {
-            var report = await _reportService.GetBookingStatusReport();
-            return Ok(report);
-        }*/
+        /*  [HttpGet]
+          [Route("booking-types")]
+          public async Task<ActionResult<List<BookingTypeReportDto>>> GetBookingTypeReport()
+          {
+              var report = await _reportService.GetBookingTypeReport();
+              return Ok(report);
+          }
+  */
+        /* [HttpGet]
+         [Route("trips")]
+         public async Task<ActionResult<TripReportDto>> GetTripReport()
+         {
+             var report = await _reportService.GetTripReport();
+             return Ok(report);
+         }
+ */
+        /* [HttpGet]
+
+         [Route("booking-status")]
+         public async Task<ActionResult<List<BookingStatusReportDto>>> GetBookingStatusReport()
+         {
+             var report = await _reportService.GetBookingStatusReport();
+             return Ok(report);
+         }*/
 
         [HttpGet]
 

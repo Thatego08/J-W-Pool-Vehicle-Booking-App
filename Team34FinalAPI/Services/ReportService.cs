@@ -14,6 +14,8 @@ namespace Team34FinalAPI.Services
         Task<IEnumerable<ReportViewModel.TripReportViewModel>> GetTripReportAsync();
         Task<IEnumerable<ReportViewModel.BookingStatusReportViewModel>> GetBookingStatusReportAsync();
         Task<IEnumerable<ReportViewModel.ProjectStatusReportViewModel>> GetProjectStatusReportAsync();
+
+        Task<IEnumerable<ReportViewModel.VehicleMakeReportViewModel>> GetVehicleMakeReportAsync();
     }
     public class ReportService:IReportService
     {
@@ -99,6 +101,19 @@ namespace Team34FinalAPI.Services
                     Count = g.Count()
                 }).ToListAsync();
         }
+        public async Task<IEnumerable<VehicleMakeReportViewModel>> GetVehicleMakeReportAsync()
+        {
+            return await _vehicleDbContext.Vehicles
+                .GroupBy(v => v.VehicleMake.Name)
+                .Select(g => new VehicleMakeReportViewModel
+                {
+                    Make = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+        }
+
+
 
         public async Task<List<BookingTypeReportDto>> GetBookingTypeReport()
         {
