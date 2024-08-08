@@ -23,6 +23,12 @@
             public int Count { get; set; }
             public int Accidents { get; set; }
         }
+        public class FuelExpenditureReportViewModel
+        {
+            public string Vehicle { get; set; }
+            public int TripCount { get; set; }
+            public decimal FuelCost { get; set; }
+        }
 
         public class BookingStatusReportViewModel
         {
@@ -35,7 +41,7 @@
             public string Status { get; set; }
             public int Count { get; set; }
         }
-
+        
         public class VehicleMakeReportViewModel
         {
             public string Make { get; set; }
