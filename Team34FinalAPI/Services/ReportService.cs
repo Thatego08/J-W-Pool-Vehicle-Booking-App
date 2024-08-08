@@ -16,6 +16,8 @@ namespace Team34FinalAPI.Services
         Task<IEnumerable<ReportViewModel.ProjectStatusReportViewModel>> GetProjectStatusReportAsync();
 
         Task<IEnumerable<ReportViewModel.VehicleMakeReportViewModel>> GetVehicleMakeReportAsync();
+        Task<IEnumerable<FuelExpenditureReport>> GetFuelExpenditureReportAsync();
+
     }
     public class ReportService:IReportService
     {
@@ -137,6 +139,19 @@ namespace Team34FinalAPI.Services
                 TripsWithAccidents = tripsWithAccidents
             };
         }
+        public async Task<IEnumerable<FuelExpenditureReport>> GetFuelExpenditureReportAsync()
+        {
+            return await _tripDbContext.Trips
+                .GroupBy(t => t.Name)
+                .Select(g => new FuelExpenditureReport
+                {
+                    Vehicle = g.Key,
+                    TripCount = g.Count(),
+                    FuelCost = g.Sum(t => t.FuelAmount)
+                })
+                .ToListAsync();
+        }
+
 
         public async Task<List<BookingStatusReportDto>> GetBookingStatusReport()
         {
@@ -160,6 +175,9 @@ namespace Team34FinalAPI.Services
                     Count = g.Count()
                 }).ToListAsync();
         }
+
+       
+
     }
 
 }

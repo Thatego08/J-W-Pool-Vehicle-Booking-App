@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Team34FinalAPI.Services;
+using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.Report_DTO_s.ReportData;
 
 namespace Team34FinalAPI.Controllers
@@ -68,6 +69,23 @@ namespace Team34FinalAPI.Controllers
 
 
         //Additions
+            
+        [HttpGet]
+        [Route("fuel-expenditure")]
+        public async Task<ActionResult<IEnumerable<ReportViewModel.FuelExpenditureReportViewModel>>> GetFuelExpenditureReport()
+        {
+            try
+            {
+
+                var report = await _reportService.GetFuelExpenditureReportAsync();
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching fuel expenditure report.");
+                return StatusCode(500, "Internal server error.");
+            }
+        }
 
         [HttpGet("VehicleStatusReport")]
         public async Task<IActionResult> GetVehicleStatusReport()
