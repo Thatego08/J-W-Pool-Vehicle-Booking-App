@@ -42,7 +42,7 @@ public class ProjectController : ControllerBase
                     Description = pvm.Description,
                     TaskCode = pvm.TaskCode,
                     ActivityCode = pvm.ActivityCode,
-                    StatusId = pvm.StatusId
+                    StatusId = 1 //Default to availabe status
                 };
 
                 _logger.LogInformation("Adding project: {@Project}", project);
