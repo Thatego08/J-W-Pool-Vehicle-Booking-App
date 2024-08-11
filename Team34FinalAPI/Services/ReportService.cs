@@ -17,6 +17,9 @@ namespace Team34FinalAPI.Services
 
         Task<IEnumerable<ReportViewModel.VehicleMakeReportViewModel>> GetVehicleMakeReportAsync();
         Task<IEnumerable<FuelExpenditureReport>> GetFuelExpenditureReportAsync();
+        Task<IEnumerable<BookingStatusReportViewModel>> GetFilteredBookingStatusReportAsync(string bookingType, DateTime? startDate, DateTime? endDate);
+        Task<List<ProjectReportDto>> GetFilteredProjectsAsync(string projectStatus);
+
 
     }
     public class ReportService:IReportService
@@ -176,7 +179,64 @@ namespace Team34FinalAPI.Services
                 }).ToListAsync();
         }
 
-       
+        public async Task<IEnumerable<BookingStatusReportViewModel>> GetFilteredBookingStatusReportAsync(string bookingType, DateTime? startDate, DateTime? endDate)
+        {
+            var query = _bookingDbContext.Bookings.AsQueryable();
+
+            // Apply filters
+            if (!string.IsNullOrEmpty(bookingType))
+            {
+                query = query.Where(b => b.Type == bookingType);
+            }
+
+            
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(b => b.StartDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(b => b.EndDate <= endDate.Value);
+            }
+
+            // Group and select the report data
+            return await query
+                .GroupBy(b => b.Status.Name)
+                .Select(g => new BookingStatusReportViewModel
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<ProjectReportDto>> GetFilteredProjectsAsync( string projectStatus)
+        {
+            // Start with the base query
+            var query = _bookingDbContext.Projects.AsQueryable();
+
+            // Apply filters based on provided parameters
+           
+
+            if (!string.IsNullOrEmpty(projectStatus))
+            {
+                query = query.Where(p => p.Status.Name == projectStatus);
+            }
+
+
+            // Group the results by project status and project the results into a DTO
+            return await query
+                .GroupBy(p => p.Status)
+                .Select(g => new ProjectReportDto
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+        }
+
 
     }
 

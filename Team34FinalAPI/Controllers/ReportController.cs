@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Team34FinalAPI.Services;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.Report_DTO_s.ReportData;
+using static Team34FinalAPI.ViewModels.ReportViewModel;
 
 namespace Team34FinalAPI.Controllers
 {
+
+    [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class ReportsController : ControllerBase
@@ -33,30 +37,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(report);
         }
 
-        /*  [HttpGet]
-          [Route("booking-types")]
-          public async Task<ActionResult<List<BookingTypeReportDto>>> GetBookingTypeReport()
-          {
-              var report = await _reportService.GetBookingTypeReport();
-              return Ok(report);
-          }
-  */
-        /* [HttpGet]
-         [Route("trips")]
-         public async Task<ActionResult<TripReportDto>> GetTripReport()
-         {
-             var report = await _reportService.GetTripReport();
-             return Ok(report);
-         }
- */
-        /* [HttpGet]
-
-         [Route("booking-status")]
-         public async Task<ActionResult<List<BookingStatusReportDto>>> GetBookingStatusReport()
-         {
-             var report = await _reportService.GetBookingStatusReport();
-             return Ok(report);
-         }*/
+      
 
         [HttpGet]
 
@@ -67,9 +48,24 @@ namespace Team34FinalAPI.Controllers
             return Ok(report);
         }
 
+        [HttpGet("filtered-booking-status")]
+        public async Task<ActionResult<IEnumerable<BookingStatusReportViewModel>>> GetFilteredBookingStatusReport([FromQuery] string bookingType, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var report = await _reportService.GetFilteredBookingStatusReportAsync(bookingType, startDate, endDate);
+            return Ok(report);
+        }
+
+        [HttpGet("filtered-projects")]
+        public async Task<ActionResult<IEnumerable<ProjectReportDto>>> GetFilteredProjects([FromQuery] string projectStatus)
+        {
+            var report = await _reportService.GetFilteredProjectsAsync( projectStatus);
+            return Ok(report);
+        }
+
+
 
         //Additions
-            
+
         [HttpGet]
         [Route("fuel-expenditure")]
         public async Task<ActionResult<IEnumerable<ReportViewModel.FuelExpenditureReportViewModel>>> GetFuelExpenditureReport()
