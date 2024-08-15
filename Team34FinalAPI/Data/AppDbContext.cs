@@ -13,6 +13,7 @@ namespace Team34FinalAPI.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            
             base.OnModelCreating(builder);
 
             // Configure relationships
@@ -27,16 +28,17 @@ namespace Team34FinalAPI.Data
                 .HasForeignKey(r => r.RateTypeID);
 
             builder.Entity<RateType>().HasData(
-               new RateType { RateTypeID = 1, RateTypeName = "half-day rate" },
-               new RateType { RateTypeID = 2, RateTypeName = "full-day rate" },
-               new RateType { RateTypeID = 3, RateTypeName = "kilometer rate" }
+               new RateType { RateTypeID = 1, RateTypeName = "Half-Day Rate" },
+               new RateType { RateTypeID = 2, RateTypeName = "Full-Day Rate" },
+               new RateType { RateTypeID = 3, RateTypeName = "Travel Kilometer Rate" },
+               new RateType { RateTypeID = 4, RateTypeName = "Special Rate" }
 
                );
 
                  builder.Entity<Rate>().HasData(
-               new Rate { RateID = 1, ProjectID = 1, RateTypeID = 1, RateValue = 100, ApplicableTimePeriod = "6am-12pm" },
-               new Rate { RateID = 2, ProjectID = 2, RateTypeID = 2, RateValue = 200, ApplicableTimePeriod = "12pm-6pm" },
-               new Rate { RateID = 3, ProjectID = 3, RateTypeID = 2, RateValue = 200, ApplicableTimePeriod = null }
+               new Rate { RateID = 1, ProjectID = 1, RateTypeID = 1, RateValue = 100, ApplicableTimePeriod = "7am-5pm", Conditions="Standard" },
+               new Rate { RateID = 2, ProjectID = 2, RateTypeID = 2, RateValue = 200, ApplicableTimePeriod = "6am-5pm", Conditions = "Standard" },
+               new Rate { RateID = 3, ProjectID = 3, RateTypeID = 2, RateValue = 200, ApplicableTimePeriod = "6am-5pm", Conditions = "Standard" }
 
 
            );
