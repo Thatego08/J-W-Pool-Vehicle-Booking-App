@@ -9,6 +9,7 @@ namespace Team34FinalAPI.Models
         public DbSet<Trip> Trips { get; set; }
         public DbSet<TripMedia> TripMedia { get; set; }
         public DbSet<RefuelVehicle> RefuelVehicles { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,6 +22,13 @@ namespace Team34FinalAPI.Models
                 .WithOne(m => m.Trip)
                 .HasForeignKey(m => m.TripId);
 
+            modelBuilder.Entity<Trip>()
+          .HasOne(t => t.Booking)        // Trip has one Booking
+          .WithMany(b => b.Trips)        // Booking has many Trips
+          .HasForeignKey(t => t.BookingID) // Foreign key in Trip table
+          .OnDelete(DeleteBehavior.Restrict); // Set Restrict to avoid cascading delete
+
+            // Other entity configurations
 
             // Configure the relationship between Trip and RefuelVehicle
             modelBuilder.Entity<Trip>()
@@ -44,9 +52,9 @@ namespace Team34FinalAPI.Models
         .Property(rv => rv.FuelQuantity)
         .HasPrecision(18, 2); // Adjust precision and scale as needed
 
-            modelBuilder.Entity<Trip>()
-                .Property(t => t.FuelAmount)
-                .HasPrecision(18, 2); // Adjust precision and scale as needed
+            //modelBuilder.Entity<Trip>()
+                //.Property(t => t.FuelAmount)
+                //.HasPrecision(18, 2); // Adjust precision and scale as needed
         }
     }
 }

@@ -27,6 +27,7 @@ namespace Team34FinalAPI.Models
 
         public int? StatusId { get; set; }
         public Status? Status { get; set; }
+        public ICollection<Trip> Trips { get; set; }
 
     }
 }
