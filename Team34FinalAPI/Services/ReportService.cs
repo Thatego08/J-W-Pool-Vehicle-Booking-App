@@ -134,12 +134,12 @@ namespace Team34FinalAPI.Services
         public async Task<TripReportDto> GetTripReport()
         {
             var totalTrips = await _tripDbContext.Trips.CountAsync();
-            var tripsWithAccidents = await _tripDbContext.Trips.CountAsync(t => t.HasAccidents);
+           // var tripsWithAccidents = await _tripDbContext.Trips.CountAsync(t => t.HasAccidents);
 
             return new TripReportDto
             {
                 TotalTrips = totalTrips,
-                TripsWithAccidents = tripsWithAccidents
+                //TripsWithAccidents = tripsWithAccidents
             };
         }
         public async Task<IEnumerable<FuelExpenditureReport>> GetFuelExpenditureReportAsync()
@@ -150,7 +150,7 @@ namespace Team34FinalAPI.Services
                 {
                     Vehicle = g.Key,
                     TripCount = g.Count(),
-                    FuelCost = g.Sum(t => t.FuelAmount)
+                    //FuelCost = g.Sum(t => t.FuelAmount)
                 })
                 .ToListAsync();
         }

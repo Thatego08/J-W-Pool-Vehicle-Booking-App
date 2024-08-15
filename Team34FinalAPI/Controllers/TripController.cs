@@ -23,6 +23,7 @@ namespace Team34FinalAPI.Controllers
             _tripRepository = tripRepository;
         }
 
+        [Authorize(Roles = "Driver")]
         [HttpPost("createTrip")]
         public async Task<IActionResult> CreateTrip([FromForm] TripViewModel tvm)
         {
@@ -39,15 +40,21 @@ namespace Team34FinalAPI.Controllers
             // Get the current logged-in user's username
             var userName = User.Identity.Name;
 
+            // Check if BookingID exists
+            var bookingExists = await _context.Bookings.AnyAsync(b => b.BookingID == tvm.BookingID);
+            if (!bookingExists)
+            {
+                return BadRequest("Invalid BookingID.");
+            }
+
             var trip = new Trip
             {
                 Name = tvm.Name, // Use Name instead of VehicleId
                 Location = tvm.Location,
-                FuelAmount = tvm.FuelAmount,
+                BookingID = tvm.BookingID, // Ensure BookingID is set correctly
                 Comment = tvm.Comment,
                 TravelStart = tvm.TravelStart,
                 TravelEnd = tvm.TravelEnd,
-                RegistrationNumber = tvm.RegistrationNumber,
                 UserName = userName // Assign the username
             };
 
@@ -122,11 +129,11 @@ namespace Team34FinalAPI.Controllers
             // Update trip properties
             trip.Name = tvm.Name; // Use Name instead of VehicleId
             trip.Location = tvm.Location;
-            trip.FuelAmount = tvm.FuelAmount;
+           
             trip.Comment = tvm.Comment;
             trip.TravelStart = tvm.TravelStart;
             trip.TravelEnd = tvm.TravelEnd;
-            trip.RegistrationNumber = tvm.RegistrationNumber;
+           
 
             try
             {
