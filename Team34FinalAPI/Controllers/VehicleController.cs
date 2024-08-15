@@ -89,7 +89,9 @@ namespace Team34FinalAPI.Controllers
                 };
 
                 await _vehicleRepository.AddVehicleAsync(vehicle);
-                return Ok("Vehicle added successfully!");
+                var result = "Vehicle added successfully!";
+                return Ok();
+
             }
             catch (Exception ex)
             {
