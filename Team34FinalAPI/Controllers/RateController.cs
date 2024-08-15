@@ -21,6 +21,7 @@ namespace Team34FinalAPI.Controllers
 
 
         [HttpGet]
+        [Route(("get-rate"))]
         public async Task<IActionResult> GetAllRates()
         {
             var rates = await _rateRepo.GetAllRatesAsync();
@@ -28,6 +29,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPost]
+        [Route(("create-rate"))]
         public async Task<IActionResult> CreateRate([FromBody] Rate rate)
         {
             if (rate == null || !ModelState.IsValid)
@@ -41,7 +43,8 @@ namespace Team34FinalAPI.Controllers
             return Ok(new { message = "Rate created successfully", rate = createdRate });
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
+        [Route("update-rate")]
         public async Task<IActionResult> UpdateRate(int id, [FromBody] Rate rate)
         {
             if (rate == null || rate.RateID != id || !ModelState.IsValid)
@@ -58,7 +61,15 @@ namespace Team34FinalAPI.Controllers
             await _rateRepo.UpdateRateAsync(rate);
             return NoContent();
         }
+/*
+        [HttpGet]
+        [Route("get-rates-with-details")]
+        public async Task<IActionResult> GetAllRatesWithDetails()
+        {
+            var rates = await _rateRepo.GetAllRatesWithDetailsAsync();
+            return Ok(rates);
+        }*/
 
-   
+
     }
-    }
+}
