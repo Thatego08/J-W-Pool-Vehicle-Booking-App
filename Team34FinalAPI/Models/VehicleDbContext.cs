@@ -29,6 +29,7 @@ namespace Team34FinalAPI.Models
 
         public DbSet<VehicleChecklist> VehicleChecklists { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -215,23 +216,7 @@ namespace Team34FinalAPI.Models
             });
 
 
-            //PostChecklist
-            modelBuilder.Entity<PostChecklist>(entity =>
-            {
-                entity.HasKey(v => v.PostId);
-                entity.HasIndex(v => v.VehicleId).IsUnique();  // Changed from AlternateKey to Index for FK
-                entity.Property(v => v.UserName);
-                entity.Property<bool>(v => v.ReturnVehicle);
-                entity.Property<decimal>(v => v.OpeningKms);
-                entity.Property<decimal>(v => v.ClosingKms);
-                entity.OwnsOne(v => v.ExteriorChecks);
-                entity.OwnsOne(v => v.InteriorChecks);
-                entity.OwnsOne(v => v.UnderTheHoodChecks);
-                entity.OwnsOne(v => v.FunctionalTests);
-                entity.OwnsOne(v => v.SafetyEquipment);
-                entity.OwnsOne(v => v.Documentation);
-
-            });
+           
 
             modelBuilder.Entity<Service>(entity =>
             {

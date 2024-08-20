@@ -10,6 +10,7 @@ namespace Team34FinalAPI.Models
         public DbSet<TripMedia> TripMedia { get; set; }
         public DbSet<RefuelVehicle> RefuelVehicles { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<PreChecklist> PreChecklists { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +30,21 @@ namespace Team34FinalAPI.Models
           .OnDelete(DeleteBehavior.Restrict); // Set Restrict to avoid cascading delete
 
             // Other entity configurations
+            modelBuilder.Entity<PreChecklist>()
+       .HasOne<Trip>() // Configure the relationship
+       .WithOne() // One-to-one relationship
+       .HasForeignKey<PreChecklist>(pc => pc.TripId); // Foreign key in PreChecklist
+
+            modelBuilder.Entity<Trip>()
+               .HasMany(t => t.TripMedia)
+               .WithOne(tm => tm.Trip)
+               .HasForeignKey(tm => tm.TripId);
+
+            //modelBuilder.Entity<PreChecklist>()
+       //.HasMany(p => p.TripMedia)
+       //.WithOne(m => m.PreChecklist)
+       //.HasForeignKey(m => m.Id)
+      // .OnDelete(DeleteBehavior.Cascade);
 
             // Configure the relationship between Trip and RefuelVehicle
             modelBuilder.Entity<Trip>()
@@ -37,13 +53,20 @@ namespace Team34FinalAPI.Models
          .HasForeignKey(rv => rv.TripId);
             // This will make TripId optional
 
+            modelBuilder.Entity<RefuelVehicle>()
+       .HasOne(rv => rv.Trip)
+       .WithMany(t => t.RefuelVehicles)
+       .HasForeignKey(rv => rv.TripId)
+       .OnDelete(DeleteBehavior.ClientSetNull); // Allow null values
+                                                // Or use DeleteBehavior.ClientSetNull if you want null values allowed
+
 
             // Configure the relationship between Trip and Vehicle
             //modelBuilder.Entity<Trip>()
-              //  .HasOne<Vehicle>(t => t.Vehicle)
-               // .WithMany() // Assuming a vehicle can have multiple trips
-               // .HasForeignKey(t => t.VehicleId)
-               // .IsRequired();
+            //  .HasOne<Vehicle>(t => t.Vehicle)
+            // .WithMany() // Assuming a vehicle can have multiple trips
+            // .HasForeignKey(t => t.VehicleId)
+            // .IsRequired();
 
             // Ignore the Vehicle entity to avoid creating its table
             modelBuilder.Ignore<Vehicle>();

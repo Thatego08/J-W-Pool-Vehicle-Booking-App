@@ -10,24 +10,25 @@ namespace Team34FinalAPI.Models
         public int RefuelVehicleId { get; set; }
 
         [ForeignKey("Trip")]
-        public int? TripId { get; set; } // Make TripId nullable
+       
+        public int TripId { get; set; }
 
-        public string RadiatorWaterLevel { get; set; }
-        public string Battery { get; set; }
+
+
         public string OilLevel { get; set; }
-        public string BrakeFluidLevel { get; set; }
-        public string ClutchFluidLevel { get; set; }
-        public string WindowWasherFluidLevel { get; set; }
-        public string VBeltCondition { get; set; }
+       
+      
+       
+   
         public string TyrePressure { get; set; }
         public string TyreCondition { get; set; }
-        public string SpareWheelCondition { get; set; }
+       
         public string Comments { get; set; }
 
         public decimal FuelQuantity { get; set; }
         public decimal FuelCost { get; set; }
 
         [JsonIgnore]
-        public Trip Trip { get; set; }
+        public Trip? Trip { get; set; }
     }
 }
