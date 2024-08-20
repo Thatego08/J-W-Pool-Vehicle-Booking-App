@@ -20,6 +20,12 @@ namespace Team34FinalAPI.Models
         public byte[] FileContent { get; set; }
         public string? MediaType { get; set; }
 
+        public int Id { get; set; }
+
+        [ForeignKey("Id")]
+        [JsonIgnore]
+        public PreChecklist PreChecklist { get; set; } // Navigation property
+
 
     }
 }
