@@ -8,9 +8,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Team34FinalAPI.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Team34FinalAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class BookingController : ControllerBase
@@ -23,7 +26,9 @@ namespace Team34FinalAPI.Controllers
         private readonly ILogger<BookingController> _logger;
         private readonly IEmailService _emailService;
 
-        public BookingController(IBookingRepository bookingRepository, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
+        private readonly UserManager<User> _userManager;
+
+        public BookingController(IBookingRepository bookingRepository, UserManager<User> userManager, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
         {
             _bookingRepository = bookingRepository;
             _projectRepository = projectRepository;
@@ -32,6 +37,8 @@ namespace Team34FinalAPI.Controllers
             _vehicleContext = vehicleContext;
             _logger = logger;
             _emailService = emailService;
+
+            _userManager = userManager;
         }
 
         // Get all bookings
@@ -69,82 +76,94 @@ namespace Team34FinalAPI.Controllers
         [Route("AddBooking")]
         public async Task<ActionResult<BookingViewModel>> PostBookingAsync(BookingViewModel bookingViewModel)
         {
-            //Add Booking Adjustments
-
             _logger.LogInformation("Entering PostBookingAsync with data: {@BookingViewModel}", bookingViewModel);
             try
             {
                 // Validate vehicle
-                _logger.LogInformation("Finding vehicle: {VehicleName}", bookingViewModel.VehicleName);
                 var vehicle = await _vehicleRepository.GetVehicleByNameAsync(bookingViewModel.VehicleName);
                 if (vehicle == null)
                 {
-                    _logger.LogWarning("Vehicle with name {VehicleName} does not exist.", bookingViewModel.VehicleName);
                     return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} does not exist.");
                 }
 
                 if (vehicle.StatusID == 2 || vehicle.StatusID == 3)
                 {
-                    _logger.LogWarning("Vehicle with name {VehicleName} is not available for booking.", bookingViewModel.VehicleName);
                     return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} is not available for booking.");
                 }
 
                 // Validate project or event
                 int? projectId = null;
-                string? eventName = null;
-
                 if (bookingViewModel.ProjectNumber.HasValue)
                 {
-                    _logger.LogInformation("Finding project: {ProjectNumber}", bookingViewModel.ProjectNumber.Value);
                     var project = await _projectRepository.GetProjectByNumberAsync(bookingViewModel.ProjectNumber.Value);
                     if (project == null)
                     {
-                        _logger.LogWarning("Project with number {ProjectNumber} does not exist.", bookingViewModel.ProjectNumber.Value);
                         return BadRequest($"Project with number {bookingViewModel.ProjectNumber.Value} does not exist.");
                     }
                     projectId = project.ProjectID;
                 }
-                else if (!string.IsNullOrEmpty(bookingViewModel.Event))
+                _logger.LogInformation("Starting SomeAction for user: {User}", User.Identity.Name);
+
+                // Retrieve the logged-in user
+               
+
+                
+                // Get the username of the logged-in user
+                var userName = User.Identity?.Name;
+                if (string.IsNullOrEmpty(userName))
                 {
-                    eventName = bookingViewModel.Event;
-                }
-                else
-                {
-                    _logger.LogWarning("Either ProjectNumber or Event must be provided.");
-                    return BadRequest("Either ProjectNumber or Event must be provided.");
+                    return BadRequest(new { message = "User not found." });
                 }
 
-                // Create booking
+                // Retrieve the user profile based on the username
+                var user = await _userManager.FindByNameAsync(userName);
+
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found." });
+                }
+
+                //var user = await _userManager.GetUserAsync(User);
+                if (user == null) 
+                {
+                    return Unauthorized(); // No logged-in user found
+                }
+
+                _logger.LogInformation("User retrieved successfully: Username:", user.UserName);
+                // Create booking without EndDate
                 var booking = new Booking
                 {
                     UserName = bookingViewModel.UserName,
                     Event = bookingViewModel.Event,
                     Type = bookingViewModel.Type,
                     StartDate = bookingViewModel.StartDate,
-                    EndDate = bookingViewModel.EndDate,
                     VehicleId = vehicle.VehicleID,
                     ProjectId = projectId,
-                    StatusId = 2
+                    StatusId = 2 // Assuming '2' means 'Booked'
                 };
 
-                _logger.LogInformation("Booking details before adding: {@Booking}", booking);
-
+                // Update vehicle status to 'Booked'
                 vehicle.StatusID = 2;
 
-                _logger.LogInformation("Adding booking to the repository.");
                 await _bookingRepository.AddBookingAsync(booking);
-
-                _logger.LogInformation("Updating vehicle status.");
                 await _vehicleRepository.UpdateVehicleAsync(vehicle);
 
                 bookingViewModel.BookingID = booking.BookingID;
 
-                var message = $"Dear {booking.UserName},<br/><br/>Your booking has been confirmed for {booking.StartDate} with the vehicle {vehicle.Name}.<br/><br/>Thank you,<br/>Jones and Wagener International";
+                // Send confirmation emailstring subject = "Booking Confirmation";
 
-                _logger.LogInformation("Sending confirmation email to {UserName}", booking.UserName);
-                await _emailService.SendEmailAsync(booking.UserName, "Booking Confirmation", message);
+                // After booking is successfully created, send the confirmation email
+                string subject = "Booking Confirmation";
+                string message = $"Dear {user.Name},\n\nYour booking has been successfully created. Details:\n\n" +
+                                 $"Booking Date: {bookingViewModel.StartDate}\n" +
+                                 $"Vehicle: {bookingViewModel.VehicleName}\n" +
+                                 $"Type: {bookingViewModel.Type}\n\n" +
+                                 "Thank you for using our service.";
 
-                _logger.LogInformation("Booking created with ID {BookingID}", booking.BookingID);
+                await _emailService.SendEmailAsync(user.Email, subject, message);
+
+                return Ok("Booking created and confirmation email sent.");
+
                 return CreatedAtAction(nameof(GetBookingById), new { id = booking.BookingID }, bookingViewModel);
             }
             catch (DbUpdateException ex)
@@ -158,6 +177,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
 
         // Edit booking
