@@ -9,7 +9,7 @@ using Team34FinalAPI.ViewModels;
 namespace Team34FinalAPI.Controllers
 {
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Driver")]
     [ApiController]
     [Route("api/[controller]")]
 public class ProjectController : ControllerBase
