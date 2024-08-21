@@ -10,6 +10,7 @@ namespace Team34FinalAPI.Data
 
         public DbSet<Rate> Rates { get; set; }
         public DbSet<RateType> RateTypes { get; set; }
+        public DbSet<FAQ> Faqs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
