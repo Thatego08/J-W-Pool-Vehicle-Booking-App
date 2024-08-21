@@ -184,6 +184,7 @@ builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IRateRepo, RateRepository>();
+builder.Services.AddScoped<IFAQRepo, FAQRepo>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ReportService, ReportService>();
