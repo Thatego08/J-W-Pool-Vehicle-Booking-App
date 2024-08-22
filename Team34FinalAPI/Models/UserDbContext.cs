@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using static System.Net.WebRequestMethods;
 
 namespace Team34FinalAPI.Models
 {
@@ -18,6 +19,7 @@ namespace Team34FinalAPI.Models
         public DbSet<Feedback> Feedbacks { get; set; } //DbSet for Feedback entity
 
 
+        public DbSet<OTP> Otps { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

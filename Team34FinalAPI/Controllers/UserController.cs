@@ -28,8 +28,10 @@ namespace Team34FinalAPI.Controllers
         private readonly IUserClaimsPrincipalFactory<User> _claimsPrincipalFactory;
         private readonly IConfiguration _configuration;
         private IAuditLogRepository _auditLogRepository;
+        private readonly IOTPService _otpService;
+        private readonly IOTPRepository _otpRepository;
 
-        public UserController(UserManager<User> userManager, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
+        public UserController(UserManager<User> userManager,IOTPService otpService,IOTPRepository otpRepository, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
         {
             this._userDbContext = userDbContext;
             _userRepository = userRepository;
@@ -41,6 +43,8 @@ namespace Team34FinalAPI.Controllers
             _configuration = configuration;
             _claimsPrincipalFactory = userClaimsPrincipal;
             _auditLogRepository = auditLogRepository;
+            _otpService = otpService;
+            _otpRepository = otpRepository;
 
             //_userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _emailService = emailService;
@@ -363,7 +367,6 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support. Details: {ex.Message}");
             }
         }
-
         [HttpPost]
         [Route("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
@@ -383,15 +386,59 @@ namespace Team34FinalAPI.Controllers
                 return NotFound("User not found");
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = Url.Action(nameof(ResetPassword), "Auth", new { token, email = user.Email }, Request.Scheme);
+            // Generate and save OTP
+            var otp = await _otpService.GenerateAndSaveOtpAsync(model.Email);
 
-            // Send email (use your email service)
-            await _emailService.SendEmailAsync(user.Email, "Reset Password", $"Please reset your password by clicking here: {callbackUrl}");
+            // Send OTP via email
+            await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp}");
 
-            _logger.LogInformation("Password reset link sent to email: {Email}", user.Email);
-            return Ok("Password reset link has been sent to your email.");
+            _logger.LogInformation("OTP sent to email: {Email}", user.Email);
+            //return Ok("OTP has been sent to your email.");
+            return Ok(new { message = "OTP has been sent" });
+
         }
+
+        [HttpPost]
+        [Route("verify-otp")]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOTPViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state in verify-otp request.");
+                return BadRequest(ModelState);
+            }
+
+            var otp = await _otpRepository.GetOtpAsync(model.Email);
+            if (otp == null)
+            {
+                _logger.LogWarning("OTP not found or already used for email: {Email}", model.Email);
+                return BadRequest("Invalid OTP or OTP has expired.");
+            }
+
+            _logger.LogInformation("Retrieved OTP: {StoredOtp}, Entered OTP: {EnteredOtp}", otp.Code, model.OTP);
+
+            if (otp.Code.ToUpper() != model.OTP.ToUpper())
+            {
+                _logger.LogWarning("OTP does not match for email: {Email}", model.Email);
+                return BadRequest("Invalid OTP.");
+            }
+
+            if (otp.ExpiryTime < DateTime.UtcNow)
+            {
+                _logger.LogWarning("OTP expired for email: {Email}", model.Email);
+                return BadRequest("OTP has expired.");
+            }
+
+            // Mark the OTP as used
+            await _otpRepository.MarkOtpAsUsedAsync(model.Email);
+
+            _logger.LogInformation("OTP verified successfully for email: {Email}", model.Email);
+            return Ok(new { message = "OTP verified successfully." });
+        }
+
+
+
+
 
         [HttpPost]
         [Route("reset-password")]
@@ -404,6 +451,24 @@ namespace Team34FinalAPI.Controllers
             if (user == null)
                 return NotFound("User not found");
 
+            // Validate OTP
+            var otp = await _otpService.GetOtpAsync(model.Email);
+            if (otp == null)
+                return BadRequest("Invalid OTP.");
+
+            if (otp.Code != model.OTP)
+                return BadRequest("Incorrect OTP.");
+
+            if (otp.ExpiryTime < DateTime.UtcNow)
+                return BadRequest("OTP has expired.");
+
+            if (otp.IsUsed)
+                return BadRequest("OTP has already been used.");
+
+            // If OTP is valid, mark it as used
+            await _otpService.MarkOtpAsUsedAsync(model.Email);
+
+            // Proceed with password reset
             var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
             if (result.Succeeded)
                 return Ok("Password has been reset.");
@@ -413,6 +478,7 @@ namespace Team34FinalAPI.Controllers
 
             return BadRequest(ModelState);
         }
+
 
     }
 }
