@@ -19,77 +19,51 @@ namespace Team34FinalAPI.Controllers
         [HttpGet("{tripId}")]
         public async Task<ActionResult<PreChecklist>> GetPreChecklist(int tripId)
         {
-            var preChecklist = await _context.PreChecklists
-                .FirstOrDefaultAsync(pc => pc.TripId == tripId);
+           // var preChecklist = await _context.PreChecklists
+               // .FirstOrDefaultAsync(pc => pc.TripId == tripId);
 
-            if (preChecklist == null)
+           // if (preChecklist == null)
             {
                 return NotFound();
             }
 
-            return preChecklist;
+           // return preChecklist;
         }
-
         [HttpPost]
-        public async Task<ActionResult<PreChecklist>> CreatePreChecklist(PreChecklist preChecklist)
+        public async Task<ActionResult<PreChecklist>> CreatePreChecklist([FromBody] PreChecklist preChecklist)
         {
-            _context.PreChecklists.Add(preChecklist);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPreChecklist), new { tripId = preChecklist.TripId }, preChecklist);
-        }
-
-
-
-        [HttpPut("{tripId}")]
-        public async Task<IActionResult> UpdatePreChecklist(int tripId, PreChecklist preChecklist)
-        {
-            if (tripId != preChecklist.TripId)
+            if (preChecklist == null)
             {
-                return BadRequest();
+                return BadRequest("PreChecklist cannot be null.");
             }
-
-            _context.Entry(preChecklist).State = EntityState.Modified;
 
             try
             {
+                _context.PreChecklists.Add(preChecklist);
                 await _context.SaveChangesAsync();
+
+                // Return status 200 OK with the created entity
+                return Ok(preChecklist);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateException ex)
             {
-                if (!PreChecklistExists(tripId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                // Log the exception details
+                // Example: _logger.LogError(ex, "An error occurred while saving the PreChecklist.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while saving the PreChecklist.");
             }
-
-            return NoContent();
-        }
-
-        [HttpDelete("{tripId}")]
-        public async Task<IActionResult> DeletePreChecklist(int tripId)
-        {
-            var preChecklist = await _context.PreChecklists
-                .FirstOrDefaultAsync(pc => pc.TripId == tripId);
-
-            if (preChecklist == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                // Log the exception details
+                // Example: _logger.LogError(ex, "An unexpected error occurred.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
             }
-
-            _context.PreChecklists.Remove(preChecklist);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
-        private bool PreChecklistExists(int tripId)
-        {
-            return _context.PreChecklists.Any(e => e.TripId == tripId);
-        }
+
+
+        // private bool PreChecklistExists(int tripId)
+        // {
+        //   return _context.PreChecklists.Any(e => e.TripId == tripId);
+        // }
     }
 }

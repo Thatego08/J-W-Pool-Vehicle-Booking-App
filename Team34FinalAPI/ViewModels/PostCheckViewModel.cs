@@ -1,17 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
-namespace Team34FinalAPI.Models
+namespace Team34FinalAPI.ViewModels
 {
-    public class PreChecklist
+    public class PostCheckViewModel
     {
-        [Key]
-        public int Id { get; set; }
-      
-
-        [Required]
-        public decimal OpeningKms { get; set; }
-
+        public decimal ClosingKms { get; set; }
         public bool OilLeaks { get; set; }
         public bool FuelLevel { get; set; }
         public bool Mirrors { get; set; }
@@ -34,10 +28,11 @@ namespace Team34FinalAPI.Models
         public bool JWMarketingMagnets { get; set; }
         public bool CheckedByJWSecurity { get; set; }
         public bool LicenseDiskValid { get; set; }
+        public string Comments { get; set; }
+        public string AdditionalComments { get; set; }
 
-        public string Comments { get; set; } // Optional comments field
-        public string AdditionalComments { get; set; } // Additional comments field if needed
-       
-       
+        // Fields for TripMedia
+        public List<IFormFile> MediaFiles { get; set; }
+        public string? MediaDescription { get; set; }
     }
 }
