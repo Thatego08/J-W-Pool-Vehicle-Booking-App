@@ -47,43 +47,29 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest("Invalid BookingID.");
             }
 
+            // Check if PreChecklistId is valid (if provided)
+            if (tvm.PreChecklistId.HasValue)
+            {
+                var preChecklistExists = await _context.PreChecklists.AnyAsync(pc => pc.Id == tvm.PreChecklistId.Value);
+                if (!preChecklistExists)
+                {
+                    return BadRequest("Invalid PreChecklistId.");
+                }
+            }
+
             var trip = new Trip
             {
-                Name = tvm.Name, // Use Name instead of VehicleId
+                Name = tvm.Name,
                 Location = tvm.Location,
-                BookingID = tvm.BookingID, // Ensure BookingID is set correctly
+                BookingID = tvm.BookingID,
                 Comment = tvm.Comment,
                 TravelStart = tvm.TravelStart,
                 TravelEnd = tvm.TravelEnd,
-                UserName = userName // Assign the username
+                UserName = userName,
+                PreChecklistId = tvm.PreChecklistId // Set the PreChecklistId
             };
 
-            // Initialize TripMedia collection if it's null
-            trip.TripMedia = new List<TripMedia>();
-
-            // Handle file uploads if there are any
-            if (tvm.MediaFiles != null && tvm.MediaFiles.Any())
-            {
-                foreach (var file in tvm.MediaFiles)
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        await file.CopyToAsync(ms);
-                        var fileBytes = ms.ToArray();
-
-                        var tripMedia = new TripMedia
-                        {
-                            Trip = trip,
-                            Description = tvm.MediaDescription, // Nullable description
-                            FileName = file.FileName,
-                            FileContent = fileBytes,
-                            MediaType = file.ContentType
-                        };
-
-                        trip.TripMedia.Add(tripMedia);
-                    }
-                }
-            }
+            // Remove the TripMedia initialization and processing
 
             try
             {
@@ -103,6 +89,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(trip);
         }
 
+
         [Authorize(Roles = "Driver")]
         [HttpPut("UpdateTrip/{id}")]
         public async Task<IActionResult> UpdateTrip(int id, [FromForm] TripViewModel tvm)
@@ -118,7 +105,6 @@ namespace Team34FinalAPI.Controllers
             }
 
             var trip = await _context.Trips
-                .Include(t => t.TripMedia)
                 .FirstOrDefaultAsync(t => t.TripId == id);
 
             if (trip == null)
@@ -127,13 +113,11 @@ namespace Team34FinalAPI.Controllers
             }
 
             // Update trip properties
-            trip.Name = tvm.Name; // Use Name instead of VehicleId
+            trip.Name = tvm.Name; // Ensure the 'Name' property exists in your Trip model
             trip.Location = tvm.Location;
-           
             trip.Comment = tvm.Comment;
             trip.TravelStart = tvm.TravelStart;
             trip.TravelEnd = tvm.TravelEnd;
-           
 
             try
             {
@@ -158,14 +142,35 @@ namespace Team34FinalAPI.Controllers
         [HttpGet("GetAllTrips")]
         public async Task<IActionResult> GetAllTrips()
         {
-            var trips = await _context.Trips.Include(t => t.TripMedia).ToListAsync();
-            return Ok(trips);
+            try
+            {
+                // Fetch trips without including related TripMedia
+                var trips = await _context.Trips
+                    .Include(t => t.Booking)         // Include related Booking if necessary
+                    .Include(t => t.PreChecklist)    // Include related PreChecklist
+                    .Include(t => t.RefuelVehicles)  // Include related RefuelVehicles if necessary
+                    .ToListAsync();
+
+                return Ok(trips);
+            }
+            catch (Exception ex)
+            {
+                // Log error details (if you have logging set up)
+                // _logger.LogError(ex, "An error occurred while retrieving trips.");
+
+                // Return a general error message
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
         }
 
         [HttpGet("GetTripById/{id}")]
         public async Task<IActionResult> GetTripById(int id)
         {
-            var trip = await _context.Trips.Include(t => t.TripMedia).FirstOrDefaultAsync(t => t.TripId == id);
+            var trip = await _context.Trips
+                .Include(t => t.Booking)         // Include related Booking if necessary
+                .Include(t => t.PreChecklist)    // Include related PreChecklist
+                .Include(t => t.RefuelVehicles)  // Include related RefuelVehicles if necessary
+                .FirstOrDefaultAsync(t => t.TripId == id);
 
             if (trip == null)
             {
@@ -174,6 +179,7 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(trip);
         }
+
 
         [Authorize(Roles = "Driver")]
         [HttpGet("GetPreviousTripsByUserName/{userName}")]
@@ -187,7 +193,9 @@ namespace Team34FinalAPI.Controllers
             }
 
             var trips = await _context.Trips
-                .Include(t => t.TripMedia)
+                .Include(t => t.Booking)         // Include related Booking if necessary
+                .Include(t => t.PreChecklist)    // Include related PreChecklist
+                .Include(t => t.RefuelVehicles)  // Include related RefuelVehicles if necessary
                 .Where(t => t.UserName == userName)
                 .ToListAsync();
 
@@ -198,6 +206,7 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(trips);
         }
+
 
         private bool TripExists(int id)
         {

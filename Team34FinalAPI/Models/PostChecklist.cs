@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Schema;
 
@@ -6,7 +7,7 @@ namespace Team34FinalAPI.Models
 {
     public class PostChecklist
     {
-
+        [Key]
         public int PostId { get; set; }
         public int VehicleId { get; set; } //foreign key
 

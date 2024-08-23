@@ -15,13 +15,18 @@ namespace Team34FinalAPI.Models
 
         public async Task<IEnumerable<Trip>> GetAllTripsAsync()
         {
-            return await _context.Trips.Include(t => t.TripMedia).ToListAsync();
+            // Fetch trips without including TripMedia
+            return await _context.Trips.ToListAsync();
         }
+
 
         public async Task<Trip> GetTripByIdAsync(int tripId)
         {
-            return await _context.Trips.Include(t => t.TripMedia).FirstOrDefaultAsync(t => t.TripId == tripId);
+            // Fetch a trip by its ID without including TripMedia
+            return await _context.Trips
+                                 .FirstOrDefaultAsync(t => t.TripId == tripId);
         }
+
 
 
         public async Task AddTripAsync(Trip trip)

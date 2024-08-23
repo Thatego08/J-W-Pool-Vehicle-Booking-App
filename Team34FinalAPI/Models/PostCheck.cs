@@ -1,17 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace Team34FinalAPI.Models
 {
-    public class PreChecklist
+    public class PostCheck
     {
         [Key]
-        public int Id { get; set; }
-      
+        public int PostCheckId { get; set; }
 
-        [Required]
-        public decimal OpeningKms { get; set; }
-
+        public decimal ClosingKms { get; set; }
         public bool OilLeaks { get; set; }
         public bool FuelLevel { get; set; }
         public bool Mirrors { get; set; }
@@ -35,9 +32,9 @@ namespace Team34FinalAPI.Models
         public bool CheckedByJWSecurity { get; set; }
         public bool LicenseDiskValid { get; set; }
 
-        public string Comments { get; set; } // Optional comments field
-        public string AdditionalComments { get; set; } // Additional comments field if needed
-       
-       
+        public string Comments { get; set; }
+        public string AdditionalComments { get; set; }
+
+        public ICollection<TripMedia> TripMedia { get; set; } = new List<TripMedia>();
     }
 }
