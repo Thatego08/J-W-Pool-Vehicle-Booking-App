@@ -302,6 +302,58 @@ namespace Team34FinalAPI.Controllers
             return Ok(bookingViewModels);
         }
 
+        // Cancel Booking
+        [HttpPut("CancelBooking/{id}")]
+        public async Task<IActionResult> CancelBookingAsync(int id)
+        {
+            try
+            {
+                // Fetch the booking
+                var booking = await _bookingRepository.GetBookingByIdAsync(id);
+                if (booking == null)
+                {
+                    return NotFound("Booking not found.");
+                }
+
+                // Fetch the associated vehicle
+                var vehicle = await _vehicleRepository.GetVehicleByIdAsync(booking.VehicleId);
+                if (vehicle == null)
+                {
+                    return NotFound("Associated vehicle not found.");
+                }
+
+                // Update the status of the vehicle to 'Available'
+                vehicle.StatusID = 1; // 1 corresponds to 'Available'
+                await _vehicleRepository.UpdateVehicleAsync(vehicle);
+
+                // Update the status of the booking to 'Cancelled'
+                booking.StatusId = 4; // 4 corresponds to 'Cancelled'
+                await _bookingRepository.UpdateBookingAsync(booking);
+
+                // Save changes
+                await _context.SaveChangesAsync();
+
+                // Optional: You can also send a notification email to the user about the cancellation.
+                var user = await _userManager.FindByNameAsync(booking.UserName);
+                if (user != null)
+                {
+                    string subject = "Booking Cancellation";
+                    string message = $"Dear {user.Name},\n\nYour booking for vehicle {vehicle.Name} has been successfully cancelled.\n\nThank you.";
+                    await _emailService.SendEmailAsync(user.Email, subject, message);
+                }
+
+                //return Ok("Booking cancelled and vehicle status updated to 'Available'.");
+                return Ok(new { message = "Booking cancelled and vehicle status updated to 'Available'." });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in CancelBookingAsync");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
         private List<BookingViewModel> MapToViewModel(IEnumerable<Booking> bookings)
         {
             var bookingViewModels = new List<BookingViewModel>();

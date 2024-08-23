@@ -65,6 +65,7 @@ namespace Team34FinalAPI.Models
         public async Task UpdateBookingAsync(Booking booking)
         {
             _context.Bookings.Update(booking);
+            _context.Entry(booking).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 

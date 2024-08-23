@@ -37,6 +37,8 @@ namespace Team34FinalAPI.Models
 
 
         Task<Vehicle> GetVehicleByNameAsync(string name);
+
+        Task<Vehicle> GetVehicleByIdAsync(int vehicleId);
         Task UpdateVehicleAsync(Vehicle vehicle);
     }
 }

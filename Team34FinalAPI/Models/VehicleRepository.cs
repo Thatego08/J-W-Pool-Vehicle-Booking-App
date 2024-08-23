@@ -70,6 +70,7 @@ namespace Team34FinalAPI.Models
         public async Task UpdateVehicleAsync(Vehicle vehicle)
         {
             _context.Vehicles.Update(vehicle);
+            _context.Entry(vehicle).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
@@ -112,6 +113,18 @@ namespace Team34FinalAPI.Models
                 .Include(v => v.LicenseDisk)
                 .ToListAsync();
         }
+
+        public async Task<Vehicle> GetVehicleByIdAsync(int vehicleId)
+        {
+            return await _context.Vehicles
+                .Include(v => v.Colour)
+                .Include(v => v.FuelType)
+                .Include(v => v.VehicleMake)
+                .Include(v => v.VehicleModel)
+                .Include(v => v.Status)
+                .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
+        }
+
 
 
         public async Task<InsuranceCover[]> GetInsuranceCoverAsync()
