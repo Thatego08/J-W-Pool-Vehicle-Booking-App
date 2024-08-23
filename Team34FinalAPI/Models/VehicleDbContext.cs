@@ -199,6 +199,21 @@ namespace Team34FinalAPI.Models
                 );
 
 
+            //PostChecklist
+
+            modelBuilder.Entity<PostChecklist>(entity =>
+            {
+                entity.HasKey(pc => pc.PostId); // Assuming 'Id' is the primary key
+
+                // Add any additional configuration as needed
+            });
+
+           
+                modelBuilder.Entity<PostDocumentation>().HasNoKey();
+                // Assuming 'Id' is the primary key
+
+                // Add any additional configuration as needed
+           
             //PreChecklist
 
             modelBuilder.Entity<VehicleChecklist>(entity =>

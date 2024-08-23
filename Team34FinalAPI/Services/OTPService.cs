@@ -1,4 +1,5 @@
-﻿using Team34FinalAPI.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Team34FinalAPI.Models;
 using static System.Net.WebRequestMethods;
 
 namespace Team34FinalAPI.Services
@@ -8,10 +9,11 @@ namespace Team34FinalAPI.Services
 
         private readonly IOTPRepository _otpRepository;
         private readonly int _otpExpiryMinutes = 10;  // Set OTP expiration time (10 minutes)
-
-        public OTPService(IOTPRepository otpRepository)
+        private readonly UserDbContext _context;
+        public OTPService(IOTPRepository otpRepository, UserDbContext context)
         {
             _otpRepository = otpRepository;
+            _context = context;
         }
 
         public async Task<string> GenerateAndSaveOtpAsync(string email)
@@ -59,7 +61,10 @@ namespace Team34FinalAPI.Services
         }
         public async Task<OTP> GetOtpAsync(string email)
         {
-            return await _otpRepository.GetOtpAsync(email);
+            return await _context.Otps
+        .Where(o => o.Email == email && !o.IsUsed)
+        .OrderByDescending(o => o.ExpiryTime)
+        .FirstOrDefaultAsync();
         }
 
         private string GenerateOtp(int length)

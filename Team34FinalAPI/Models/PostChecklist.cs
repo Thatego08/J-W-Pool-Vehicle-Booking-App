@@ -27,16 +27,17 @@ namespace Team34FinalAPI.Models
                 return ClosingKms - OpeningKms;
             }
         }
+        [NotMapped]
         public PostExteriorChecks ExteriorChecks { get; set; }
-
+        [NotMapped]
         public PostInteriorChecks InteriorChecks { get; set; }
-
+        [NotMapped]
         public PostUnderTheHoodChecks UnderTheHoodChecks { get; set; }
-
+        [NotMapped]
         public PostFunctionalTests FunctionalTests { get; set; }
-
+        [NotMapped]
         public PostSafetyEquipment SafetyEquipment { get; set; }
-
+        [NotMapped]
         public PostDocumentation Documentation { get; set; }
 
     }
@@ -86,7 +87,7 @@ namespace Team34FinalAPI.Models
         public bool TriangleInPlace3x { get; set; }
         public bool JackWheelPresent { get; set; }
     }
-
+    [NotMapped]
     public class PostDocumentation
     {
         public bool LicenseDisks { get; set; }
