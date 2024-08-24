@@ -162,7 +162,7 @@ namespace Team34FinalAPI.Controllers
 
                 await _emailService.SendEmailAsync(user.Email, subject, message);
 
-                return Ok("Booking created and confirmation email sent.");
+                return Ok(new { message = "Booking created and confirmation email sent." });
 
                 return CreatedAtAction(nameof(GetBookingById), new { id = booking.BookingID }, bookingViewModel);
             }
@@ -302,6 +302,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(bookingViewModels);
         }
 
+
         // Cancel Booking
         [HttpPut("CancelBooking/{id}")]
         public async Task<IActionResult> CancelBookingAsync(int id)
@@ -350,6 +351,37 @@ namespace Team34FinalAPI.Controllers
             {
                 _logger.LogError(ex, "Error in CancelBookingAsync");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("UpdateVehicleStatus/{vehicleName}")]
+        public async Task<IActionResult> UpdateVehicleStatus(string vehicleName, [FromBody] UpdateVehicleStatusDTO statusDto)
+        {
+            if (string.IsNullOrWhiteSpace(vehicleName) || statusDto == null)
+            {
+                return BadRequest("Invalid vehicle name or status data.");
+            }
+
+            // Find the vehicle by its name
+            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(v => v.Name == vehicleName);
+
+            if (vehicle == null)
+            {
+                return NotFound("Vehicle not found.");
+            }
+
+            // Update the vehicle status
+            vehicle.StatusID = statusDto.StatusId;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new { message = "Vehicle status updated successfully." });
+            }
+            catch (DbUpdateException)
+            {
+                // Handle the case where the update fails
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error updating the vehicle status.");
             }
         }
 
