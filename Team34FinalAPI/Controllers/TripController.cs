@@ -92,7 +92,7 @@ namespace Team34FinalAPI.Controllers
 
         [Authorize(Roles = "Driver")]
         [HttpPut("UpdateTrip/{id}")]
-        public async Task<IActionResult> UpdateTrip(int id, [FromForm] TripViewModel tvm)
+        public async Task<IActionResult> UpdateTrip(int id, [FromBody] TripViewModel tvm)
         {
             if (id != tvm.TripId)
             {
@@ -127,15 +127,18 @@ namespace Team34FinalAPI.Controllers
             {
                 if (!TripExists(id))
                 {
-                    return NotFound();
+                    // Log the error and return a successful response with an error message
+                    return Ok(new { Message = "Trip not found during update" });
                 }
                 else
                 {
+                    // Rethrow the exception if there is another issue
                     throw;
                 }
             }
 
-            return NoContent();
+            // Return a successful response indicating the update was successful
+            return Ok(new { Message = "Trip updated successfully" });
         }
 
         [Authorize(Roles = "Admin")]

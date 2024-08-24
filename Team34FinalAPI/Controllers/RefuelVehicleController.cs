@@ -24,6 +24,8 @@ namespace Team34FinalAPI.Controllers
             return Ok(refuelVehicles);
         }
 
+
+
         // GET: api/RefuelVehicle/5
         [HttpGet("{id}")]
         public async Task<ActionResult<RefuelVehicle>> GetRefuelVehicle(int id)
