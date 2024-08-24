@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
+using iText.Kernel.Counter.Context;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -158,6 +160,7 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(postCheckDto); // Return PostCheck along with media
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllPostChecks")]
         public async Task<IActionResult> GetAllPostChecksAsync()
         {
@@ -210,5 +213,44 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(postCheckDtos); // Return the list of PostChecks with media
         }
+
+
+        [HttpDelete("{postCheckId}")]
+        public async Task<IActionResult> DeletePostCheckAsync(int postCheckId)
+        {
+            var postCheck = await _context.PostChecks
+                                          .Include(pc => pc.TripMedia)
+                                          .FirstOrDefaultAsync(pc => pc.PostCheckId == postCheckId);
+
+            if (postCheck == null)
+            {
+                return NotFound(); // Return 404 if PostCheck not found
+            }
+
+            try
+            {
+                // Remove associated media files
+                if (postCheck.TripMedia != null)
+                {
+                    _context.TripMedia.RemoveRange(postCheck.TripMedia);
+                }
+
+                // Remove the post check
+                _context.PostChecks.Remove(postCheck);
+                await _context.SaveChangesAsync();
+
+                return NoContent(); // Return 204 No Content on successful deletion
+            }
+            catch (DbUpdateException dbEx)
+            {
+                var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+                return StatusCode(500, $"Database update error: {innerExceptionMessage}"); // Returns in case of database update exception
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Unexpected error: {ex.Message}"); // Returns in case of other exceptions
+            }
+        }
+
     }
 }
