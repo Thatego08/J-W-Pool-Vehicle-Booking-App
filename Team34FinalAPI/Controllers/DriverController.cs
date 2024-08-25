@@ -128,33 +128,53 @@ namespace Team34FinalAPI.Controllers
             return firstPart + lastPart;
         }
 
-        [Authorize(Roles = "Driver, Admin")]
-
+       
         [HttpPut]
         [Route("UpdateDriver/{userName}")]
-        public async Task<ActionResult<DriverViewModel>> UpdateDriver(string userName, DriverViewModel driverModel)
+        public async Task<IActionResult> UpdateDriver(string userName, DriverViewModel driverModel)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var existingDriver = await _driverRepository.GetDriverAsync(userName);
-                if (existingDriver == null) return NotFound($"The driver does not exists");
+                if (existingDriver == null)
+                {
+                    return NotFound($"Driver with username '{userName}' does not exist.");
+                }
+
+                // Update driver fields
                 existingDriver.Name = driverModel.Name;
                 existingDriver.Surname = driverModel.Surname;
-                //existingDriver.UserName = driverModel.UserName;
                 existingDriver.Email = driverModel.Email;
                 existingDriver.PhoneNumber = driverModel.PhoneNumber;
 
-                if (await _driverRepository.SaveChangesAync())
+                // Optionally update the password if provided
+                if (!string.IsNullOrEmpty(driverModel.Password))
+                {
+                    existingDriver.PasswordHash = _userManager.PasswordHasher.HashPassword(existingDriver, driverModel.Password);
+                }
+
+                // Save changes
+                var result = await _driverRepository.SaveChangesAync();
+
+                if (result)
                 {
                     return Ok(existingDriver);
                 }
-
+                else
+                {
+                    return StatusCode(500, "An error occurred while updating the driver.");
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error. Please contact support");
+                _logger.LogError(ex, "An error occurred while updating the driver with username '{UserName}'", userName);
+                return StatusCode(500, "Internal server error. Please contact support.");
             }
-            return BadRequest("Your request is invalid ");
         }
 
 
