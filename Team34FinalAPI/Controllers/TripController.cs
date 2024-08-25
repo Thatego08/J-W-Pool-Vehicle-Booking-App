@@ -29,7 +29,8 @@ namespace Team34FinalAPI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return BadRequest(new { Message = "Model validation failed", Errors = errors });
             }
 
             if (tvm == null)
@@ -69,8 +70,6 @@ namespace Team34FinalAPI.Controllers
                 PreChecklistId = tvm.PreChecklistId // Set the PreChecklistId
             };
 
-            // Remove the TripMedia initialization and processing
-
             try
             {
                 _context.Trips.Add(trip);
@@ -88,6 +87,7 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(trip);
         }
+
 
 
         [Authorize(Roles = "Driver")]

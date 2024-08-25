@@ -16,18 +16,17 @@ namespace Team34FinalAPI.Controllers
             _context = context;
         }
 
-        [HttpGet("{tripId}")]
-        public async Task<ActionResult<PreChecklist>> GetPreChecklist(int tripId)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PreChecklist>> GetPreChecklist(int id)
         {
-           // var preChecklist = await _context.PreChecklists
-               // .FirstOrDefaultAsync(pc => pc.TripId == tripId);
+            var preChecklist = await _context.PreChecklists.FindAsync(id);
 
-           // if (preChecklist == null)
+            if (preChecklist == null)
             {
                 return NotFound();
             }
 
-           // return preChecklist;
+            return Ok(preChecklist);
         }
         [HttpPost]
         public async Task<ActionResult<PreChecklist>> CreatePreChecklist([FromBody] PreChecklist preChecklist)
