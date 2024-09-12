@@ -12,5 +12,8 @@
         Task<User> GetUserAsync(string UserName);
 
         Task<User> FindByEmailAsync(string email);
+
+
+        void Update(User user);
     }
 }
