@@ -1,4 +1,5 @@
 ﻿using System;
+using iText.Kernel.Counter.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +44,11 @@ namespace Team34FinalAPI.Models
         public async Task<User> FindByEmailAsync(string email)
         {
             return await _userManager.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        }
+
+        public void Update(User user)
+        {
+            _userDbContext.Users.Update(user); // Marks the user entity as modified
         }
     }
 }

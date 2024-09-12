@@ -372,67 +372,50 @@ namespace Team34FinalAPI.Controllers
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state for forgot password request.");
                 return BadRequest(ModelState);
-            }
 
-            _logger.LogInformation("Processing forgot password request for email: {Email}", model.Email);
-
-            var user = await _userRepository.FindByEmailAsync(model.Email);
+            var user = await _userRepository.FindByEmailAsync(model.Email); // Fetch user by email
             if (user == null)
-            {
-                _logger.LogWarning("User not found for email: {Email}", model.Email);
                 return NotFound("User not found");
-            }
 
-            // Generate and save OTP
-            var otp = await _otpService.GenerateAndSaveOtpAsync(model.Email);
+            // Generate OTP
+            var otp = new OTP
+            {
+                Email = model.Email,
+                Code = new Random().Next(100000, 999999).ToString(), // Generate 6-digit OTP
+                ExpiryTime = DateTime.UtcNow.AddMinutes(10), // OTP valid for 10 minutes
+                IsUsed = false
+            };
+
+            // Save OTP in the OTP table
+            await _otpRepository.SaveOtpAsync(otp);
 
             // Send OTP via email
-            await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp}");
+            await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp.Code}");
 
-            _logger.LogInformation("OTP sent to email: {Email}", user.Email);
-            //return Ok("OTP has been sent to your email.");
-            return Ok(new { message = "OTP has been sent" });
-
+            return Ok(new { message = "OTP has been sent to your email." });
         }
 
+       
         [HttpPost]
         [Route("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOTPViewModel model)
         {
             if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state in verify-otp request.");
                 return BadRequest(ModelState);
-            }
 
+            // Retrieve OTP by email
             var otp = await _otpRepository.GetOtpAsync(model.Email);
-            if (otp == null)
-            {
-                _logger.LogWarning("OTP not found or already used for email: {Email}", model.Email);
-                return BadRequest("Invalid OTP or OTP has expired.");
-            }
+            if (otp == null || otp.IsUsed || otp.ExpiryTime < DateTime.UtcNow)
+                return BadRequest("Invalid or expired OTP.");
+            
+            _logger.LogInformation($"Stored OTP: {otp.Code}, Entered OTP: {model.OTP}");
 
-            _logger.LogInformation("Retrieved OTP: {StoredOtp}, Entered OTP: {EnteredOtp}", otp.Code, model.OTP);
 
-            if (otp.Code.ToUpper() != model.OTP.ToUpper())
-            {
-                _logger.LogWarning("OTP does not match for email: {Email}", model.Email);
-                return BadRequest("Invalid OTP.");
-            }
+            // Ensure case-insensitive comparison
+            if (!otp.Code.Trim().ToUpper().Equals(model.OTP.Trim().ToUpper()))
+                return BadRequest("Incorrect OTP.");
 
-            if (otp.ExpiryTime < DateTime.UtcNow)
-            {
-                _logger.LogWarning("OTP expired for email: {Email}", model.Email);
-                return BadRequest("OTP has expired.");
-            }
-
-            // Mark the OTP as used
-            await _otpRepository.MarkOtpAsUsedAsync(model.Email);
-
-            _logger.LogInformation("OTP verified successfully for email: {Email}", model.Email);
             return Ok(new { message = "OTP verified successfully." });
         }
 
@@ -447,37 +430,39 @@ namespace Team34FinalAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userRepository.FindByEmailAsync(model.Email);
             if (user == null)
                 return NotFound("User not found");
 
-            // Validate OTP
-            var otp = await _otpService.GetOtpAsync(model.Email);
-            if (otp == null)
-                return BadRequest("Invalid OTP.");
+            // Validate OTP (use your existing logic)
+            var otp = await _otpRepository.GetOtpAsync(model.Email);
+            if (otp == null || otp.Code != model.OTP || otp.ExpiryTime < DateTime.UtcNow || otp.IsUsed)
+                return BadRequest("Invalid or expired OTP.");
 
-            if (otp.Code != model.OTP)
-                return BadRequest("Incorrect OTP.");
+            // Mark OTP as used
+            await _otpRepository.MarkOtpAsUsedAsync(model.Email);
 
-            if (otp.ExpiryTime < DateTime.UtcNow)
-                return BadRequest("OTP has expired.");
+            // Generate a password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            if (otp.IsUsed)
-                return BadRequest("OTP has already been used.");
+            // Reset the user's password using UserManager's ResetPasswordAsync
+            var resetResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
 
-            // If OTP is valid, mark it as used
-            await _otpService.MarkOtpAsUsedAsync(model.Email);
-
-            // Proceed with password reset
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-            if (result.Succeeded)
-                return Ok("Password has been reset.");
-
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
-
-            return BadRequest(ModelState);
+            if (resetResult.Succeeded)
+            {
+                return Ok(new { message = "Password has been reset successfully." });
+            }
+            else
+            {
+                foreach (var error in resetResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
         }
+
+
 
 
     }
