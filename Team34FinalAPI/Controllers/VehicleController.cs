@@ -85,7 +85,7 @@ namespace Team34FinalAPI.Controllers
                     EngineNo = vehicleViewModel.EngineNo,
                     ColourID = vehicleViewModel.ColourID,
                     FuelTypeID = vehicleViewModel.FuelTypeID,
-                    StatusID = vehicleViewModel.StatusID
+                    StatusID = 1
                 };
 
                 await _vehicleRepository.AddVehicleAsync(vehicle);
@@ -294,6 +294,33 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error: Unable to delete the vehicle make.");
             }
         }
+
+        [HttpGet("GetModelByMake/{makeId}")]
+        public async Task<IActionResult> GetModelsByMakeAsync(int makeId)
+        {
+            try
+            {
+                var result = await _vehicleRepository.GetModelsByMakeAsync(makeId);
+
+                if (result == null || result.Count == 0)
+                    return NotFound("No vehicle models exist for this make.");
+
+                // Optionally, you can format the response to include relevant details
+                var vehicleModels = result.Select(model => new
+                {
+                    model.VehicleModelID,
+                    model.VehicleModelName
+                });
+
+                return Ok(vehicleModels);  // Returning the list of models
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (ex) here
+                return StatusCode(500, "Internal Server Error: Unable to retrieve vehicle models.");
+            }
+        }
+
 
         [HttpGet("GetAllVehicleModels")]
         public async Task<IActionResult> GetAllVehicleModels()

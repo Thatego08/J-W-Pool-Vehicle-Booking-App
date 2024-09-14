@@ -237,6 +237,13 @@ namespace Team34FinalAPI.Models
              .FirstOrDefaultAsync(v => v.VehicleModelID == Id);
         }
 
+        public async Task<List<VehicleModel>> GetModelsByMakeAsync(int makeId)
+        {
+            return await _context.VehicleModel
+                .Where(v => v.VehicleMakeID == makeId)
+                .Include(v => v.VehicleMake) // Include the VehicleMake details
+                .ToListAsync(); // Return a list of vehicle models
+        }
 
         public async Task<bool> SaveChangesAsync()
         {
