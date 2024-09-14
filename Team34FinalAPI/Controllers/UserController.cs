@@ -30,8 +30,9 @@ namespace Team34FinalAPI.Controllers
         private IAuditLogRepository _auditLogRepository;
         private readonly IOTPService _otpService;
         private readonly IOTPRepository _otpRepository;
+        private readonly ISMS_Service _smsService;
 
-        public UserController(UserManager<User> userManager,IOTPService otpService,IOTPRepository otpRepository, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
+        public UserController(UserManager<User> userManager,ISMS_Service smsService,IOTPService otpService,IOTPRepository otpRepository, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
         {
             this._userDbContext = userDbContext;
             _userRepository = userRepository;
@@ -48,7 +49,7 @@ namespace Team34FinalAPI.Controllers
 
             //_userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _emailService = emailService;
-
+            _smsService = smsService;
         }
 
         [HttpGet]
@@ -367,6 +368,65 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support. Details: {ex.Message}");
             }
         }
+
+        [HttpPut]
+        [Route("update-user")]
+        public async Task<IActionResult> UpdateUser(string userName ,[FromBody] UpdateUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Get the current user based on their email (or ID if available)
+            var user = await _userRepository.GetUserAsync(userName);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Update basic profile details
+          /*  user.Name = model.Name;
+            user.Surname = model.Surname;
+            user.PhoneNumber = model.PhoneNumber;
+*/
+            // Handle password change if both CurrentPassword and NewPassword are provided
+            if (!string.IsNullOrEmpty(model.CurrentPassword) && !string.IsNullOrEmpty(model.NewPassword))
+            {
+                // Verify the current password is correct
+                var passwordCheck = await _userManager.CheckPasswordAsync(user, model.CurrentPassword);
+                if (!passwordCheck)
+                    return BadRequest("Incorrect current password");
+
+                // Check if the new password is the same as the current password
+                var passwordHasher = new PasswordHasher<User>();
+                if (passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.NewPassword) == PasswordVerificationResult.Success)
+                    return BadRequest(new { message = "The new password cannot be the same as the current password." });
+
+
+                // Change the password
+                var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+                if (!changePasswordResult.Succeeded)
+                {
+                    foreach (var error in changePasswordResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return BadRequest(ModelState);
+                }
+            }
+
+            // Update user in the database
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+
+            return Ok(new { message = "Profile updated successfully." });
+        }
+
+
         [HttpPost]
         [Route("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
@@ -392,6 +452,8 @@ namespace Team34FinalAPI.Controllers
 
             // Send OTP via email
             await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp.Code}");
+
+          //  await _smsService.SendSmsAsync(user.PhoneNumber, $"Your OTP for password reset is: {otp.Code}");
 
             return Ok(new { message = "OTP has been sent to your email." });
         }
