@@ -382,10 +382,7 @@ namespace Team34FinalAPI.Controllers
                 return NotFound("User not found");
 
             // Update basic profile details
-          /*  user.Name = model.Name;
-            user.Surname = model.Surname;
-            user.PhoneNumber = model.PhoneNumber;
-*/
+  
             // Handle password change if both CurrentPassword and NewPassword are provided
             if (!string.IsNullOrEmpty(model.CurrentPassword) && !string.IsNullOrEmpty(model.NewPassword))
             {

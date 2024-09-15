@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using Team34FinalAPI.Models;
+using Team34FinalAPI.Services;
 using Team34FinalAPI.ViewModels;
 
 namespace Team34FinalAPI.Controllers
@@ -18,11 +19,17 @@ namespace Team34FinalAPI.Controllers
         private readonly IAdminRepo _adminRepo;
         private readonly ILogger<AdminController> _logger;
         private readonly UserManager<User> _userManager;
-        public AdminController(IAdminRepo adminRepo, UserManager<User> userManager, ILogger<AdminController> logger)
+        private readonly IConfiguration _configuration;
+        private readonly OTPSettingsService _otpSettingsService;
+        private readonly IOTPService _otpService;
+        public AdminController(IAdminRepo adminRepo, IOTPService otpService, IConfiguration configuration, OTPSettingsService otpSettingsService, UserManager<User> userManager, ILogger<AdminController> logger)
         {
             _adminRepo = adminRepo;
             _userManager = userManager;
             _logger = logger;
+            _configuration = configuration;
+            _otpService = otpService;
+            _otpSettingsService = otpSettingsService;
         }
 
         [Authorize(Roles = "Admin")]
@@ -162,6 +169,8 @@ namespace Team34FinalAPI.Controllers
         }
 
 
+
+
         private string GenerateUsername(string firstName, string lastName)
         {
             string firstPart = firstName.Length >= 4 ? firstName.Substring(0, 4) : firstName;
@@ -169,5 +178,25 @@ namespace Team34FinalAPI.Controllers
             return firstPart + lastPart;
         }
 
+        [HttpGet]
+        [Route("otp-expiration")]
+        public async Task<IActionResult> GetOtpExpirationTime()
+        {
+            var expirationTime = await _otpSettingsService.GetOtpExpirationTimeAsync();
+            return Ok(new { expirationTime });
+        }
+
+        [HttpPost]
+        [Route("update-otp-expiration")]
+        public async Task<IActionResult> UpdateOtpExpirationTime([FromBody] int newExpirationTime)
+        {
+            await _otpSettingsService.UpdateOtpExpirationTimeAsync(newExpirationTime);
+            return Ok();
+        }
+
+
     }
 }
+
+
+
