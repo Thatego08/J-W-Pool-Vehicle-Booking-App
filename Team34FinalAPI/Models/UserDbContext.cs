@@ -18,6 +18,8 @@ namespace Team34FinalAPI.Models
 
         public DbSet<Feedback> Feedbacks { get; set; } //DbSet for Feedback entity
 
+        public DbSet<OTPSettings> OTPSettings { get; set; }
+
 
         public DbSet<OTP> Otps { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,7 +35,17 @@ namespace Team34FinalAPI.Models
             // Add configuration for the Driver entity if needed
             modelBuilder.Entity<Driver>()
                 .ToTable("Users");
+
 */
+            // Seed default OTP settings if needed
+            modelBuilder.Entity<OTPSettings>().HasData(
+                new OTPSettings
+                {
+                    Id = 1,
+                    ExpirationTimeInMinutes = 10 // Default to 10 minutes
+                }
+            );
+
             // Configure the User entity
             modelBuilder.Entity<User>(entity =>
             {

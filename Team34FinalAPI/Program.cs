@@ -192,12 +192,15 @@ builder.Services.AddScoped<ReportService, ReportService>();
 builder.Services.AddScoped<IOTPRepository, OTPRepository>();
 builder.Services.AddScoped<IOTPService, OTPService>();
 
-
+builder.Services.AddScoped<OTPSettingsService>();
 builder.Services.AddScoped<ISMS_Service, SMS_Service>();
 
 
 // Configure MailJet settings
 builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
+
+//Configure OTP Settings'
+builder.Services.Configure<OTPSettings>(builder.Configuration.GetSection("OtpSettings"));
 
 // Register the MailJetService
 builder.Services.AddScoped<IEmailService, MailJetService>();
