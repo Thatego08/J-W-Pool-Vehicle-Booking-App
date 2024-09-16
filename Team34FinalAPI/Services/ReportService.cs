@@ -3,6 +3,7 @@ using Team34FinalAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.ViewModels.ReportViewModel;
+using Team34FinalAPI.Report_DTO_s;
 
 namespace Team34FinalAPI.Services
 {
@@ -83,6 +84,22 @@ namespace Team34FinalAPI.Services
                 })
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<ReportData.VehicleFuelReportDto>> GetFuelExpendituresReportAsync()
+        {
+            return await _tripDbContext.Trips
+                .SelectMany(t => t.RefuelVehicles, (t, rv) => new ReportData.VehicleFuelReportDto
+                {
+                    VehicleName = t.Name,            // Fetching the Name property from Trip
+                    TripDate = t.TravelStart,        // Assuming TravelStart is the trip date
+                    FuelAmount = rv.FuelQuantity,    // Fetching FuelQuantity from RefuelVehicle
+                    FuelCost = rv.FuelCost           // Fetching FuelCost from RefuelVehicle
+                })
+                .ToListAsync();
+        }
+
+
+
 
         public async Task<IEnumerable<ProjectStatusReportViewModel>> GetProjectStatusReportAsync()
         {
