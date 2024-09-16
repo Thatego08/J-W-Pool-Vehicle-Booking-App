@@ -46,7 +46,13 @@ namespace Team34FinalAPI.Report_DTO_s
             public Status Status { get; set; }
             public int Count { get; set; }
         }
-
+        public class VehicleFuelReportDto
+        {
+            public string VehicleName { get; set; }
+            public DateTime TripDate { get; set; }
+            public decimal FuelAmount { get; set; }
+            public decimal FuelCost { get; set; }
+        }
 
     }
 }

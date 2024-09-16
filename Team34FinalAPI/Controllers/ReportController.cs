@@ -7,7 +7,6 @@ using static Team34FinalAPI.ViewModels.ReportViewModel;
 
 namespace Team34FinalAPI.Controllers
 {
-
     [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
@@ -15,6 +14,7 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly ReportService _reportService;
         private readonly ILogger<ReportsController> _logger;
+
         public ReportsController(ReportService reportService, ILogger<ReportsController> logger)
         {
             _reportService = reportService;
@@ -37,10 +37,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(report);
         }
 
-      
-
         [HttpGet]
-
         [Route("projects")]
         public async Task<ActionResult<List<ProjectReportDto>>> GetProjectReport()
         {
@@ -58,22 +55,18 @@ namespace Team34FinalAPI.Controllers
         [HttpGet("filtered-projects")]
         public async Task<ActionResult<IEnumerable<ProjectReportDto>>> GetFilteredProjects([FromQuery] string projectStatus)
         {
-            var report = await _reportService.GetFilteredProjectsAsync( projectStatus);
+            var report = await _reportService.GetFilteredProjectsAsync(projectStatus);
             return Ok(report);
         }
 
-
-
-        //Additions
-
         [HttpGet]
-        [Route("fuel-expenditure")]
-        public async Task<ActionResult<IEnumerable<ReportViewModel.FuelExpenditureReportViewModel>>> GetFuelExpenditureReport()
+       
+        [Route("vehicle-fuel-report")]
+        public async Task<ActionResult<IEnumerable<FuelExpenditureReportViewModel>>> GetFuelExpendituresReport()
         {
             try
             {
-
-                var report = await _reportService.GetFuelExpenditureReportAsync();
+                var report = await _reportService.GetFuelExpendituresReportAsync();
                 return Ok(report);
             }
             catch (Exception ex)
@@ -82,6 +75,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error.");
             }
         }
+
 
         [HttpGet("VehicleStatusReport")]
         public async Task<IActionResult> GetVehicleStatusReport()
@@ -157,8 +151,5 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error.");
             }
         }
-
-
     }
-
 }

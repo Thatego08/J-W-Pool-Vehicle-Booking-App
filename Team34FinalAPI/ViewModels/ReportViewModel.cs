@@ -23,6 +23,14 @@
             public int Count { get; set; }
             public int Accidents { get; set; }
         }
+
+        public class FuelExpendituresReportViewModel
+        {
+            public string VehicleName { get; set; }
+            public DateTime TripDate { get; set; }
+            public decimal FuelAmount { get; set; }
+            public decimal FuelCost { get; set; }
+        }
         public class FuelExpenditureReportViewModel
         {
             public string Vehicle { get; set; }
