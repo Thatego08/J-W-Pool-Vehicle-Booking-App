@@ -170,9 +170,9 @@ namespace Team34FinalAPI.Controllers
         public async Task<IActionResult> GetTripById(int id)
         {
             var trip = await _context.Trips
-                .Include(t => t.Booking)         // Include related Booking if necessary
-                .Include(t => t.PreChecklist)    // Include related PreChecklist
-                .Include(t => t.RefuelVehicles)  // Include related RefuelVehicles if necessary
+                .Include(t => t.Booking)         // Booking can be null
+                .Include(t => t.PreChecklist)    // PreChecklist can be null
+                .Include(t => t.RefuelVehicles)  // RefuelVehicles can be null or empty list
                 .FirstOrDefaultAsync(t => t.TripId == id);
 
             if (trip == null)
@@ -180,8 +180,14 @@ namespace Team34FinalAPI.Controllers
                 return NotFound($"Trip with ID {id} not found");
             }
 
+            // You can explicitly check for null related data if necessary
+            trip.Booking = trip.Booking ?? new Booking();
+            trip.PreChecklist = trip.PreChecklist ?? new PreChecklist();
+            trip.RefuelVehicles = trip.RefuelVehicles ?? new List<RefuelVehicle>();
+
             return Ok(trip);
         }
+
 
 
         [Authorize(Roles = "Driver")]

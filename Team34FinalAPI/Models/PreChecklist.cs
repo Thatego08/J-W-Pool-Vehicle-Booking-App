@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Team34FinalAPI.Models
 {
@@ -7,7 +8,6 @@ namespace Team34FinalAPI.Models
     {
         [Key]
         public int Id { get; set; }
-      
 
         [Required]
         public decimal OpeningKms { get; set; }
@@ -37,7 +37,12 @@ namespace Team34FinalAPI.Models
 
         public string Comments { get; set; } // Optional comments field
         public string AdditionalComments { get; set; } // Additional comments field if needed
-       
-       
+
+        // Foreign key for Booking
+        public int BookingID { get; set; }
+
+        [ForeignKey("BookingID")]
+        [JsonIgnore]
+        public Booking? Booking { get; set; }
     }
 }

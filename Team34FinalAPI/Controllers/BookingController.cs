@@ -60,7 +60,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         // Get specific Booking
-        [HttpGet("GetBooking{id}")]
+        [HttpGet("GetBooking/{id}")]
         public async Task<ActionResult<BookingViewModel>> GetBookingById(int id)
         {
             var booking = await _bookingRepository.GetBookingByIdAsync(id);
@@ -70,6 +70,7 @@ namespace Team34FinalAPI.Controllers
             }
             return Ok(MapToViewModel(booking));
         }
+
 
         // Updated Post method, to include 'Send Booking Confirmation'
         [HttpPost]
