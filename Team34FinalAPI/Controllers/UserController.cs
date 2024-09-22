@@ -522,7 +522,37 @@ namespace Team34FinalAPI.Controllers
         }
 
 
+    [HttpGet]
+    public async Task<IActionResult> GetAuditLogs([FromQuery] string username)
+    {
+        var logs = await _auditLogRepository.GetAuditLogsAsync(username);
+        return Ok(logs);
+    }
+
+        [HttpPut("edit/{id}")]
+        public async Task<IActionResult> EditAuditLogDetails(int id, [FromBody] EditAuditLogRequest request)
+        {
+            if (string.IsNullOrEmpty(request.NewDetails))
+            {
+                return BadRequest("Details cannot be empty.");
+            }
+
+            await _auditLogRepository.EditAuditLogDetailsAsync(id, request.NewDetails);
+            return Ok(new { message = "Audit log details updated successfully." });
+        }
+
+
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteAuditLog(int id)
+        {
+            await _auditLogRepository.DeleteAuditLogAsync(id);
+            return Ok(new { message = "Audit log deleted successfully." });
+        }
+
 
 
     }
+
+
+
 }

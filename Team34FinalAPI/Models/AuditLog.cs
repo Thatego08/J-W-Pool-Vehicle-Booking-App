@@ -8,4 +8,9 @@
         public string Details { get; set; }
         public DateTime Timestamp { get; set; }
     }
+
+    public class EditAuditLogRequest
+    {
+        public string NewDetails { get; set; }
+    }
 }
