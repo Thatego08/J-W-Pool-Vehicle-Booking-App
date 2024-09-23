@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.ViewModels.ReportViewModel;
 using Team34FinalAPI.Report_DTO_s;
+using System.Globalization;
 
 namespace Team34FinalAPI.Services
 {
@@ -253,6 +254,37 @@ namespace Team34FinalAPI.Services
                 })
                 .ToListAsync();
         }
+
+
+  public async Task<IEnumerable<UserTripReportDto>> GetTripsPerUserPerMonthAsync()
+{
+    var trips = await _tripDbContext.Trips
+        .GroupBy(t => new
+        {
+            t.UserName,
+            Month = t.TravelStart.Month,  // Keep Month as int
+            Year = t.TravelStart.Year
+        })
+        .Select(g => new
+        {
+            UserName = g.Key.UserName,
+            Month = g.Key.Month,
+            Year = g.Key.Year,
+            TripCount = g.Count()
+        })
+        .ToListAsync(); // Perform the query and get the result from the database
+
+    // Now convert the month number to month name in memory (client-side)
+    return trips
+        .Select(g => new UserTripReportDto
+        {
+            UserName = g.UserName,
+            Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Month), // Convert month int to name
+            Year = g.Year,
+            TripCount = g.TripCount
+        })
+        .ToList(); // This is now a synchronous call
+}
 
 
     }
