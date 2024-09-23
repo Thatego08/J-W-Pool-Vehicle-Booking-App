@@ -54,5 +54,14 @@ namespace Team34FinalAPI.Report_DTO_s
             public decimal FuelCost { get; set; }
         }
 
+        public class UserTripReportDto
+        {
+            public string UserName { get; set; }
+            public string Month { get; set; }     // Change from int to string  // Month number (1 for January, 12 for December)
+            public int Year { get; set; }   // Year of the trips
+            public int TripCount { get; set; }  // Count of trips for that user in the specific month
+        }
+
+
     }
 }

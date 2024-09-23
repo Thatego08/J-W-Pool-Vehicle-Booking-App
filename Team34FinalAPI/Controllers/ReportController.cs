@@ -137,6 +137,14 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [HttpGet("trips-per-user-per-month")]
+        public async Task<IActionResult> GetTripsPerUserPerMonth()
+        {
+            var report = await _reportService.GetTripsPerUserPerMonthAsync();
+            return Ok(report);
+        }
+
+
         [HttpGet("ProjectStatusReport")]
         public async Task<IActionResult> GetProjectStatusReport()
         {

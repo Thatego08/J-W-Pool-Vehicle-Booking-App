@@ -27,6 +27,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPost("CreatePostCheck")]
+        [RequestSizeLimit(10_000_000)]
         public async Task<IActionResult> CreatePostCheck([FromForm] PostCheckViewModel pcvm)
         {
             if (!ModelState.IsValid)
