@@ -34,7 +34,7 @@ namespace Team34FinalAPI.ViewModels
 
         // Fields for TripMedia
       
-        public List<IFormFile> MediaFiles { get; set; }
+        public List<IFormFile>? MediaFiles { get; set; }
         public string? MediaDescription { get; set; }
     }
 }
