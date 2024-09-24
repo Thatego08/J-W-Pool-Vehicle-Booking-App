@@ -128,7 +128,7 @@ namespace Team34FinalAPI.Controllers
             return firstPart + lastPart;
         }
 
-       
+
         [HttpPut]
         [Route("UpdateDriver/{userName}")]
         public async Task<IActionResult> UpdateDriver(string userName, DriverViewModel driverModel)
@@ -140,34 +140,33 @@ namespace Team34FinalAPI.Controllers
 
             try
             {
-                var existingDriver = await _driverRepository.GetDriverAsync(userName);
+                // Get the driver by username from _userManager
+                var existingDriver = await _userManager.FindByNameAsync(userName);
                 if (existingDriver == null)
                 {
                     return NotFound($"Driver with username '{userName}' does not exist.");
                 }
 
-                // Update driver fields
+                // Update driver fields (but not PasswordHash)
                 existingDriver.Name = driverModel.Name;
                 existingDriver.Surname = driverModel.Surname;
                 existingDriver.Email = driverModel.Email;
                 existingDriver.PhoneNumber = driverModel.PhoneNumber;
 
-                // Optionally update the password if provided
-                if (!string.IsNullOrEmpty(driverModel.Password))
-                {
-                    existingDriver.PasswordHash = _userManager.PasswordHasher.HashPassword(existingDriver, driverModel.Password);
-                }
+                // Save the changes using _userManager
+                var updateResult = await _userManager.UpdateAsync(existingDriver);
 
-                // Save changes
-                var result = await _driverRepository.SaveChangesAync();
-
-                if (result)
+                if (updateResult.Succeeded)
                 {
                     return Ok(existingDriver);
                 }
                 else
                 {
-                    return StatusCode(500, "An error occurred while updating the driver.");
+                    foreach (var error in updateResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return BadRequest(ModelState);
                 }
             }
             catch (Exception ex)
@@ -176,6 +175,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support.");
             }
         }
+
 
 
         [Authorize(Roles = "Admin")]
