@@ -55,5 +55,32 @@
             public string Make { get; set; }
             public int Count { get; set; }
         }
+
+
+        public class BookingPerUserReportViewModel
+        {
+            public string UserName { get; set; }
+            public int Month { get; set; }
+            public int Year { get; set; } // Add this property
+            public int BookingCount { get; set; }
+        }
+
+        public class CancelledBookingReportViewModel
+        {
+            public string UserName { get; set; }
+            public int BookingId { get; set; }
+            public DateTime CancelledDate { get; set; } // We'll use the booking's EndDate as a proxy
+            
+        }
+
+
+        //public class AvailableVehiclesReportViewModel
+        //{
+        //    public string VehicleName { get; set; }
+        //    public int Month { get; set; } // Add this property
+        //    public int Year { get; set; }  // Add this property
+        //    public int AvailableCount { get; set; }
+        //}
+
     }
 }
