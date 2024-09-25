@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Team34FinalAPI.Models;
+using Team34FinalAPI.Report_DTO_s;
 using Team34FinalAPI.Services;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.Report_DTO_s.ReportData;
@@ -159,5 +161,56 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error.");
             }
         }
+
+        //Bookings per User per month report added
+        [HttpGet("bookings-per-user-per-month")]
+        public async Task<IActionResult> GetBookingsPerUserPerMonthAsync()
+        {
+            try
+            {
+                var result = await _reportService.GetBookingsPerUserPerMonthAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Log exception (consider using a logging framework)
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        //Number of cancelled bookings per month
+        [HttpGet("cancelled-bookings-per-month")]
+        public async Task<IActionResult> GetCancelledBookingsPerMonthAsync()
+        {
+            try
+            {
+                var result = await _reportService.GetCancelledBookingsPerMonthAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Log exception (consider using a logging framework)
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        //Available vehicles for the month
+        //[HttpGet("available-vehicles-for-month")]
+        //public async Task<IActionResult> GetAvailableVehiclesForMonthAsync()
+        //{
+        //    try
+        //    {
+        //        var result = await _reportService.GetAvailableVehiclesForMonthAsync();
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log exception (consider using a logging framework)
+        //        return StatusCode(500, "Internal server error");
+        //    }
+        //}
+
+
     }
 }
