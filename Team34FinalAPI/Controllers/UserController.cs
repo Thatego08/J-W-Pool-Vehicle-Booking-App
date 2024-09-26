@@ -73,7 +73,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserViewModel model)
+        public async Task<IActionResult> Register([FromForm] UserViewModel model, IFormFile profilePhoto)
         {
             if (!ModelState.IsValid)
             {
@@ -107,7 +107,20 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest(new { Message = "Username already exists." });
                 }
 
+                // Handle the profile photo
+                if (profilePhoto != null && profilePhoto.Length > 0)
+                {
+                    var filePath = Path.Combine("Images/Uploads", $"{username}_profile.jpg"); // Example storage path
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await profilePhoto.CopyToAsync(stream);
+                    }
+                    user.ProfilePhotoPath = filePath; // Save the file path or URL in the user entity
+                }
+
                 var result = await _userManager.CreateAsync(user, model.Password);
+
+
 
                 if (result.Succeeded)
                 {
@@ -232,12 +245,21 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest(new { message = "User not found." });
             }
 
+
+
             // Retrieve the user profile based on the username
             var user = await _userManager.FindByNameAsync(userName);
 
             if (user == null)
             {
                 return NotFound(new { message = "User not found." });
+            }
+
+            // Build the URL for the profile photo
+            var profilePhotoUrl = string.Empty;
+            if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+            {
+                profilePhotoUrl = $"{Request.Scheme}://{Request.Host}/Images/Uploads/{Path.GetFileName(user.ProfilePhotoPath)}";
             }
 
             // Return the user profile information
@@ -247,7 +269,9 @@ namespace Team34FinalAPI.Controllers
                 user.Email,
                 user.Name,
                 user.Surname,
-                user.Role
+                user.Role,
+
+                ProfilePhotoUrl = profilePhotoUrl
             };
 
             return Ok(userProfile);

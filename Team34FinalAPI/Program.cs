@@ -22,6 +22,7 @@ using Mailjet.Client.Resources;
 using Newtonsoft.Json.Linq;
 using User = Team34FinalAPI.Models.User;
 using Org.BouncyCastle.Crypto.Tls;
+using Microsoft.Extensions.FileProviders;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -196,6 +197,7 @@ builder.Services.AddScoped<OTPSettingsService>();
 builder.Services.AddScoped<ISMS_Service, SMS_Service>();
 
 
+
 // Configure MailJet settings
 builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
 
@@ -302,6 +304,14 @@ else
 app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 
+
+// Add this line to serve files from Images directory
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Images")),
+    RequestPath = "/Images"
+});
 app.UseAuthentication();
 app.UseAuthorization();
 
