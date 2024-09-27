@@ -11,6 +11,16 @@ namespace Team34FinalAPI.Models
             _context = context;
         }
 
+
+        public async Task<Booking> GetConflictingBookingAsync(int vehicleId, DateTime startDate, DateTime endDate)
+        {
+            return await _context.Bookings
+                .Where(b => b.VehicleId == vehicleId &&
+                            ((b.StartDate <= endDate && b.StartDate >= startDate) || // Start date within range
+                             (b.EndDate >= startDate && b.EndDate <= endDate)))      // End date within range
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<Booking>> GetBookingsAsync()
         {
             try

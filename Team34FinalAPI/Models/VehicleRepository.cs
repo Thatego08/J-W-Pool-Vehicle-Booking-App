@@ -11,10 +11,12 @@ namespace Team34FinalAPI.Models
     public class VehicleRepository : IVehicleRepository
     {
         private readonly VehicleDbContext _context;
+        private readonly BookingDbContext _bContext;
 
-        public VehicleRepository(VehicleDbContext context)
+        public VehicleRepository(VehicleDbContext context, BookingDbContext bContext)
         {
             _context = context;
+            _bContext = bContext;
         }
 
         public async Task AddVehicleAsync(Vehicle vehicle)
@@ -62,6 +64,21 @@ namespace Team34FinalAPI.Models
         }
 
         //Additions
+
+        public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate)
+        {
+            // Get the IDs of vehicles that have conflicting bookings
+            var unavailableVehicleIds = await _bContext.Bookings
+                .Where(b => (b.StartDate < endDate && b.EndDate > startDate)) // Conflict in date ranges
+                .Select(b => b.VehicleId)
+                .ToListAsync();
+
+            // Return all vehicles that are not in the unavailable list
+            return await _context.Vehicles
+                .Where(v => !unavailableVehicleIds.Contains(v.VehicleID)) // Available vehicles not booked
+                .ToListAsync();
+        }
+
         public async Task<Vehicle> GetVehicleByNameAsync(string name)
         {
             return await _context.Vehicles.SingleOrDefaultAsync(v => v.Name == name);
@@ -114,17 +131,36 @@ namespace Team34FinalAPI.Models
                 .ToListAsync();
         }
 
+        /*    public async Task<Vehicle> GetVehicleByIdAsync(int vehicleId)
+            {
+                return await _context.Vehicles
+                    .Include(v => v.Colour)
+                    .Include(v => v.FuelType)
+                    .Include(v => v.VehicleMake)
+                    .Include(v => v.VehicleModel)
+                    .Include(v => v.Status)
+                    .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
+            }
+
+    */
+
         public async Task<Vehicle> GetVehicleByIdAsync(int vehicleId)
         {
-            return await _context.Vehicles
-                .Include(v => v.Colour)
-                .Include(v => v.FuelType)
-                .Include(v => v.VehicleMake)
-                .Include(v => v.VehicleModel)
-                .Include(v => v.Status)
-                .FirstOrDefaultAsync(v => v.VehicleID == vehicleId);
-        }
+            var vehicle = await _context.Vehicles.FindAsync(vehicleId);
 
+            // Get the current date
+            var currentDate = DateTime.UtcNow;
+
+            // Check if the vehicle is booked for the current date
+            var activeBooking = await _bContext.Bookings
+                .Where(b => b.VehicleId == vehicleId && b.StartDate <= currentDate && b.EndDate >= currentDate)
+                .FirstOrDefaultAsync();
+
+            // If there's an active booking, set status to 'Booked', otherwise 'Available'
+            vehicle.StatusID = activeBooking != null ? 2 : 1; // 2 for 'Booked', 1 for 'Available'
+
+            return vehicle;
+        }
 
 
         public async Task<InsuranceCover[]> GetInsuranceCoverAsync()
