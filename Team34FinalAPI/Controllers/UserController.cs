@@ -448,6 +448,71 @@ namespace Team34FinalAPI.Controllers
         }
 
 
+        [HttpPut]
+        [Route("update-details")]
+        public async Task<IActionResult> UpdateDetails(string userName, [FromForm] UpdateDetailsViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userRepository.GetUserAsync(userName);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Update basic profile details
+            user.Name = model.Name;
+            user.Surname = model.Surname;
+            user.Email = model.Email;
+
+            // Handle profile picture update
+            if (model.ProfilePhoto != null)
+            {
+                // Check if a new profile photo is uploaded
+                if (model.ProfilePhoto != null)
+                {
+                    // Save the uploaded file
+                    var filePath = Path.Combine("Images/Uploads", model.ProfilePhoto.FileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfilePhoto.CopyToAsync(stream);
+                    }
+
+                    // Update the user's profile photo path in the user object
+                    user.ProfilePhotoPath = model.ProfilePhoto.FileName; // Assuming you have a property for this
+                }
+            }
+            
+           
+            // Update user in the database
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+
+            return Ok(new { message = "Profile updated successfully." });
+        }
+
+        private async Task<string> SaveProfilePhoto(IFormFile file, string userName)
+        {
+            // Logic to save the profile photo and return the URL
+            var uploads = Path.Combine(Directory.GetCurrentDirectory(), "Images/Uploads");
+            var filePath = Path.Combine(uploads, $"{userName}_profile.jpg");
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+
+            return $"/Images/Uploads/{userName}_profile.jpg"; // Return the relative URL
+        }
+
+
+
         [HttpPost]
         [Route("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
