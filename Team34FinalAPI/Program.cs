@@ -195,6 +195,9 @@ builder.Services.AddScoped<IOTPService, OTPService>();
 
 builder.Services.AddScoped<OTPSettingsService>();
 builder.Services.AddScoped<ISMS_Service, SMS_Service>();
+builder.Services.AddScoped<BookingReminderService>();
+
+builder.Services.AddHostedService<BookingReminderHostedService>();
 
 
 

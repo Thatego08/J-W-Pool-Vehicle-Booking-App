@@ -13,6 +13,7 @@
 
         Task<Booking?> GetConflictingBookingAsync(int vehicleId, DateTime startDate, DateTime endDate);
 
+        Task<List<Booking>> GetBookingsWithinNext24HoursAsync();
 
     }
 }
