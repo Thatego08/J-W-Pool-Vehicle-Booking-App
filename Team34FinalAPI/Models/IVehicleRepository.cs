@@ -37,6 +37,8 @@ namespace Team34FinalAPI.Models
 
         //Additions
 
+        Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate);
+
 
         Task<Vehicle> GetVehicleByNameAsync(string name);
 
