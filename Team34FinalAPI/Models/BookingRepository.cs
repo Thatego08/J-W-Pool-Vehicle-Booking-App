@@ -44,6 +44,17 @@ namespace Team34FinalAPI.Models
             }
         }
 
+
+        public async Task<List<Booking>> GetBookingsWithinNext24HoursAsync()
+        {
+            var now = DateTime.UtcNow;
+            var twentyFourHoursLater = now.AddHours(24);
+
+            return await _context.Bookings
+                .Where(b => b.StartDate >= now && b.StartDate <= twentyFourHoursLater && b.StatusId != 4) // Exclude cancelled bookings
+                .ToListAsync();
+        }
+
         public async Task<Booking> GetBookingByIdAsync(int id)
         {
             try
