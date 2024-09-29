@@ -33,7 +33,7 @@ namespace Team34FinalAPI.ViewModels
         public string AdditionalComments { get; set; }
 
         // Fields for TripMedia
-      
+        public int TripId { get; set; } // Add this property
         public List<IFormFile>? MediaFiles { get; set; }
         public string? MediaDescription { get; set; }
     }

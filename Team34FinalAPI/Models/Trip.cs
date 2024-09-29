@@ -24,7 +24,8 @@ namespace Team34FinalAPI.Models
       
         public string UserName { get; set; }
         public ICollection<RefuelVehicle> RefuelVehicles { get; set; }
+        public ICollection<PostCheck> PostChecks { get; set; } = new List<PostCheck>(); // Navigation property for PostChecks
 
-      
+
     }
 }
