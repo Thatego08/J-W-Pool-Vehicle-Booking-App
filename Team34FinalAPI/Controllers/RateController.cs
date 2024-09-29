@@ -11,12 +11,13 @@ namespace Team34FinalAPI.Controllers
     public class RateController : ControllerBase
     {
         private readonly IRateRepo _rateRepo;
+        private readonly IAuditLogRepository _auditLogRepo;
 
 
-        public RateController(IRateRepo rateRepo)
+        public RateController(IRateRepo rateRepo, IAuditLogRepository auditLogRepo)
         {
             _rateRepo = rateRepo;
-
+            _auditLogRepo = auditLogRepo;
         }
 
 
@@ -39,6 +40,15 @@ namespace Team34FinalAPI.Controllers
 
             var createdRate = await _rateRepo.CreateRateAsync(rate);
 
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+                Action = "Create Rate",
+                Details = $"Rate for projects has been created by an administrator",
+                Timestamp = DateTime.UtcNow
+            });
+
             // Instead of CreatedAtAction, use a simpler response
             return Ok(new { message = "Rate created successfully", rate = createdRate });
         }
@@ -59,6 +69,14 @@ namespace Team34FinalAPI.Controllers
             }
 
             await _rateRepo.UpdateRateAsync(rate);
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+                Action = "Update Rate",
+                Details = $"Rate for projects has been updated by an administrator",
+                Timestamp = DateTime.UtcNow
+            });
             return NoContent();
         }
 /*

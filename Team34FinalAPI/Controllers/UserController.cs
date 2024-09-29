@@ -274,6 +274,14 @@ namespace Team34FinalAPI.Controllers
                 ProfilePhotoUrl = profilePhotoUrl
             };
 
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Profile View",
+                Details = "User viewed their profile successfully.",
+                Timestamp = DateTime.UtcNow
+            });
+
             return Ok(userProfile);
         }
 
@@ -444,6 +452,14 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest(ModelState);
             }
 
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Update Password",
+                Details = "User has successfully updated their password.",
+                Timestamp = DateTime.UtcNow
+            });
+
             return Ok(new { message = "Profile updated successfully." });
         }
 
@@ -494,6 +510,13 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest(ModelState);
             }
 
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Update Details",
+                Details = "User has successfully updated their details.",
+                Timestamp = DateTime.UtcNow
+            });
             return Ok(new { message = "Profile updated successfully." });
         }
 
@@ -539,8 +562,15 @@ namespace Team34FinalAPI.Controllers
             // Send OTP via email
             await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp.Code}");
 
-          //  await _smsService.SendSmsAsync(user.PhoneNumber, $"Your OTP for password reset is: {otp.Code}");
+            //  await _smsService.SendSmsAsync(user.PhoneNumber, $"Your OTP for password reset is: {otp.Code}");
 
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Forgot Password",
+                Details = "User has successfully reset their password.",
+                Timestamp = DateTime.UtcNow
+            });
             return Ok(new { message = "OTP has been sent to your email." });
         }
 

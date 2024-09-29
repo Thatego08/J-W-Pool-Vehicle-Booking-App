@@ -16,11 +16,13 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly TripDbContext _context;
         private readonly ITripRepository _tripRepository;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public TripController(TripDbContext context, ITripRepository tripRepository)
+        public TripController(TripDbContext context, ITripRepository tripRepository, IAuditLogRepository auditLogRepo)
         {
             _context = context;
             _tripRepository = tripRepository;
+            _auditLogRepo = auditLogRepo;
         }
 
         [Authorize(Roles = "Driver")]
@@ -74,6 +76,16 @@ namespace Team34FinalAPI.Controllers
             {
                 _context.Trips.Add(trip);
                 await _context.SaveChangesAsync();
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = userName,
+                    Action = "Create New Trip",
+                    Details = $"Trip created for vehicle booking. Trip created by : " + userName +" with the following comments: "+trip.Comment,
+                    Timestamp = DateTime.UtcNow
+                });
+
             }
             catch (DbUpdateException dbEx)
             {
@@ -122,6 +134,14 @@ namespace Team34FinalAPI.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = trip.UserName,
+                    Action = "Update Trip",
+                    Details = $"Trip details for "+ tvm.Name + " have been updated by: " + trip.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -235,7 +255,19 @@ namespace Team34FinalAPI.Controllers
                 _tripRepository.Delete(existingTrip);
 
                 if (await _tripRepository.SaveChangesAsync())
+
+                {
+
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                       Action = "Delete Trip",
+                        Details = $"Trip has been deleted by an administrator" ,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingTrip);
+
+                }
 
                 return StatusCode(500, "Failed to delete trip");
             }

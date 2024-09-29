@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Team34FinalAPI.Migrations.BookingDb;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
 
@@ -10,10 +11,12 @@ namespace Team34FinalAPI.Controllers
     public class FAQController : ControllerBase
     {
         private readonly IFAQRepo _faqRepo;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public FAQController(IFAQRepo faqRepo)
+        public FAQController(IFAQRepo faqRepo, IAuditLogRepository auditLogRepo)
         {
             _faqRepo = faqRepo;
+            _auditLogRepo = auditLogRepo;
         }
 
         // get all faqs
@@ -45,6 +48,15 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest("FAQ object is null");
             }
 
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+               
+                Action = "New FAQ Added",
+                Details = $"New Frequently Asked Question Added by an Administrator" ,
+                Timestamp = DateTime.UtcNow
+            });
+
             await _faqRepo.AddFaq(faq);
             return CreatedAtAction(nameof(GetFaqById), new { id = faq.FAQId, Message = "FAQ added successfully!" }, faq);
         }
@@ -65,7 +77,18 @@ namespace Team34FinalAPI.Controllers
             }
 
             await _faqRepo.UpdateFaq(faq);
+
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+
+                Action = "FAQ Details Updated",
+                Details = $"Frequently Asked Question Details updated by an Administrator",
+                Timestamp = DateTime.UtcNow
+            });
             return Ok(new { Message = "FAQ Updated Successfully!" });
+
         }
 
         //delete existing faq
@@ -79,6 +102,16 @@ namespace Team34FinalAPI.Controllers
             }
 
             await _faqRepo.DeleteFaq(id);
+
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+
+                Action = "FAQ Deleted",
+                Details = $"Frequently Asked Question Deleted by an Administrator",
+                Timestamp = DateTime.UtcNow
+            });
             return Ok(new { Message = "FAQ Deleted Successfully!" });
         }
 
