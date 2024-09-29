@@ -27,10 +27,11 @@ namespace Team34FinalAPI.Controllers
         private readonly VehicleDbContext _vehicleContext;
         private readonly ILogger<BookingController> _logger;
         private readonly IEmailService _emailService;
+        private readonly IAuditLogRepository _auditLogRepo;
 
         private readonly UserManager<User> _userManager;
 
-        public BookingController(IBookingRepository bookingRepository, UserManager<User> userManager, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
+        public BookingController(IBookingRepository bookingRepository,IAuditLogRepository auditLogRepository, UserManager<User> userManager, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
         {
             _bookingRepository = bookingRepository;
             _projectRepository = projectRepository;
@@ -39,6 +40,7 @@ namespace Team34FinalAPI.Controllers
             _vehicleContext = vehicleContext;
             _logger = logger;
             _emailService = emailService;
+            _auditLogRepo = auditLogRepository;
 
             _userManager = userManager;
         }
@@ -169,9 +171,21 @@ namespace Team34FinalAPI.Controllers
                 await _bookingRepository.AddBookingAsync(booking);
 
 
+
                 await _vehicleRepository.UpdateVehicleAsync(vehicle);
 
                 bookingViewModel.BookingID = booking.BookingID;
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = userName,
+                    Action = "Add new booking",
+                    Details = $"Booking for vehicle created by : " + userName,
+                    Timestamp = DateTime.UtcNow
+                });
+
+
 
                 // Send confirmation email (as implemented)
                 // After booking is successfully created, send the confirmation email
@@ -269,6 +283,15 @@ namespace Team34FinalAPI.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = bookingViewModel.UserName,
+                    Action = "Edit Booking",
+                    Details = $"Booking has been updated by: " + booking.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -295,6 +318,16 @@ namespace Team34FinalAPI.Controllers
         {
             var booking = await _bookingRepository.GetBookingByIdAsync(id);
             if (booking == null) return NotFound();
+
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+                UserName = booking.UserName,
+                Action = "Delete Booking",
+                Details = $"Booking for vehicle has been deleted by : " + booking.UserName,
+                Timestamp = DateTime.UtcNow
+            });
 
             await _bookingRepository.DeleteBookingAsync(id);
 
@@ -375,6 +408,16 @@ namespace Team34FinalAPI.Controllers
                     await _emailService.SendEmailAsync(user.Email, subject, message);
                 }
 
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = booking.UserName,
+                    Action = "Cancel Booking",
+                    Details = $"Booking for vehicle has been canceled by : " + booking.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
+
                 //return Ok("Booking cancelled and vehicle status updated to 'Available'.");
                 return Ok(new { message = "Booking cancelled and vehicle status updated to 'Available'." });
 
@@ -409,6 +452,7 @@ namespace Team34FinalAPI.Controllers
             {
                 await _context.SaveChangesAsync();
                 return Ok(new { message = "Vehicle status updated successfully." });
+
             }
             catch (DbUpdateException)
             {

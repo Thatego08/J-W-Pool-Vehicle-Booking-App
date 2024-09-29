@@ -19,13 +19,15 @@ namespace Team34FinalAPI.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly IVehicleRepository _vehicleRepository;
         private readonly ILogger<VehicleController> _logger;
+        private readonly IAuditLogRepository _auditLogRepo;
 
 
-        public VehicleController(IVehicleRepository vehicleRepository, IWebHostEnvironment environment, ILogger<VehicleController> logger)
+        public VehicleController(IVehicleRepository vehicleRepository, IWebHostEnvironment environment, ILogger<VehicleController> logger, IAuditLogRepository auditLogRepo)
         {
             _vehicleRepository = vehicleRepository;
             _environment = environment;
             _logger = logger;
+            _auditLogRepo = auditLogRepo;
         }
 
         [HttpGet("GetAllVehicles")]
@@ -89,7 +91,16 @@ namespace Team34FinalAPI.Controllers
                 };
 
                 await _vehicleRepository.AddVehicleAsync(vehicle);
+
                 var result = "Vehicle added successfully!";
+
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Add Vehicle",
+                    Details = "Vehicle has been successfully added by." + User.Identity.Name,
+                    Timestamp = DateTime.UtcNow
+                });
                 return Ok();
 
             }
@@ -142,6 +153,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Edit Vehicle Details",
+                        Details = "Vehicle details have been successfully updated by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
             }
@@ -179,6 +198,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Delete Vehicle",
+                        Details = "Vehicle has been successfully deleted by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
                 return BadRequest("Failed to delete the vehicle.");
@@ -219,6 +246,14 @@ namespace Team34FinalAPI.Controllers
 
                 _vehicleRepository.AddVehicleMake(vehicleMake);
                 await _vehicleRepository.SaveChangesAsync();
+
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Add Vehicle Make",
+                    Details = "Vehicle Make has been successfully added by." + User.Identity.Name,
+                    Timestamp = DateTime.UtcNow
+                });
                 return CreatedAtAction(nameof(AddVehicleMake), vehicleMake);
             }
             catch (Exception ex)
@@ -261,6 +296,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Edit Vehicle Make",
+                        Details = "Vehicle Make has been successfully updated by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
             }
@@ -283,6 +326,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Delete Vehicle Make",
+                        Details = "Vehicle Make has been successfully Deleted by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
                 return BadRequest("Failed to delete the vehicle make.");
@@ -348,6 +399,14 @@ namespace Team34FinalAPI.Controllers
 
                 _vehicleRepository.AddVehicleModel(vehicleModel);
                 await _vehicleRepository.SaveChangesAsync();
+
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Add Vehicle Model",
+                    Details = "Vehicle Model has been successfully added by." + User.Identity.Name,
+                    Timestamp = DateTime.UtcNow
+                });
                 return CreatedAtAction(nameof(AddVehicleModel), vehicleModel);
             }
             catch (Exception ex)
@@ -393,6 +452,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Edit Vehicle Model",
+                        Details = "Vehicle Model has been successfully updated by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
             }
@@ -415,6 +482,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Delete Vehicle Model",
+                        Details = "Vehicle model has been successfully deleted by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
                 return BadRequest("Failed to delete the vehicle model.");
@@ -453,6 +528,14 @@ namespace Team34FinalAPI.Controllers
 
                 _vehicleRepository.AddFuelType(fuelType);
                 await _vehicleRepository.SaveChangesAsync();
+
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Add FuelType",
+                    Details = "Vehicle fuel type has been successfully added by." + User.Identity.Name,
+                    Timestamp = DateTime.UtcNow
+                });
                 return CreatedAtAction(nameof(AddFuelType), fuelType);
             }
             catch (Exception ex)
@@ -555,6 +638,14 @@ namespace Team34FinalAPI.Controllers
 
                 _vehicleRepository.AddColour(colour);
                 await _vehicleRepository.SaveChangesAsync();
+
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Add Vehicle Color",
+                    Details = "Vehicle color option has been successfully added by." + User.Identity.Name,
+                    Timestamp = DateTime.UtcNow
+                });
                 return CreatedAtAction(nameof(AddColour), colour);
             }
             catch (Exception ex)
@@ -691,6 +782,14 @@ namespace Team34FinalAPI.Controllers
 
                 _vehicleRepository.AddInsuranceCover(insurance);
                 await _vehicleRepository.SaveChangesAsync();
+
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = User.Identity.Name,
+                    Action = "Add Vehicle Insurance Cover",
+                    Details = "Vehicle Insurance Cover has been successfully added by." + User.Identity.Name,
+                    Timestamp = DateTime.UtcNow
+                });
                 return CreatedAtAction(nameof(AddInsuranceCover), insurance);
             }
             catch (Exception ex)
@@ -716,6 +815,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Edit Vehicle Insurance",
+                        Details = "Vehicle Insurance options has been successfully updated by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
             }
@@ -738,6 +845,14 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
+
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = User.Identity.Name,
+                        Action = "Delete Vehicle Insurance",
+                        Details = "Vehicle insurance has been successfully removed by." + User.Identity.Name,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingVehicle);
                 }
                 return BadRequest("Failed to delete the insurance cover.");

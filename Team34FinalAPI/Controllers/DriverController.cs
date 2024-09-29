@@ -13,6 +13,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
+using Team34FinalAPI.Migrations.BookingDb;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -27,12 +28,15 @@ namespace Team34FinalAPI.Controllers
 
         private readonly ILogger<DriverController> _logger;
         private readonly UserManager<User> _userManager;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public DriverController(IDriverRepository driverRepository, UserManager<User> userManager, ILogger<DriverController> Logger)
+
+        public DriverController(IDriverRepository driverRepository, IAuditLogRepository auditLogRepository,UserManager<User> userManager, ILogger<DriverController> Logger)
         {
             _driverRepository = driverRepository;
             this._userManager = userManager;
             _logger = Logger;
+            _auditLogRepo = auditLogRepository;
         }
 
         [Authorize(Roles = "Admin")]
@@ -94,6 +98,15 @@ namespace Team34FinalAPI.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(driver, "Driver");
+                    
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = username,
+                        Action = "Register Driver",
+                        Details = $"New driver details registered with Username: " + username,
+                        Timestamp = DateTime.UtcNow
+                    });
 
                     return Ok("User registered successfully" + "Your Username is: " + username);
                 }
@@ -159,6 +172,14 @@ namespace Team34FinalAPI.Controllers
                 if (updateResult.Succeeded)
                 {
                     return Ok(existingDriver);
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = userName,
+                        Action = "Driver Details Update",
+                        Details = $"Driver details updated by : " + userName,
+                        Timestamp = DateTime.UtcNow
+                    });
                 }
                 else
                 {
@@ -191,7 +212,17 @@ namespace Team34FinalAPI.Controllers
                 _driverRepository.Delete(existingDriver);
 
                 if (await _driverRepository.SaveChangesAync())
+                {
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = userName,
+                        Action = "Delete Driver",
+                        Details = $"Driver details removed effectively by : " + userName,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingDriver);
+                }
 
             }
 
