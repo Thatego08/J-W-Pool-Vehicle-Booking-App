@@ -33,6 +33,12 @@ namespace Team34FinalAPI.Models
                 .WithOne(t => t.PostCheck)
                 .HasForeignKey(t => t.PostCheckId);
 
+            modelBuilder.Entity<PostCheck>()
+       .HasOne(p => p.Trip)
+       .WithMany(t => t.PostChecks) // Trip has many PostChecks
+       .HasForeignKey(p => p.TripId) // Foreign key relationship
+       .OnDelete(DeleteBehavior.Cascade); // Adjust based on your desired behavior
+
             modelBuilder.Entity<PreChecklist>()
        .HasOne(pc => pc.Booking)
        .WithMany(b => b.PreChecklists) // 'PreChecklists' navigation property in Booking

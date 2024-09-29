@@ -41,6 +41,7 @@ namespace Team34FinalAPI.Controllers
 
             var postCheck = new PostCheck
             {
+                TripId = pcvm.TripId,
                 ClosingKms = pcvm.ClosingKms,
                 OilLeaks = pcvm.OilLeaks,
                 FuelLevel = pcvm.FuelLevel,
@@ -129,6 +130,7 @@ namespace Team34FinalAPI.Controllers
             var postCheckDto = new
             {
                 postCheck.PostCheckId,
+                postCheck.TripId,
                 postCheck.ClosingKms,
                 postCheck.OilLeaks,
                 postCheck.FuelLevel,
@@ -182,6 +184,7 @@ namespace Team34FinalAPI.Controllers
             var postCheckDtos = postChecks.Select(postCheck => new
             {
                 postCheck.PostCheckId,
+                postCheck.TripId,
                 postCheck.ClosingKms,
                 postCheck.OilLeaks,
                 postCheck.FuelLevel,

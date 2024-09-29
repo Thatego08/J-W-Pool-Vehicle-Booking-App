@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
 
 namespace Team34FinalAPI.Models
 {
@@ -8,6 +10,11 @@ namespace Team34FinalAPI.Models
         [Key]
         public int PostCheckId { get; set; }
 
+        // Foreign key property for Trip
+        public int TripId { get; set; }
+
+        [JsonIgnore] // Avoid circular references in JSON serialization
+        public Trip Trip { get; set; } // Navigation property
         public decimal ClosingKms { get; set; }
         public bool OilLeaks { get; set; }
         public bool FuelLevel { get; set; }
@@ -31,6 +38,8 @@ namespace Team34FinalAPI.Models
         public bool JWMarketingMagnets { get; set; }
         public bool CheckedByJWSecurity { get; set; }
         public bool LicenseDiskValid { get; set; }
+
+       
 
         public string Comments { get; set; }
         public string AdditionalComments { get; set; }
