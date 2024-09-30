@@ -5,9 +5,11 @@ namespace Team34FinalAPI.Models
     {
         Task<bool> SaveChangesAsync();
         Task AddVehicleAsync(VehicleViewModel vehicleModel);
-        
+
+        Task AddVehicleModelAsync(ModelViewModel mvm);
         void Delete<T>(T entity) where T : class;
 
+        Task<bool> ExistsVehicleMake(int vehicleMakeId);
         void AddVehicleMake(VehicleMake vehicleMake);
         void AddVehicleModel (VehicleModel vehicleModel);
         void AddColour(Colour colour);

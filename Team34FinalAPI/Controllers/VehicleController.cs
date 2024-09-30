@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace Team34FinalAPI.Controllers
@@ -28,6 +29,7 @@ namespace Team34FinalAPI.Controllers
             _logger = logger;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllVehicles")]
         public async Task<IActionResult> GetAllVehicles()
         {
@@ -66,6 +68,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         //Add Vehicle Adjustment
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddVehicle")]
         public async Task<IActionResult> AddVehicle([FromBody] VehicleViewModel vehicleViewModel)
         {
@@ -118,6 +121,7 @@ namespace Team34FinalAPI.Controllers
         
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         [Route("EditVehicle/{vehicleId}")] // Corrected route template
         public async Task<ActionResult<VehicleViewModel>> EditVehicle(int vehicleId, VehicleViewModel vehicleModel)
         {
@@ -166,7 +170,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(availableVehicles);
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteVehicle/{vehicleId}")]
         public async Task<IActionResult> DeleteVehicle(int vehicleId)
         {
@@ -191,7 +195,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         //
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllVehicleMakes")]
         public async Task<IActionResult> GetAllVehicleMakes()
         {
@@ -207,6 +211,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddVehicleMake")]
         public async Task<IActionResult> AddVehicleMake([FromBody] VehicleMake vehicleMake)
         {
@@ -228,6 +233,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetVehicleMake/{makeId}")]
         public async Task<IActionResult> GetMakeAsync(int makeId)
         {
@@ -247,6 +253,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         [Route("EditMake/{makeId}")] // Corrected route template
         public async Task<ActionResult<VehicleViewModel>> EditMake(int makeId, VehicleMake vehicleMake)
         {
@@ -271,6 +278,7 @@ namespace Team34FinalAPI.Controllers
             return BadRequest("Your request is invalid");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteMake/{makeId}")]
         public async Task<IActionResult> DeleteMake(int makeId)
         {
@@ -294,6 +302,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetModelByMake/{makeId}")]
         public async Task<IActionResult> GetModelsByMakeAsync(int makeId)
         {
@@ -320,7 +329,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllVehicleModels")]
         public async Task<IActionResult> GetAllVehicleModels()
         {
@@ -336,6 +345,39 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPost("AddVehicleModel")]
+        public async Task<IActionResult> AddVehicleModel([FromBody] ModelViewModel mvm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState); // Return validation errors
+            }
+
+            try
+            {
+                if (mvm == null)
+                {
+                    return BadRequest("Vehicle model is required.");
+                }
+
+                mvm.VehicleModelID = 0; // Ensure ID is set to 0 for new entry
+
+                _vehicleRepository.AddVehicleModelAsync(mvm);
+                await _vehicleRepository.SaveChangesAsync();
+                return CreatedAtAction(nameof(AddVehicleModel), new { id = mvm.VehicleModelID }, mvm);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (optional)
+                return StatusCode(500, $"Internal Server Error: Unable to add vehicle model. {ex.Message}");
+            }
+        }
+
+
+
+        /*
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddVehicleModel")]
         public async Task<IActionResult> AddVehicleModel([FromBody] VehicleModel vehicleModel)
         {
@@ -355,8 +397,9 @@ namespace Team34FinalAPI.Controllers
                 // Log the exception (ex)
                 return StatusCode(500, "Internal Server Error: Unable to add vehicle model.");
             }
-        }
+        }*/
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetVehicleModel/{modelId}")]
         public async Task<IActionResult> GetModelAsync(int modelId)
         {
@@ -377,6 +420,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         [Route("EditModel/{modelId}")] // Corrected route template
         public async Task<ActionResult<VehicleViewModel>> EditModel(int modelId, VehicleModel vehicleModel)
         {
@@ -403,6 +447,7 @@ namespace Team34FinalAPI.Controllers
             return BadRequest("Your request is invalid");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteModel/{modelId}")]
         public async Task<IActionResult> DeleteModel(int modelId)
         {
@@ -426,6 +471,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllFuelTypes")]
         public async Task<IActionResult> GetAllFuelTypes()
         {
@@ -441,6 +487,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddFuelType")]
         public async Task<IActionResult> AddFuelType([FromBody] VehicleFuelType fuelType)
         {
@@ -462,6 +509,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetFuelType/{fuelId}")]
         public async Task<IActionResult> GetFuelAsync(int fuelId)
         {
@@ -481,6 +529,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         [Route("EditFuel/{fuelId}")] // Corrected route template
         public async Task<ActionResult<VehicleViewModel>> EditFuel(int fuelId, VehicleFuelType fuelType)
         {
@@ -505,6 +554,7 @@ namespace Team34FinalAPI.Controllers
             return BadRequest("Your request is invalid");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteFuel/{fuelId}")]
         public async Task<IActionResult> DeleteFuel(int fuelId)
         {
@@ -528,6 +578,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllColours")]
         public async Task<IActionResult> GetAllColours()
         {
@@ -564,6 +615,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetColour/{colourId}")]
         public async Task<IActionResult> GetColourAsync(int colourId)
         {
@@ -583,6 +635,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         [Route("EditColour/{colourId}")] // Corrected route template
         public async Task<ActionResult<VehicleViewModel>> EditColour(int colourId, Colour colour)
         {
@@ -607,6 +660,7 @@ namespace Team34FinalAPI.Controllers
             return BadRequest("Your request is invalid");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteColour/{colourId}")]
         public async Task<IActionResult> DeleteColour(int colourId)
         {
@@ -630,6 +684,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllLicenseDisks")]
         public async Task<IActionResult> GetAllLicenseDisks()
         {
@@ -645,6 +700,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetInsuranceCovers")]
         public async Task<IActionResult> GetInsuranceCovers()
         {
@@ -659,8 +715,8 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error: Unable to retrieve insurance covers.");
             }
         }
-       
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetInsurance/{insuranceId}")]
         public async Task<IActionResult> GetInsuranceAsync(int insuranceId)
         {
@@ -679,6 +735,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddInsuranceCover")]
         public async Task<IActionResult> AddInsuranceCover([FromBody] InsuranceCover insurance)
         {
@@ -702,6 +759,7 @@ namespace Team34FinalAPI.Controllers
 
 
         [HttpPut]
+        [Authorize(Roles = "Admin")]
         [Route("EditInsurance/{insuranceId}")] // Corrected route template
         public async Task<ActionResult<VehicleViewModel>> EditInsurance(int insuranceId, InsuranceCover insurance)
         {
@@ -724,8 +782,9 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal Server Error");
             }
             return BadRequest("Your request is invalid");
-        } 
+        }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteInsurance/{insuranceId}")]
         public async Task<IActionResult> DeleteInsurance(int insuranceId)
         {
@@ -749,6 +808,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllStatus")]
         public async Task<IActionResult> GetAllStatus()
         {

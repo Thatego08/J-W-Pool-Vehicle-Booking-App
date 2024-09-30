@@ -21,6 +21,16 @@ namespace Team34FinalAPI.Models
 
         public async Task AddVehicleAsync(Vehicle vehicle)
         {
+
+            var licenseDisk = new LicenseDisk()
+            {
+                LicenseExpiryDate = vehicle.LicenseExpiryDate,
+            };
+
+            vehicle.LicenseDisk = licenseDisk;
+
+            
+            _context.LicenseDisks.Add(licenseDisk);
             await _context.Vehicles.AddAsync(vehicle);
             await _context.SaveChangesAsync();
         }
@@ -58,6 +68,19 @@ namespace Team34FinalAPI.Models
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddVehicleModelAsync(ModelViewModel mvm)
+        {
+            var vModel = new VehicleModel()
+            {
+                VehicleModelName = mvm.VehicleModelName,
+                VehicleMakeID = mvm.VehicleMakeID,
+            };
+
+            _context.VehicleModel.Add(vModel);
+            await _context.SaveChangesAsync();
+        }
+
+
         public void Delete<T>(T entity) where T : class
         {
             _context.Remove(entity);
@@ -86,10 +109,26 @@ namespace Team34FinalAPI.Models
 
         public async Task UpdateVehicleAsync(Vehicle vehicle)
         {
+            // Update the vehicle
             _context.Vehicles.Update(vehicle);
-            _context.Entry(vehicle).State = EntityState.Modified;
+
+            // Find the existing LicenseDisk for this vehicle
+            var licenseDisk = await _context.LicenseDisks
+                                            .FirstOrDefaultAsync(ld => ld.VehicleID == vehicle.VehicleID);
+
+            if (licenseDisk != null)
+            {
+                // Update the license expiry date
+                licenseDisk.LicenseExpiryDate = vehicle.LicenseExpiryDate;
+
+                // Mark the LicenseDisk entity as modified
+                _context.Entry(licenseDisk).State = EntityState.Modified;
+            }
+
+            // Save changes to the database
             await _context.SaveChangesAsync();
         }
+
 
         public async Task<IEnumerable<Vehicle>> GetAllVehiclesAsync()
         {
@@ -237,6 +276,10 @@ namespace Team34FinalAPI.Models
             _context.Add(vehicleModel);
         }
 
+        public async Task<bool> ExistsVehicleMake(int vehicleMakeId)
+        {
+            return await _context.VehicleMake.AnyAsync(vm => vm.VehicleMakeID == vehicleMakeId);
+        }
         /*Task<Colour> GetColourAsync(int colourId);
         Task<InsuranceCover> GetInsuranceAsync(int Id);
         Task<VehicleFuelType> GetFuelAsync(int Id);
