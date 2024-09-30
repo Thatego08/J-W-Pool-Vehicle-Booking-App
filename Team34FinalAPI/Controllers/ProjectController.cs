@@ -12,29 +12,21 @@ namespace Team34FinalAPI.Controllers
     [Authorize(Roles = "Admin,Driver")]
     [ApiController]
     [Route("api/[controller]")]
-public class ProjectController : ControllerBase
-{
-    private readonly IProjectRepository _projectRepository;
-
-    private readonly ILogger<ProjectController> _logger;
-
-        private readonly IRateRepo _rateRepository; // Injecting rate repository
-        private readonly IAuditLogRepository _auditLogRepo;
-
-        public ProjectController(IProjectRepository projectRepository, IRateRepo rateRepository, ILogger<ProjectController> logger,IAuditLogRepository auditLogRepo)
+    public class ProjectController : ControllerBase
     {
-            _rateRepository = rateRepository ?? throw new ArgumentNullException(nameof(rateRepository)); // Initialize _rateRepository
+        private readonly IProjectRepository _projectRepository;
+        private readonly ILogger<ProjectController> _logger;
 
+        public ProjectController(IProjectRepository projectRepository, ILogger<ProjectController> logger)
+        {
             _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _auditLogRepo = auditLogRepo;
-    }
-
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
 
         [HttpPost]
-    [Route("AddProject")]
-    public async Task<IActionResult> AddProject([FromBody] ProjectViewModel pvm)
-    {
+        [Route("AddProject")]
+        public async Task<IActionResult> AddProject([FromBody] ProjectViewModel pvm)
+        {
             try
             {
                 if (pvm == null)
@@ -52,7 +44,6 @@ public class ProjectController : ControllerBase
                     ActivityCode = pvm.ActivityCode,
                     StatusId = 1 //Default to availabe status
                 };
-               
 
                 _logger.LogInformation("Adding project: {@Project}", project);
 
@@ -60,14 +51,6 @@ public class ProjectController : ControllerBase
                 await _projectRepository.SaveChangesAsync();
 
                 _logger.LogInformation("Project added successfully with ID: {ProjectID}", project.ProjectID);
-
-                //Audit Log stuff 
-                await _auditLogRepo.AddLogAsync(new AuditLog
-                {
-                    Action = "Add New Project",
-                    Details = $"New Project details added by an administrator",
-                    Timestamp = DateTime.UtcNow
-                });
                 return Ok("Project added successfully.");
             }
             catch (Exception ex)
@@ -77,48 +60,39 @@ public class ProjectController : ControllerBase
             }
         }
 
-    [HttpPut]
-    [Route("EditProject/{ProjectID}")]
-    public async Task<IActionResult> EditProject(int ProjectID, [FromBody] ProjectViewModel pvm)
-    {
-        if (pvm == null)
+        [HttpPut]
+        [Route("EditProject/{ProjectID}")]
+        public async Task<IActionResult> EditProject(int ProjectID, [FromBody] ProjectViewModel pvm)
         {
-            return BadRequest("Project model is null.");
-        }
-
-        try
-        {
-            var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
-            if (existingProject == null)
+            if (pvm == null)
             {
-                return NotFound("Project does not exist.");
+                return BadRequest("Project model is null.");
             }
-            existingProject.ProjectID = pvm.ProjectID;
-            existingProject.ProjectNumber = pvm.ProjectNumber;
-            existingProject.Description = pvm.Description;
-            existingProject.JobNo = pvm.JobNo;
-            existingProject.TaskCode = pvm.TaskCode;
-            existingProject.ActivityCode = pvm.ActivityCode;
 
-            await _projectRepository.UpdateProjectAsync(existingProject);
-
-
-                //Audit Log stuff 
-                await _auditLogRepo.AddLogAsync(new AuditLog
+            try
+            {
+                var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
+                if (existingProject == null)
                 {
-                    Action = "Edit Project Details",
-                    Details = $"Project details updated by an administrator",
-                    Timestamp = DateTime.UtcNow
-                });
+                    return NotFound("Project does not exist.");
+                }
+                existingProject.ProjectID = pvm.ProjectID;
+                existingProject.ProjectNumber = pvm.ProjectNumber;
+                existingProject.Description = pvm.Description;
+                existingProject.JobNo = pvm.JobNo;
+                existingProject.TaskCode = pvm.TaskCode;
+                existingProject.ActivityCode = pvm.ActivityCode;
+
+                await _projectRepository.UpdateProjectAsync(existingProject);
 
                 return Ok(existingProject);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while editing the project.");
+                return StatusCode(500, "Internal server error, contact support.");
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while editing the project.");
-            return StatusCode(500, "Internal server error, contact support.");
-        }
-    }
 
         [HttpGet]
         [Route("projectNumbers")]
@@ -139,80 +113,71 @@ public class ProjectController : ControllerBase
 
 
         [HttpGet]
-    [Route("GetAllProjects")]
-    public async Task<IActionResult> GetAllProjects()
-    {
-        try
+        [Route("GetAllProjects")]
+        public async Task<IActionResult> GetAllProjects()
         {
-            var results = await _projectRepository.GetAllProjectsAsync();
-            return Ok(results);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while retrieving projects.");
-            return StatusCode(500, "Internal server error, contact support.");
-        }
-    }
-
-    [HttpGet]
-    [Route("GetProject/{ProjectID}")]
-    public async Task<IActionResult> GetProject(int ProjectID)
-    {
-        try
-        {
-            var result = await _projectRepository.GetProjectAsync(ProjectID);
-
-            if (result == null)
+            try
             {
-                return NotFound("Project does not exist.");
+                var results = await _projectRepository.GetAllProjectsAsync();
+                return Ok(results);
             }
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while retrieving the project.");
-            return StatusCode(500, "Internal server error, contact support.");
-        }
-    }
-
-    [HttpDelete]
-    [Route("DeleteProject/{ProjectID}")]
-    public async Task<IActionResult> DeleteProject(int ProjectID)
-    {
-        try
-        {
-            var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
-
-            if (existingProject == null)
+            catch (Exception ex)
             {
-                return NotFound("Project does not exist.");
+                _logger.LogError(ex, "An error occurred while retrieving projects.");
+                return StatusCode(500, "Internal server error, contact support.");
             }
+        }
 
-            _projectRepository.Delete(existingProject);
-
-            if (await _projectRepository.SaveChangesAsync())
+        [HttpGet]
+        [Route("GetProject/{ProjectID}")]
+        public async Task<IActionResult> GetProject(int ProjectID)
+        {
+            try
             {
-                    //Audit Log stuff 
-                    await _auditLogRepo.AddLogAsync(new AuditLog
-                    {
-                        Action = "Delete Project",
-                        Details = $"Project Details have been deleted by an administrator" ,
-                        Timestamp = DateTime.UtcNow
-                    });
+                var result = await _projectRepository.GetProjectAsync(ProjectID);
 
+                if (result == null)
+                {
+                    return NotFound("Project does not exist.");
+                }
 
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving the project.");
+                return StatusCode(500, "Internal server error, contact support.");
+            }
+        }
+
+        [HttpDelete]
+        [Route("DeleteProject/{ProjectID}")]
+        public async Task<IActionResult> DeleteProject(int ProjectID)
+        {
+            try
+            {
+                var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
+
+                if (existingProject == null)
+                {
+                    return NotFound("Project does not exist.");
+                }
+
+                _projectRepository.Delete(existingProject);
+
+                if (await _projectRepository.SaveChangesAsync())
+                {
                     return Ok(existingProject);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while deleting the project.");
-            return StatusCode(500, "Internal server error, contact support.");
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting the project.");
+                return StatusCode(500, "Internal server error, contact support.");
+            }
 
-        return BadRequest("Your request is invalid.");
+            return BadRequest("Your request is invalid.");
+        }
     }
-}
 
 }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Team34FinalAPI.Migrations.BookingDb;
+//using Team34FinalAPI.Migrations.BookingDb;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
 

@@ -13,7 +13,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
-using Team34FinalAPI.Migrations.BookingDb;
+//using Team34FinalAPI.Migrations.BookingDb;
 
 namespace Team34FinalAPI.Controllers
 {
