@@ -15,5 +15,6 @@
 
         Task<List<Booking>> GetBookingsWithinNext24HoursAsync();
 
+        
     }
 }

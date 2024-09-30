@@ -2,6 +2,7 @@
 {
     public class ProjectRate
     {
+        
         public int ProjectID { get; set; }
         public Project Project { get; set; }
 
