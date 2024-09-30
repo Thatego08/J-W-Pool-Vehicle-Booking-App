@@ -14,11 +14,13 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly IFeedbackRepository _feedbackRepository;
         private readonly ILogger<FeedbackController> _logger;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public FeedbackController(IFeedbackRepository feedbackRepository, ILogger<FeedbackController> logger)
+        public FeedbackController(IFeedbackRepository feedbackRepository, ILogger<FeedbackController> logger, IAuditLogRepository auditLogRepo)
         {
             _feedbackRepository = feedbackRepository ?? throw new ArgumentNullException(nameof(feedbackRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _auditLogRepo = auditLogRepo;
         }
 
         [HttpPost("submit")]
@@ -47,6 +49,15 @@ namespace Team34FinalAPI.Controllers
             {
                 await _feedbackRepository.AddFeedbackAsync(feedback);
                 _logger.LogInformation("Feedback submitted by {UserName} with message: {Message} and rating: {Rating}", model.UserName, model.Message, model.Rating);
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = model.UserName,
+                    Action = "Add New Feedback",
+                    Details = $"Feedback for system added by : " + model.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
                 return Ok(new { Message = "Feedback submitted successfully." });
             }
             catch (Exception ex)

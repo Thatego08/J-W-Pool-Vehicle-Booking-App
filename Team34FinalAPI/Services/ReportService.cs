@@ -3,6 +3,8 @@ using Team34FinalAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.ViewModels.ReportViewModel;
+using Team34FinalAPI.Report_DTO_s;
+using System.Globalization;
 
 namespace Team34FinalAPI.Services
 {
@@ -19,6 +21,9 @@ namespace Team34FinalAPI.Services
         Task<IEnumerable<FuelExpenditureReport>> GetFuelExpenditureReportAsync();
         Task<IEnumerable<BookingStatusReportViewModel>> GetFilteredBookingStatusReportAsync(string bookingType, DateTime? startDate, DateTime? endDate);
         Task<List<ProjectReportDto>> GetFilteredProjectsAsync(string projectStatus);
+        Task<List<BookingPerUserReportViewModel>> GetBookingsPerUserPerMonthAsync();
+        Task<List<CancelledBookingReportViewModel>> GetCancelledBookingsPerMonthAsync();
+        //Task<List<AvailableVehiclesReportViewModel>> GetAvailableVehiclesForMonthAsync();
 
 
     }
@@ -83,6 +88,22 @@ namespace Team34FinalAPI.Services
                 })
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<ReportData.VehicleFuelReportDto>> GetFuelExpendituresReportAsync()
+        {
+            return await _tripDbContext.Trips
+                .SelectMany(t => t.RefuelVehicles, (t, rv) => new ReportData.VehicleFuelReportDto
+                {
+                    VehicleName = t.Name,            // Fetching the Name property from Trip
+                    TripDate = t.TravelStart,        // Assuming TravelStart is the trip date
+                    FuelAmount = rv.FuelQuantity,    // Fetching FuelQuantity from RefuelVehicle
+                    FuelCost = rv.FuelCost           // Fetching FuelCost from RefuelVehicle
+                })
+                .ToListAsync();
+        }
+
+
+
 
         public async Task<IEnumerable<ProjectStatusReportViewModel>> GetProjectStatusReportAsync()
         {
@@ -236,6 +257,98 @@ namespace Team34FinalAPI.Services
                 })
                 .ToListAsync();
         }
+
+
+  public async Task<IEnumerable<UserTripReportDto>> GetTripsPerUserPerMonthAsync()
+    {
+         var trips = await _tripDbContext.Trips
+        .GroupBy(t => new
+        {
+            t.UserName,
+            Month = t.TravelStart.Month,  // Keep Month as int
+            Year = t.TravelStart.Year
+        })
+        .Select(g => new
+        {
+            UserName = g.Key.UserName,
+            Month = g.Key.Month,
+            Year = g.Key.Year,
+            TripCount = g.Count()
+        })
+        .ToListAsync(); // Perform the query and get the result from the database
+
+         // Now convert the month number to month name in memory (client-side)
+            return trips
+        .Select(g => new UserTripReportDto
+        {
+            UserName = g.UserName,
+            Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Month), // Convert month int to name
+            Year = g.Year,
+            TripCount = g.TripCount
+        })
+        .ToList(); // This is now a synchronous call
+        }
+
+
+        public async Task<List<BookingPerUserReportViewModel>> GetBookingsPerUserPerMonthAsync()
+        {
+            var bookings = await _bookingDbContext.Bookings
+                .GroupBy(b => new
+                {
+                    b.UserName,
+                    Month = b.StartDate.Month,
+                    Year = b.StartDate.Year
+                })
+                .Select(g => new BookingPerUserReportViewModel
+                {
+                    UserName = g.Key.UserName,
+                    Month = g.Key.Month,
+                    Year = g.Key.Year,
+                    BookingCount = g.Count()
+                })
+                .ToListAsync();
+
+            return bookings;
+        }
+
+
+        public async Task<List<CancelledBookingReportViewModel>> GetCancelledBookingsPerMonthAsync()
+        {
+            var cancelledBookings = await _bookingDbContext.Bookings
+                .Where(b => b.Status.Name == "Cancelled")
+                .Select(b => new CancelledBookingReportViewModel
+                {
+                    UserName = b.UserName,
+                    BookingId = b.BookingID,
+                    CancelledDate = b.Status.DateChanged, // Access DateChanged
+                })
+                .ToListAsync();
+
+            return cancelledBookings;
+        }
+
+
+
+
+        //public async Task<List<AvailableVehiclesReportViewModel>> GetAvailableVehiclesForMonthAsync()
+        //{
+        //    var availableVehicles = await _vehicleDbContext.Vehicles
+        //        .Where(v => v.Status.Name == "Available") // Example filter
+        //        .GroupBy(v => new
+        //        {
+        //            Month = v.CreatedDate.Month, // Ensure CreatedDate is the correct field
+        //            Year = v.CreatedDate.Year
+        //        })
+        //        .Select(g => new AvailableVehiclesReportViewModel
+        //        {
+        //            Month = g.Key.Month,
+        //            Year = g.Key.Year,
+        //            AvailableCount = g.Count()
+        //        })
+        //        .ToListAsync();
+
+        //    return availableVehicles;
+        //}
 
 
     }

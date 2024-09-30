@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using Team34FinalAPI.Models;
+using Team34FinalAPI.Services;
 using Team34FinalAPI.ViewModels;
 
 namespace Team34FinalAPI.Controllers
@@ -18,11 +19,19 @@ namespace Team34FinalAPI.Controllers
         private readonly IAdminRepo _adminRepo;
         private readonly ILogger<AdminController> _logger;
         private readonly UserManager<User> _userManager;
-        public AdminController(IAdminRepo adminRepo, UserManager<User> userManager, ILogger<AdminController> logger)
+        private readonly IConfiguration _configuration;
+        private readonly OTPSettingsService _otpSettingsService;
+        private readonly IOTPService _otpService;
+        private readonly IAuditLogRepository _auditLogRepo;
+        public AdminController(IAdminRepo adminRepo, IOTPService otpService,IAuditLogRepository auditLogRepository, IConfiguration configuration, OTPSettingsService otpSettingsService, UserManager<User> userManager, ILogger<AdminController> logger)
         {
             _adminRepo = adminRepo;
             _userManager = userManager;
             _logger = logger;
+            _configuration = configuration;
+            _otpService = otpService;
+            _otpSettingsService = otpSettingsService;
+            _auditLogRepo = auditLogRepository;
         }
 
         [Authorize(Roles = "Admin")]
@@ -59,6 +68,16 @@ namespace Team34FinalAPI.Controllers
 
                 if (await _adminRepo.SaveChangesAync())
                 {
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = userName,
+                        Action = "Update admin details",
+                        Details = $"Admin details have been updated by: " + userName,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+
                     return Ok(existingAdmin);
                 }
             }
@@ -118,6 +137,17 @@ namespace Team34FinalAPI.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(admin, "Admin");
+
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = username,
+                        Action = "Register admin details",
+                        Details = $"Admin registration completed by: " + username,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+
                     return Ok("User registered successfully. Your Username is: " + username);
                 }
                 else
@@ -151,8 +181,21 @@ namespace Team34FinalAPI.Controllers
                 _adminRepo.Delete(existingAdmin);
 
                 if (await _adminRepo.SaveChangesAync())
+                {
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = userName,
+                        Action = "Delete admin details",
+                        Details = $"Admin details have been deleted by: " + userName,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+
                     return Ok(existingAdmin);
-            }
+           
+                }
+                     }
             catch (Exception)
             {
                 return StatusCode(500, "Internal server error. Please contact support");
@@ -162,6 +205,8 @@ namespace Team34FinalAPI.Controllers
         }
 
 
+
+
         private string GenerateUsername(string firstName, string lastName)
         {
             string firstPart = firstName.Length >= 4 ? firstName.Substring(0, 4) : firstName;
@@ -169,5 +214,25 @@ namespace Team34FinalAPI.Controllers
             return firstPart + lastPart;
         }
 
+        [HttpGet]
+        [Route("otp-expiration")]
+        public async Task<IActionResult> GetOtpExpirationTime()
+        {
+            var expirationTime = await _otpSettingsService.GetOtpExpirationTimeAsync();
+            return Ok(new { expirationTime });
+        }
+
+        [HttpPost]
+        [Route("update-otp-expiration")]
+        public async Task<IActionResult> UpdateOtpExpirationTime([FromBody] int newExpirationTime)
+        {
+            await _otpSettingsService.UpdateOtpExpirationTimeAsync(newExpirationTime);
+            return Ok();
+        }
+
+
     }
 }
+
+
+

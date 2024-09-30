@@ -28,6 +28,7 @@ namespace Team34FinalAPI.Models
         public int? StatusId { get; set; }
         public Status? Status { get; set; }
         public ICollection<Trip> Trips { get; set; }
+        public ICollection<PreChecklist> PreChecklists { get; set; } = new List<PreChecklist>();
 
     }
 }

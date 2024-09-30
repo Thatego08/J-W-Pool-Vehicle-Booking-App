@@ -31,9 +31,13 @@ namespace Team34FinalAPI.Models
         Task<VehicleFuelType> GetFuelAsync(int Id);
         Task<VehicleMake> GetMakeAsync(int Id);
         Task<VehicleModel> GetModelAsync(int Id);
+
+        Task<List<VehicleModel>> GetModelsByMakeAsync(int makeId);
         Task AddVehicleAsync(Vehicle vehicle);
 
         //Additions
+
+        Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate);
 
 
         Task<Vehicle> GetVehicleByNameAsync(string name);

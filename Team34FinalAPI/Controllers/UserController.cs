@@ -30,8 +30,9 @@ namespace Team34FinalAPI.Controllers
         private IAuditLogRepository _auditLogRepository;
         private readonly IOTPService _otpService;
         private readonly IOTPRepository _otpRepository;
+        private readonly ISMS_Service _smsService;
 
-        public UserController(UserManager<User> userManager,IOTPService otpService,IOTPRepository otpRepository, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
+        public UserController(UserManager<User> userManager,ISMS_Service smsService,IOTPService otpService,IOTPRepository otpRepository, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
         {
             this._userDbContext = userDbContext;
             _userRepository = userRepository;
@@ -48,7 +49,7 @@ namespace Team34FinalAPI.Controllers
 
             //_userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _emailService = emailService;
-
+            _smsService = smsService;
         }
 
         [HttpGet]
@@ -72,7 +73,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserViewModel model)
+        public async Task<IActionResult> Register([FromForm] UserViewModel model, IFormFile profilePhoto)
         {
             if (!ModelState.IsValid)
             {
@@ -106,7 +107,20 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest(new { Message = "Username already exists." });
                 }
 
+                // Handle the profile photo
+                if (profilePhoto != null && profilePhoto.Length > 0)
+                {
+                    var filePath = Path.Combine("Images/Uploads", $"{username}_profile.jpg"); // Example storage path
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await profilePhoto.CopyToAsync(stream);
+                    }
+                    user.ProfilePhotoPath = filePath; // Save the file path or URL in the user entity
+                }
+
                 var result = await _userManager.CreateAsync(user, model.Password);
+
+
 
                 if (result.Succeeded)
                 {
@@ -231,12 +245,21 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest(new { message = "User not found." });
             }
 
+
+
             // Retrieve the user profile based on the username
             var user = await _userManager.FindByNameAsync(userName);
 
             if (user == null)
             {
                 return NotFound(new { message = "User not found." });
+            }
+
+            // Build the URL for the profile photo
+            var profilePhotoUrl = string.Empty;
+            if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+            {
+                profilePhotoUrl = $"{Request.Scheme}://{Request.Host}/Images/Uploads/{Path.GetFileName(user.ProfilePhotoPath)}";
             }
 
             // Return the user profile information
@@ -246,8 +269,18 @@ namespace Team34FinalAPI.Controllers
                 user.Email,
                 user.Name,
                 user.Surname,
-                user.Role
+                user.Role,
+
+                ProfilePhotoUrl = profilePhotoUrl
             };
+
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Profile View",
+                Details = "User viewed their profile successfully.",
+                Timestamp = DateTime.UtcNow
+            });
 
             return Ok(userProfile);
         }
@@ -367,72 +400,200 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support. Details: {ex.Message}");
             }
         }
+
+        [HttpPut]
+        [Route("update-user")]
+        public async Task<IActionResult> UpdateUser(string userName ,[FromBody] UpdateUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Get the current user based on their email (or ID if available)
+            var user = await _userRepository.GetUserAsync(userName);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Update basic profile details
+  
+            // Handle password change if both CurrentPassword and NewPassword are provided
+            if (!string.IsNullOrEmpty(model.CurrentPassword) && !string.IsNullOrEmpty(model.NewPassword))
+            {
+                // Verify the current password is correct
+                var passwordCheck = await _userManager.CheckPasswordAsync(user, model.CurrentPassword);
+                if (!passwordCheck)
+                    return BadRequest("Incorrect current password");
+
+                // Check if the new password is the same as the current password
+                var passwordHasher = new PasswordHasher<User>();
+                if (passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.NewPassword) == PasswordVerificationResult.Success)
+                    return BadRequest(new { message = "The new password cannot be the same as the current password." });
+
+
+                // Change the password
+                var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+                if (!changePasswordResult.Succeeded)
+                {
+                    foreach (var error in changePasswordResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return BadRequest(ModelState);
+                }
+            }
+
+            // Update user in the database
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Update Password",
+                Details = "User has successfully updated their password.",
+                Timestamp = DateTime.UtcNow
+            });
+
+            return Ok(new { message = "Profile updated successfully." });
+        }
+
+
+        [HttpPut]
+        [Route("update-details")]
+        public async Task<IActionResult> UpdateDetails(string userName, [FromForm] UpdateDetailsViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userRepository.GetUserAsync(userName);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Update basic profile details
+            user.Name = model.Name;
+            user.Surname = model.Surname;
+            user.Email = model.Email;
+
+            // Handle profile picture update
+            if (model.ProfilePhoto != null)
+            {
+                // Check if a new profile photo is uploaded
+                if (model.ProfilePhoto != null)
+                {
+                    // Save the uploaded file
+                    var filePath = Path.Combine("Images/Uploads", model.ProfilePhoto.FileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfilePhoto.CopyToAsync(stream);
+                    }
+
+                    // Update the user's profile photo path in the user object
+                    user.ProfilePhotoPath = model.ProfilePhoto.FileName; // Assuming you have a property for this
+                }
+            }
+            
+           
+            // Update user in the database
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Update Details",
+                Details = "User has successfully updated their details.",
+                Timestamp = DateTime.UtcNow
+            });
+            return Ok(new { message = "Profile updated successfully." });
+        }
+
+        private async Task<string> SaveProfilePhoto(IFormFile file, string userName)
+        {
+            // Logic to save the profile photo and return the URL
+            var uploads = Path.Combine(Directory.GetCurrentDirectory(), "Images/Uploads");
+            var filePath = Path.Combine(uploads, $"{userName}_profile.jpg");
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+
+            return $"/Images/Uploads/{userName}_profile.jpg"; // Return the relative URL
+        }
+
+
+
         [HttpPost]
         [Route("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state for forgot password request.");
                 return BadRequest(ModelState);
-            }
 
-            _logger.LogInformation("Processing forgot password request for email: {Email}", model.Email);
-
-            var user = await _userRepository.FindByEmailAsync(model.Email);
+            var user = await _userRepository.FindByEmailAsync(model.Email); // Fetch user by email
             if (user == null)
-            {
-                _logger.LogWarning("User not found for email: {Email}", model.Email);
                 return NotFound("User not found");
-            }
 
-            // Generate and save OTP
-            var otp = await _otpService.GenerateAndSaveOtpAsync(model.Email);
+            // Generate OTP
+            var otp = new OTP
+            {
+                Email = model.Email,
+                Code = new Random().Next(100000, 999999).ToString(), // Generate 6-digit OTP
+                ExpiryTime = DateTime.UtcNow.AddMinutes(10), // OTP valid for 10 minutes
+                IsUsed = false
+            };
+
+            // Save OTP in the OTP table
+            await _otpRepository.SaveOtpAsync(otp);
 
             // Send OTP via email
-            await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp}");
+            await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp.Code}");
 
-            _logger.LogInformation("OTP sent to email: {Email}", user.Email);
-            //return Ok("OTP has been sent to your email.");
-            return Ok(new { message = "OTP has been sent" });
+            //  await _smsService.SendSmsAsync(user.PhoneNumber, $"Your OTP for password reset is: {otp.Code}");
 
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = User.Identity.Name,
+                Action = "Forgot Password",
+                Details = "User has successfully reset their password.",
+                Timestamp = DateTime.UtcNow
+            });
+            return Ok(new { message = "OTP has been sent to your email." });
         }
 
+       
         [HttpPost]
         [Route("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOTPViewModel model)
         {
             if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state in verify-otp request.");
                 return BadRequest(ModelState);
-            }
 
+            // Retrieve OTP by email
             var otp = await _otpRepository.GetOtpAsync(model.Email);
-            if (otp == null)
-            {
-                _logger.LogWarning("OTP not found or already used for email: {Email}", model.Email);
-                return BadRequest("Invalid OTP or OTP has expired.");
-            }
+            if (otp == null || otp.IsUsed || otp.ExpiryTime < DateTime.UtcNow)
+                return BadRequest("Invalid or expired OTP.");
+            
+            _logger.LogInformation($"Stored OTP: {otp.Code}, Entered OTP: {model.OTP}");
 
-            _logger.LogInformation("Retrieved OTP: {StoredOtp}, Entered OTP: {EnteredOtp}", otp.Code, model.OTP);
 
-            if (otp.Code.ToUpper() != model.OTP.ToUpper())
-            {
-                _logger.LogWarning("OTP does not match for email: {Email}", model.Email);
-                return BadRequest("Invalid OTP.");
-            }
+            // Ensure case-insensitive comparison
+            if (!otp.Code.Trim().ToUpper().Equals(model.OTP.Trim().ToUpper()))
+                return BadRequest("Incorrect OTP.");
 
-            if (otp.ExpiryTime < DateTime.UtcNow)
-            {
-                _logger.LogWarning("OTP expired for email: {Email}", model.Email);
-                return BadRequest("OTP has expired.");
-            }
-
-            // Mark the OTP as used
-            await _otpRepository.MarkOtpAsUsedAsync(model.Email);
-
-            _logger.LogInformation("OTP verified successfully for email: {Email}", model.Email);
             return Ok(new { message = "OTP verified successfully." });
         }
 
@@ -447,38 +608,70 @@ namespace Team34FinalAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userRepository.FindByEmailAsync(model.Email);
             if (user == null)
                 return NotFound("User not found");
 
-            // Validate OTP
-            var otp = await _otpService.GetOtpAsync(model.Email);
-            if (otp == null)
-                return BadRequest("Invalid OTP.");
+            // Validate OTP (use your existing logic)
+            var otp = await _otpRepository.GetOtpAsync(model.Email);
+            if (otp == null || otp.Code != model.OTP || otp.ExpiryTime < DateTime.UtcNow || otp.IsUsed)
+                return BadRequest("Invalid or expired OTP.");
 
-            if (otp.Code != model.OTP)
-                return BadRequest("Incorrect OTP.");
+            // Mark OTP as used
+            await _otpRepository.MarkOtpAsUsedAsync(model.Email);
 
-            if (otp.ExpiryTime < DateTime.UtcNow)
-                return BadRequest("OTP has expired.");
+            // Generate a password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            if (otp.IsUsed)
-                return BadRequest("OTP has already been used.");
+            // Reset the user's password using UserManager's ResetPasswordAsync
+            var resetResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
 
-            // If OTP is valid, mark it as used
-            await _otpService.MarkOtpAsUsedAsync(model.Email);
-
-            // Proceed with password reset
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
-            if (result.Succeeded)
-                return Ok("Password has been reset.");
-
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
-
-            return BadRequest(ModelState);
+            if (resetResult.Succeeded)
+            {
+                return Ok(new { message = "Password has been reset successfully." });
+            }
+            else
+            {
+                foreach (var error in resetResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
         }
 
 
+    [HttpGet]
+    public async Task<IActionResult> GetAuditLogs([FromQuery] string username)
+    {
+        var logs = await _auditLogRepository.GetAuditLogsAsync(username);
+        return Ok(logs);
     }
+
+        [HttpPut("edit/{id}")]
+        public async Task<IActionResult> EditAuditLogDetails(int id, [FromBody] EditAuditLogRequest request)
+        {
+            if (string.IsNullOrEmpty(request.NewDetails))
+            {
+                return BadRequest("Details cannot be empty.");
+            }
+
+            await _auditLogRepository.EditAuditLogDetailsAsync(id, request.NewDetails);
+            return Ok(new { message = "Audit log details updated successfully." });
+        }
+
+
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteAuditLog(int id)
+        {
+            await _auditLogRepository.DeleteAuditLogAsync(id);
+            return Ok(new { message = "Audit log deleted successfully." });
+        }
+
+
+
+    }
+
+
+
 }

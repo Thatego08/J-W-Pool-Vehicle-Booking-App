@@ -17,18 +17,21 @@ public class ProjectController : ControllerBase
     private readonly IProjectRepository _projectRepository;
 
     private readonly ILogger<ProjectController> _logger;
+
         private readonly IRateRepo _rateRepository; // Injecting rate repository
+        private readonly IAuditLogRepository _auditLogRepo;
 
-
-        public ProjectController(IProjectRepository projectRepository, IRateRepo rateRepository, ILogger<ProjectController> logger)
+        public ProjectController(IProjectRepository projectRepository, IRateRepo rateRepository, ILogger<ProjectController> logger,IAuditLogRepository auditLogRepo)
     {
             _rateRepository = rateRepository ?? throw new ArgumentNullException(nameof(rateRepository)); // Initialize _rateRepository
 
             _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _auditLogRepo = auditLogRepo;
     }
 
-    [HttpPost]
+
+        [HttpPost]
     [Route("AddProject")]
     public async Task<IActionResult> AddProject([FromBody] ProjectViewModel pvm)
     {
@@ -57,6 +60,14 @@ public class ProjectController : ControllerBase
                 await _projectRepository.SaveChangesAsync();
 
                 _logger.LogInformation("Project added successfully with ID: {ProjectID}", project.ProjectID);
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    Action = "Add New Project",
+                    Details = $"New Project details added by an administrator",
+                    Timestamp = DateTime.UtcNow
+                });
                 return Ok("Project added successfully.");
             }
             catch (Exception ex)
@@ -91,7 +102,16 @@ public class ProjectController : ControllerBase
 
             await _projectRepository.UpdateProjectAsync(existingProject);
 
-            return Ok(existingProject);
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    Action = "Edit Project Details",
+                    Details = $"Project details updated by an administrator",
+                    Timestamp = DateTime.UtcNow
+                });
+
+                return Ok(existingProject);
         }
         catch (Exception ex)
         {
@@ -173,7 +193,16 @@ public class ProjectController : ControllerBase
 
             if (await _projectRepository.SaveChangesAsync())
             {
-                return Ok(existingProject);
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        Action = "Delete Project",
+                        Details = $"Project Details have been deleted by an administrator" ,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+
+                    return Ok(existingProject);
             }
         }
         catch (Exception ex)

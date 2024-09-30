@@ -16,11 +16,13 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly TripDbContext _context;
         private readonly ITripRepository _tripRepository;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public TripController(TripDbContext context, ITripRepository tripRepository)
+        public TripController(TripDbContext context, ITripRepository tripRepository, IAuditLogRepository auditLogRepo)
         {
             _context = context;
             _tripRepository = tripRepository;
+            _auditLogRepo = auditLogRepo;
         }
 
         [Authorize(Roles = "Driver")]
@@ -29,7 +31,8 @@ namespace Team34FinalAPI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return BadRequest(new { Message = "Model validation failed", Errors = errors });
             }
 
             if (tvm == null)
@@ -69,12 +72,20 @@ namespace Team34FinalAPI.Controllers
                 PreChecklistId = tvm.PreChecklistId // Set the PreChecklistId
             };
 
-            // Remove the TripMedia initialization and processing
-
             try
             {
                 _context.Trips.Add(trip);
                 await _context.SaveChangesAsync();
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = userName,
+                    Action = "Create New Trip",
+                    Details = $"Trip created for vehicle booking. Trip created by : " + userName +" with the following comments: "+trip.Comment,
+                    Timestamp = DateTime.UtcNow
+                });
+
             }
             catch (DbUpdateException dbEx)
             {
@@ -90,9 +101,10 @@ namespace Team34FinalAPI.Controllers
         }
 
 
+
         [Authorize(Roles = "Driver")]
         [HttpPut("UpdateTrip/{id}")]
-        public async Task<IActionResult> UpdateTrip(int id, [FromForm] TripViewModel tvm)
+        public async Task<IActionResult> UpdateTrip(int id, [FromBody] TripViewModel tvm)
         {
             if (id != tvm.TripId)
             {
@@ -122,20 +134,31 @@ namespace Team34FinalAPI.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = trip.UserName,
+                    Action = "Update Trip",
+                    Details = $"Trip details for "+ tvm.Name + " have been updated by: " + trip.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!TripExists(id))
                 {
-                    return NotFound();
+                    // Log the error and return a successful response with an error message
+                    return Ok(new { Message = "Trip not found during update" });
                 }
                 else
                 {
+                    // Rethrow the exception if there is another issue
                     throw;
                 }
             }
 
-            return NoContent();
+            // Return a successful response indicating the update was successful
+            return Ok(new { Message = "Trip updated successfully" });
         }
 
         [Authorize(Roles = "Admin")]
@@ -167,9 +190,9 @@ namespace Team34FinalAPI.Controllers
         public async Task<IActionResult> GetTripById(int id)
         {
             var trip = await _context.Trips
-                .Include(t => t.Booking)         // Include related Booking if necessary
-                .Include(t => t.PreChecklist)    // Include related PreChecklist
-                .Include(t => t.RefuelVehicles)  // Include related RefuelVehicles if necessary
+                .Include(t => t.Booking)         // Booking can be null
+                .Include(t => t.PreChecklist)    // PreChecklist can be null
+                .Include(t => t.RefuelVehicles)  // RefuelVehicles can be null or empty list
                 .FirstOrDefaultAsync(t => t.TripId == id);
 
             if (trip == null)
@@ -177,8 +200,14 @@ namespace Team34FinalAPI.Controllers
                 return NotFound($"Trip with ID {id} not found");
             }
 
+            // You can explicitly check for null related data if necessary
+            trip.Booking = trip.Booking ?? new Booking();
+            trip.PreChecklist = trip.PreChecklist ?? new PreChecklist();
+            trip.RefuelVehicles = trip.RefuelVehicles ?? new List<RefuelVehicle>();
+
             return Ok(trip);
         }
+
 
 
         [Authorize(Roles = "Driver")]
@@ -226,7 +255,19 @@ namespace Team34FinalAPI.Controllers
                 _tripRepository.Delete(existingTrip);
 
                 if (await _tripRepository.SaveChangesAsync())
+
+                {
+
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                       Action = "Delete Trip",
+                        Details = $"Trip has been deleted by an administrator" ,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingTrip);
+
+                }
 
                 return StatusCode(500, "Failed to delete trip");
             }

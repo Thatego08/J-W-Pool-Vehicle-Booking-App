@@ -11,6 +11,16 @@ namespace Team34FinalAPI.Models
             _context = context;
         }
 
+
+        public async Task<Booking> GetConflictingBookingAsync(int vehicleId, DateTime startDate, DateTime endDate)
+        {
+            return await _context.Bookings
+                .Where(b => b.VehicleId == vehicleId &&
+                            ((b.StartDate <= endDate && b.StartDate >= startDate) || // Start date within range
+                             (b.EndDate >= startDate && b.EndDate <= endDate)))      // End date within range
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<Booking>> GetBookingsAsync()
         {
             try
@@ -32,6 +42,17 @@ namespace Team34FinalAPI.Models
                 Console.WriteLine($"Error in GetBookingsAsync: {ex.Message}");
                 throw;
             }
+        }
+
+
+        public async Task<List<Booking>> GetBookingsWithinNext24HoursAsync()
+        {
+            var now = DateTime.UtcNow;
+            var twentyFourHoursLater = now.AddHours(24);
+
+            return await _context.Bookings
+                .Where(b => b.StartDate >= now && b.StartDate <= twentyFourHoursLater && b.StatusId != 4) // Exclude cancelled bookings
+                .ToListAsync();
         }
 
         public async Task<Booking> GetBookingByIdAsync(int id)

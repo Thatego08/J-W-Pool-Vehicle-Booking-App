@@ -20,7 +20,13 @@ namespace Team34FinalAPI.Models
 
         public async Task<OTP> GetOtpAsync(string email)
         {
-            return await _context.Otps.FirstOrDefaultAsync(o => o.Email == email && !o.IsUsed);
+            {
+                return await _context.Otps
+                    .Where(o => o.Email == email && !o.IsUsed && o.ExpiryTime >= DateTime.UtcNow)
+                    .OrderByDescending(o => o.ExpiryTime) // Get the latest valid OTP
+                    .FirstOrDefaultAsync();
+            }
+
         }
 
         public async Task MarkOtpAsUsedAsync(string email)

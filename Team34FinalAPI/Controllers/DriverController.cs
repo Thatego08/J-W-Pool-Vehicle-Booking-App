@@ -13,6 +13,7 @@ using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.IdentityModel.Tokens.Jwt;
+using Team34FinalAPI.Migrations.BookingDb;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -27,12 +28,15 @@ namespace Team34FinalAPI.Controllers
 
         private readonly ILogger<DriverController> _logger;
         private readonly UserManager<User> _userManager;
+        private readonly IAuditLogRepository _auditLogRepo;
 
-        public DriverController(IDriverRepository driverRepository, UserManager<User> userManager, ILogger<DriverController> Logger)
+
+        public DriverController(IDriverRepository driverRepository, IAuditLogRepository auditLogRepository,UserManager<User> userManager, ILogger<DriverController> Logger)
         {
             _driverRepository = driverRepository;
             this._userManager = userManager;
             _logger = Logger;
+            _auditLogRepo = auditLogRepository;
         }
 
         [Authorize(Roles = "Admin")]
@@ -94,6 +98,15 @@ namespace Team34FinalAPI.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(driver, "Driver");
+                    
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = username,
+                        Action = "Register Driver",
+                        Details = $"New driver details registered with Username: " + username,
+                        Timestamp = DateTime.UtcNow
+                    });
 
                     return Ok("User registered successfully" + "Your Username is: " + username);
                 }
@@ -128,34 +141,62 @@ namespace Team34FinalAPI.Controllers
             return firstPart + lastPart;
         }
 
-        [Authorize(Roles = "Driver, Admin")]
 
         [HttpPut]
         [Route("UpdateDriver/{userName}")]
-        public async Task<ActionResult<DriverViewModel>> UpdateDriver(string userName, DriverViewModel driverModel)
+        public async Task<IActionResult> UpdateDriver(string userName, DriverViewModel driverModel)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                var existingDriver = await _driverRepository.GetDriverAsync(userName);
-                if (existingDriver == null) return NotFound($"The driver does not exists");
+                // Get the driver by username from _userManager
+                var existingDriver = await _userManager.FindByNameAsync(userName);
+                if (existingDriver == null)
+                {
+                    return NotFound($"Driver with username '{userName}' does not exist.");
+                }
+
+                // Update driver fields (but not PasswordHash)
                 existingDriver.Name = driverModel.Name;
                 existingDriver.Surname = driverModel.Surname;
-                //existingDriver.UserName = driverModel.UserName;
                 existingDriver.Email = driverModel.Email;
                 existingDriver.PhoneNumber = driverModel.PhoneNumber;
 
-                if (await _driverRepository.SaveChangesAync())
+                // Save the changes using _userManager
+                var updateResult = await _userManager.UpdateAsync(existingDriver);
+
+                if (updateResult.Succeeded)
                 {
                     return Ok(existingDriver);
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = userName,
+                        Action = "Driver Details Update",
+                        Details = $"Driver details updated by : " + userName,
+                        Timestamp = DateTime.UtcNow
+                    });
                 }
-
+                else
+                {
+                    foreach (var error in updateResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return BadRequest(ModelState);
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error. Please contact support");
+                _logger.LogError(ex, "An error occurred while updating the driver with username '{UserName}'", userName);
+                return StatusCode(500, "Internal server error. Please contact support.");
             }
-            return BadRequest("Your request is invalid ");
         }
+
 
 
         [Authorize(Roles = "Admin")]
@@ -171,7 +212,17 @@ namespace Team34FinalAPI.Controllers
                 _driverRepository.Delete(existingDriver);
 
                 if (await _driverRepository.SaveChangesAync())
+                {
+                    //Audit Log stuff 
+                    await _auditLogRepo.AddLogAsync(new AuditLog
+                    {
+                        UserName = userName,
+                        Action = "Delete Driver",
+                        Details = $"Driver details removed effectively by : " + userName,
+                        Timestamp = DateTime.UtcNow
+                    });
                     return Ok(existingDriver);
+                }
 
             }
 

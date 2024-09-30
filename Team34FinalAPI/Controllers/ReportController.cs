@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Team34FinalAPI.Models;
+using Team34FinalAPI.Report_DTO_s;
 using Team34FinalAPI.Services;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.Report_DTO_s.ReportData;
@@ -7,7 +9,6 @@ using static Team34FinalAPI.ViewModels.ReportViewModel;
 
 namespace Team34FinalAPI.Controllers
 {
-
     [Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
@@ -15,6 +16,7 @@ namespace Team34FinalAPI.Controllers
     {
         private readonly ReportService _reportService;
         private readonly ILogger<ReportsController> _logger;
+
         public ReportsController(ReportService reportService, ILogger<ReportsController> logger)
         {
             _reportService = reportService;
@@ -37,10 +39,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(report);
         }
 
-      
-
         [HttpGet]
-
         [Route("projects")]
         public async Task<ActionResult<List<ProjectReportDto>>> GetProjectReport()
         {
@@ -58,22 +57,18 @@ namespace Team34FinalAPI.Controllers
         [HttpGet("filtered-projects")]
         public async Task<ActionResult<IEnumerable<ProjectReportDto>>> GetFilteredProjects([FromQuery] string projectStatus)
         {
-            var report = await _reportService.GetFilteredProjectsAsync( projectStatus);
+            var report = await _reportService.GetFilteredProjectsAsync(projectStatus);
             return Ok(report);
         }
 
-
-
-        //Additions
-
         [HttpGet]
-        [Route("fuel-expenditure")]
-        public async Task<ActionResult<IEnumerable<ReportViewModel.FuelExpenditureReportViewModel>>> GetFuelExpenditureReport()
+       
+        [Route("vehicle-fuel-report")]
+        public async Task<ActionResult<IEnumerable<FuelExpenditureReportViewModel>>> GetFuelExpendituresReport()
         {
             try
             {
-
-                var report = await _reportService.GetFuelExpenditureReportAsync();
+                var report = await _reportService.GetFuelExpendituresReportAsync();
                 return Ok(report);
             }
             catch (Exception ex)
@@ -82,6 +77,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error.");
             }
         }
+
 
         [HttpGet("VehicleStatusReport")]
         public async Task<IActionResult> GetVehicleStatusReport()
@@ -143,6 +139,14 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [HttpGet("trips-per-user-per-month")]
+        public async Task<IActionResult> GetTripsPerUserPerMonth()
+        {
+            var report = await _reportService.GetTripsPerUserPerMonthAsync();
+            return Ok(report);
+        }
+
+
         [HttpGet("ProjectStatusReport")]
         public async Task<IActionResult> GetProjectStatusReport()
         {
@@ -158,7 +162,55 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        //Bookings per User per month report added
+        [HttpGet("bookings-per-user-per-month")]
+        public async Task<IActionResult> GetBookingsPerUserPerMonthAsync()
+        {
+            try
+            {
+                var result = await _reportService.GetBookingsPerUserPerMonthAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Log exception (consider using a logging framework)
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        //Number of cancelled bookings per month
+        [HttpGet("cancelled-bookings-per-month")]
+        public async Task<IActionResult> GetCancelledBookingsPerMonthAsync()
+        {
+            try
+            {
+                var result = await _reportService.GetCancelledBookingsPerMonthAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Log exception (consider using a logging framework)
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        //Available vehicles for the month
+        //[HttpGet("available-vehicles-for-month")]
+        //public async Task<IActionResult> GetAvailableVehiclesForMonthAsync()
+        //{
+        //    try
+        //    {
+        //        var result = await _reportService.GetAvailableVehiclesForMonthAsync();
+        //        return Ok(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log exception (consider using a logging framework)
+        //        return StatusCode(500, "Internal server error");
+        //    }
+        //}
+
 
     }
-
 }

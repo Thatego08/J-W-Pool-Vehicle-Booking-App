@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
+using iText.Kernel.Counter.Context;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -23,22 +25,23 @@ namespace Team34FinalAPI.Controllers
             _context = context;
             _logger = logger;
         }
-
         [HttpPost("CreatePostCheck")]
+        [RequestSizeLimit(10_000_000)]
         public async Task<IActionResult> CreatePostCheck([FromForm] PostCheckViewModel pcvm)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState); // Returns if model state is invalid
+                return BadRequest(ModelState);
             }
 
             if (pcvm == null)
             {
-                return BadRequest("PostCheckViewModel cannot be null"); // Returns if view model is null
+                return BadRequest("PostCheckViewModel cannot be null");
             }
 
             var postCheck = new PostCheck
             {
+                TripId = pcvm.TripId,
                 ClosingKms = pcvm.ClosingKms,
                 OilLeaks = pcvm.OilLeaks,
                 FuelLevel = pcvm.FuelLevel,
@@ -64,27 +67,31 @@ namespace Team34FinalAPI.Controllers
                 LicenseDiskValid = pcvm.LicenseDiskValid,
                 Comments = pcvm.Comments,
                 AdditionalComments = pcvm.AdditionalComments,
-                TripMedia = new List<TripMedia>()
+                TripMedia = new List<TripMedia>() // Initialize the list
             };
 
-            if (pcvm.MediaFiles != null && pcvm.MediaFiles.Any())
+            // Handle MediaFiles as optional
+            if (pcvm.MediaFiles != null && pcvm.MediaFiles.Count > 0)
             {
                 foreach (var file in pcvm.MediaFiles)
                 {
-                    using (var ms = new MemoryStream())
+                    if (file != null)
                     {
-                        await file.CopyToAsync(ms);
-                        var fileBytes = ms.ToArray();
-
-                        var tripMedia = new TripMedia
+                        using (var ms = new MemoryStream())
                         {
-                            Description = pcvm.MediaDescription,
-                            FileName = file.FileName,
-                            FileContent = fileBytes,
-                            MediaType = file.ContentType
-                        };
+                            await file.CopyToAsync(ms);
+                            var fileBytes = ms.ToArray();
 
-                        postCheck.TripMedia.Add(tripMedia);
+                            var tripMedia = new TripMedia
+                            {
+                                Description = pcvm.MediaDescription, // No need to take FirstOrDefault
+                                FileName = file.FileName,
+                                FileContent = fileBytes,
+                                MediaType = file.ContentType
+                            };
+
+                            postCheck.TripMedia.Add(tripMedia);
+                        }
                     }
                 }
             }
@@ -97,15 +104,17 @@ namespace Team34FinalAPI.Controllers
             catch (DbUpdateException dbEx)
             {
                 var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
-                return StatusCode(500, $"Database update error: {innerExceptionMessage}"); // Returns in case of database update exception
+                return StatusCode(500, $"Database update error: {innerExceptionMessage}");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Unexpected error: {ex.Message}"); // Returns in case of other exceptions
+                return StatusCode(500, $"Unexpected error: {ex.Message}");
             }
 
-            return Ok(postCheck); // Returns successfully created postCheck
+            return Ok(postCheck);
         }
+
+
         [HttpGet("{postCheckId}")]
         public async Task<IActionResult> GetPostCheckByIdAsync(int postCheckId)
         {
@@ -121,6 +130,7 @@ namespace Team34FinalAPI.Controllers
             var postCheckDto = new
             {
                 postCheck.PostCheckId,
+                postCheck.TripId,
                 postCheck.ClosingKms,
                 postCheck.OilLeaks,
                 postCheck.FuelLevel,
@@ -158,6 +168,7 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(postCheckDto); // Return PostCheck along with media
         }
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllPostChecks")]
         public async Task<IActionResult> GetAllPostChecksAsync()
         {
@@ -173,6 +184,7 @@ namespace Team34FinalAPI.Controllers
             var postCheckDtos = postChecks.Select(postCheck => new
             {
                 postCheck.PostCheckId,
+                postCheck.TripId,
                 postCheck.ClosingKms,
                 postCheck.OilLeaks,
                 postCheck.FuelLevel,
@@ -210,5 +222,44 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(postCheckDtos); // Return the list of PostChecks with media
         }
+
+
+        [HttpDelete("{postCheckId}")]
+        public async Task<IActionResult> DeletePostCheckAsync(int postCheckId)
+        {
+            var postCheck = await _context.PostChecks
+                                          .Include(pc => pc.TripMedia)
+                                          .FirstOrDefaultAsync(pc => pc.PostCheckId == postCheckId);
+
+            if (postCheck == null)
+            {
+                return NotFound(); // Return 404 if PostCheck not found
+            }
+
+            try
+            {
+                // Remove associated media files
+                if (postCheck.TripMedia != null)
+                {
+                    _context.TripMedia.RemoveRange(postCheck.TripMedia);
+                }
+
+                // Remove the post check
+                _context.PostChecks.Remove(postCheck);
+                await _context.SaveChangesAsync();
+
+                return NoContent(); // Return 204 No Content on successful deletion
+            }
+            catch (DbUpdateException dbEx)
+            {
+                var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+                return StatusCode(500, $"Database update error: {innerExceptionMessage}"); // Returns in case of database update exception
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Unexpected error: {ex.Message}"); // Returns in case of other exceptions
+            }
+        }
+
     }
 }

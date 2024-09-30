@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
 namespace Team34FinalAPI.ViewModels
@@ -32,7 +33,8 @@ namespace Team34FinalAPI.ViewModels
         public string AdditionalComments { get; set; }
 
         // Fields for TripMedia
-        public List<IFormFile> MediaFiles { get; set; }
+        public int TripId { get; set; } // Add this property
+        public List<IFormFile>? MediaFiles { get; set; }
         public string? MediaDescription { get; set; }
     }
 }

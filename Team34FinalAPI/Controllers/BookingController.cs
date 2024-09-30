@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Team34FinalAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
+using Mailjet.Client.Resources;
+using User = Team34FinalAPI.Models.User;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -25,10 +27,11 @@ namespace Team34FinalAPI.Controllers
         private readonly VehicleDbContext _vehicleContext;
         private readonly ILogger<BookingController> _logger;
         private readonly IEmailService _emailService;
+        private readonly IAuditLogRepository _auditLogRepo;
 
         private readonly UserManager<User> _userManager;
 
-        public BookingController(IBookingRepository bookingRepository, UserManager<User> userManager, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
+        public BookingController(IBookingRepository bookingRepository,IAuditLogRepository auditLogRepository, UserManager<User> userManager, IVehicleRepository vehicleRepository, IProjectRepository projectRepository, BookingDbContext context, VehicleDbContext vehicleContext, ILogger<BookingController> logger, IEmailService emailService)
         {
             _bookingRepository = bookingRepository;
             _projectRepository = projectRepository;
@@ -37,6 +40,7 @@ namespace Team34FinalAPI.Controllers
             _vehicleContext = vehicleContext;
             _logger = logger;
             _emailService = emailService;
+            _auditLogRepo = auditLogRepository;
 
             _userManager = userManager;
         }
@@ -60,7 +64,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         // Get specific Booking
-        [HttpGet("GetBooking{id}")]
+        [HttpGet("GetBooking/{id}")]
         public async Task<ActionResult<BookingViewModel>> GetBookingById(int id)
         {
             var booking = await _bookingRepository.GetBookingByIdAsync(id);
@@ -70,6 +74,7 @@ namespace Team34FinalAPI.Controllers
             }
             return Ok(MapToViewModel(booking));
         }
+
 
         // Updated Post method, to include 'Send Booking Confirmation'
         [HttpPost]
@@ -86,11 +91,6 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} does not exist.");
                 }
 
-                if (vehicle.StatusID == 2 || vehicle.StatusID == 3)
-                {
-                    return BadRequest($"Vehicle with name {bookingViewModel.VehicleName} is not available for booking.");
-                }
-
                 // Validate project or event
                 int? projectId = null;
                 if (bookingViewModel.ProjectNumber.HasValue)
@@ -104,10 +104,29 @@ namespace Team34FinalAPI.Controllers
                 }
                 _logger.LogInformation("Starting SomeAction for user: {User}", User.Identity.Name);
 
-                // Retrieve the logged-in user
-               
 
-                
+                // Check if the vehicle is available for the selected date range
+                var availableVehicles = await _vehicleRepository.GetAvailableVehiclesAsync(bookingViewModel.StartDate, bookingViewModel.EndDate);
+
+                // Validate the selected vehicle
+                var selectedVehicle = await _vehicleRepository.GetVehicleByNameAsync(bookingViewModel.VehicleName);
+                if (selectedVehicle == null || !availableVehicles.Any(v => v.VehicleID == selectedVehicle.VehicleID))
+                {
+                    return BadRequest("The selected vehicle is not available during the selected date range.");
+                }
+
+               // Check if the vehicle is already booked within the provided date range
+                var conflictingBooking = await _bookingRepository.GetConflictingBookingAsync(vehicle.VehicleID, bookingViewModel.StartDate, bookingViewModel.EndDate);
+                if (conflictingBooking != null)
+                {
+                    return BadRequest("The vehicle is not available during the selected date range.");
+                }
+
+
+                // Retrieve the logged-in user
+
+
+
                 // Get the username of the logged-in user
                 var userName = User.Identity?.Name;
                 if (string.IsNullOrEmpty(userName))
@@ -124,34 +143,51 @@ namespace Team34FinalAPI.Controllers
                 }
 
                 //var user = await _userManager.GetUserAsync(User);
-                if (user == null) 
+                if (user == null)
                 {
                     return Unauthorized(); // No logged-in user found
                 }
 
                 _logger.LogInformation("User retrieved successfully: Username:", user.UserName);
-                // Create booking without EndDate
+
+
+               
+
+                // Proceed with booking creation
                 var booking = new Booking
                 {
                     UserName = bookingViewModel.UserName,
                     Event = bookingViewModel.Event,
                     Type = bookingViewModel.Type,
                     StartDate = bookingViewModel.StartDate,
+                    EndDate = bookingViewModel.EndDate,  // Add end date
                     VehicleId = vehicle.VehicleID,
                     ProjectId = projectId,
                     StatusId = 2 // Assuming '2' means 'Booked'
                 };
 
-                // Update vehicle status to 'Booked'
-                vehicle.StatusID = 2;
+             
 
                 await _bookingRepository.AddBookingAsync(booking);
+
+
+
                 await _vehicleRepository.UpdateVehicleAsync(vehicle);
 
                 bookingViewModel.BookingID = booking.BookingID;
 
-                // Send confirmation emailstring subject = "Booking Confirmation";
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = userName,
+                    Action = "Add new booking",
+                    Details = $"Booking for vehicle created by : " + userName,
+                    Timestamp = DateTime.UtcNow
+                });
 
+
+
+                // Send confirmation email (as implemented)
                 // After booking is successfully created, send the confirmation email
                 string subject = "Booking Confirmation";
                 string message = $"Dear {user.Name},\n\nYour booking has been successfully created. Details:\n\n" +
@@ -160,16 +196,17 @@ namespace Team34FinalAPI.Controllers
                                  $"Type: {bookingViewModel.Type}\n\n" +
                                  "Thank you for using our service.";
 
+
                 await _emailService.SendEmailAsync(user.Email, subject, message);
 
                 return Ok(new { message = "Booking created and confirmation email sent." });
-
                 return CreatedAtAction(nameof(GetBookingById), new { id = booking.BookingID }, bookingViewModel);
+
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "DbUpdateException in PostBookingAsync: {InnerExceptionMessage}", ex.InnerException?.Message ?? ex.Message);
-                return StatusCode(500, $"Internal server error: {ex.InnerException?.Message ?? ex.Message}");
+                _logger.LogError(ex, "DbUpdateException in PostBookingAsync");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
             catch (Exception ex)
             {
@@ -177,6 +214,7 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
 
 
@@ -245,6 +283,15 @@ namespace Team34FinalAPI.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = bookingViewModel.UserName,
+                    Action = "Edit Booking",
+                    Details = $"Booking has been updated by: " + booking.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -271,6 +318,16 @@ namespace Team34FinalAPI.Controllers
         {
             var booking = await _bookingRepository.GetBookingByIdAsync(id);
             if (booking == null) return NotFound();
+
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+                UserName = booking.UserName,
+                Action = "Delete Booking",
+                Details = $"Booking for vehicle has been deleted by : " + booking.UserName,
+                Timestamp = DateTime.UtcNow
+            });
 
             await _bookingRepository.DeleteBookingAsync(id);
 
@@ -301,6 +358,14 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(bookingViewModels);
         }
+
+        [HttpGet("GetAvailableVehicles")]
+        public async Task<IActionResult> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate)
+        {
+            var availableVehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate);
+            return Ok(availableVehicles);
+        }
+
 
 
         // Cancel Booking
@@ -343,6 +408,16 @@ namespace Team34FinalAPI.Controllers
                     await _emailService.SendEmailAsync(user.Email, subject, message);
                 }
 
+
+                //Audit Log stuff 
+                await _auditLogRepo.AddLogAsync(new AuditLog
+                {
+                    UserName = booking.UserName,
+                    Action = "Cancel Booking",
+                    Details = $"Booking for vehicle has been canceled by : " + booking.UserName,
+                    Timestamp = DateTime.UtcNow
+                });
+
                 //return Ok("Booking cancelled and vehicle status updated to 'Available'.");
                 return Ok(new { message = "Booking cancelled and vehicle status updated to 'Available'." });
 
@@ -377,6 +452,7 @@ namespace Team34FinalAPI.Controllers
             {
                 await _context.SaveChangesAsync();
                 return Ok(new { message = "Vehicle status updated successfully." });
+
             }
             catch (DbUpdateException)
             {

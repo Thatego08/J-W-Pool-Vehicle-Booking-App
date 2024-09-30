@@ -14,16 +14,20 @@ namespace Team34FinalAPI.Controllers
     public class RateController : ControllerBase
     {
         private readonly IRateRepo _rateRepo;
+
         private readonly IProjectRepository _projectRepository; // Injecting project repository
         private readonly AppDbContext _context; // Injecting DbContext for RateType access
+         private readonly IAuditLogRepository _auditLogRepo;
 
 
 
-        public RateController(IRateRepo rateRepo, IProjectRepository projectRepository, AppDbContext context)
+        public RateController(IRateRepo rateRepo, IProjectRepository projectRepository, AppDbContext context,IAuditLogRepository auditLogRepo)
         {
             _rateRepo = rateRepo;
             _projectRepository = projectRepository; // Initialize _projectRepository
             _context = context;
+              _auditLogRepo = auditLogRepo;
+
 
         }
 
@@ -59,6 +63,7 @@ namespace Team34FinalAPI.Controllers
                 Conditions = rateViewModel.Conditions
             };
 
+
             // Handle the many-to-many association between Rate and Projects
             foreach (var projectNumber in rateViewModel.ProjectNumbers)
             {
@@ -74,6 +79,17 @@ namespace Team34FinalAPI.Controllers
             }
 
             var createdRate = await _rateRepo.CreateRateAsync(rate);
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+                Action = "Create Rate",
+                Details = $"Rate for projects has been created by an administrator",
+                Timestamp = DateTime.UtcNow
+            });
+
+            // Instead of CreatedAtAction, use a simpler response
+
             return Ok(new { message = "Rate created successfully", rate = createdRate });
         }
 
@@ -94,6 +110,14 @@ namespace Team34FinalAPI.Controllers
             }
 
             await _rateRepo.UpdateRateAsync(rate);
+
+            //Audit Log stuff 
+            await _auditLogRepo.AddLogAsync(new AuditLog
+            {
+                Action = "Update Rate",
+                Details = $"Rate for projects has been updated by an administrator",
+                Timestamp = DateTime.UtcNow
+            });
             return NoContent();
         }
 /*

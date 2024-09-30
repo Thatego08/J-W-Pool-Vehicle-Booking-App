@@ -16,49 +16,53 @@ namespace Team34FinalAPI.Controllers
             _context = context;
         }
 
-        [HttpGet("{tripId}")]
-        public async Task<ActionResult<PreChecklist>> GetPreChecklist(int tripId)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PreChecklist>> GetPreChecklist(int id)
         {
-           // var preChecklist = await _context.PreChecklists
-               // .FirstOrDefaultAsync(pc => pc.TripId == tripId);
+            var preChecklist = await _context.PreChecklists.FindAsync(id);
 
-           // if (preChecklist == null)
+            if (preChecklist == null)
             {
                 return NotFound();
             }
 
-           // return preChecklist;
+            return Ok(preChecklist);
         }
         [HttpPost]
-        public async Task<ActionResult<PreChecklist>> CreatePreChecklist([FromBody] PreChecklist preChecklist)
+        public async Task<ActionResult> CreatePreChecklist([FromBody] PreChecklist preChecklist)
         {
             if (preChecklist == null)
             {
                 return BadRequest("PreChecklist cannot be null.");
             }
 
-            try
+            // Check if BookingID is valid (optional)
+            if (preChecklist.BookingID <= 0)
             {
-                _context.PreChecklists.Add(preChecklist);
-                await _context.SaveChangesAsync();
+                return BadRequest("Invalid BookingID.");
+            }
 
-                // Return status 200 OK with the created entity
-                return Ok(preChecklist);
-            }
-            catch (DbUpdateException ex)
+            if (!ModelState.IsValid)
             {
-                // Log the exception details
-                // Example: _logger.LogError(ex, "An error occurred while saving the PreChecklist.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while saving the PreChecklist.");
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            // Assign the Booking based on BookingID
+            var booking = await _context.Bookings.FindAsync(preChecklist.BookingID);
+            if (booking == null)
             {
-                // Log the exception details
-                // Example: _logger.LogError(ex, "An unexpected error occurred.");
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+                return NotFound("Booking not found.");
             }
+
+            preChecklist.Booking = booking;
+
+            // Add the new PreChecklist and save changes
+            _context.PreChecklists.Add(preChecklist);
+            await _context.SaveChangesAsync();
+
+            // Return the Id in the response
+            return Ok(new { id = preChecklist.Id });
         }
-
 
 
         // private bool PreChecklistExists(int tripId)

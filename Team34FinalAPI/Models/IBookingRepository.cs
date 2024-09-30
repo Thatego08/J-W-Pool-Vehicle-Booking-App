@@ -10,6 +10,10 @@
         bool BookingExists(int id);
         Task<IEnumerable<Booking>> GetBookingsByUserNameAsync(string username);
         Task<IEnumerable<Booking>> GetUpcomingBookingsAsync(DateTime cutoffTime);
-        
+
+        Task<Booking?> GetConflictingBookingAsync(int vehicleId, DateTime startDate, DateTime endDate);
+
+        Task<List<Booking>> GetBookingsWithinNext24HoursAsync();
+
     }
 }
