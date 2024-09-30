@@ -3,6 +3,9 @@ using Team34FinalAPI.Models;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using Team34FinalAPI.ViewModels;
+using Team34FinalAPI.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Team34FinalAPI.Controllers
 {
@@ -11,11 +14,16 @@ namespace Team34FinalAPI.Controllers
     public class RateController : ControllerBase
     {
         private readonly IRateRepo _rateRepo;
+        private readonly IProjectRepository _projectRepository; // Injecting project repository
+        private readonly AppDbContext _context; // Injecting DbContext for RateType access
 
 
-        public RateController(IRateRepo rateRepo)
+
+        public RateController(IRateRepo rateRepo, IProjectRepository projectRepository, AppDbContext context)
         {
             _rateRepo = rateRepo;
+            _projectRepository = projectRepository; // Initialize _projectRepository
+            _context = context;
 
         }
 
@@ -29,19 +37,46 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpPost]
-        [Route(("create-rate"))]
-        public async Task<IActionResult> CreateRate([FromBody] Rate rate)
+        [Route("create-rate")]
+        public async Task<IActionResult> CreateRate([FromBody] RateViewModel rateViewModel)
         {
-            if (rate == null || !ModelState.IsValid)
+            if (rateViewModel == null || !ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            var rateType = await _context.RateTypes.FirstOrDefaultAsync(rt => rt.RateTypeID == rateViewModel.RateTypeID);
+            if (rateType == null)
+            {
+                return BadRequest("RateType not found.");
+            }
+            // Find the related RateType by RateTypeName (or ID)
+
+            var rate = new Rate
+            {
+                RateValue = rateViewModel.RateValue,
+                RateTypeID = rateType.RateTypeID,  // Set the RateTypeID instead of RateTypeName
+                ApplicableTimePeriod = rateViewModel.ApplicableTimePeriod,
+                Conditions = rateViewModel.Conditions
+            };
+
+            // Handle the many-to-many association between Rate and Projects
+            foreach (var projectNumber in rateViewModel.ProjectNumbers)
+            {
+                var project = await _projectRepository.GetProjectByNumberAsync(projectNumber);
+                if (project != null)
+                {
+                    rate.ProjectRates.Add(new ProjectRate
+                    {
+                        ProjectID = project.ProjectID,
+                        RateID = rate.RateID
+                    });
+                }
+            }
 
             var createdRate = await _rateRepo.CreateRateAsync(rate);
-
-            // Instead of CreatedAtAction, use a simpler response
             return Ok(new { message = "Rate created successfully", rate = createdRate });
         }
+
 
         [HttpPut]
         [Route("update-rate")]

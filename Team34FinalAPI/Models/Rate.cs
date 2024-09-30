@@ -19,14 +19,12 @@ public class Rate
     [Column(TypeName = "decimal(18,2)")]
     public decimal RateValue { get; set; }
 
-    [Required]
-    [ForeignKey("ProjectID")]
-    public int ProjectID { get; set; }
-
-    public Project Project { get; set; }
-
+ 
     public string? ApplicableTimePeriod { get; set; }
 
     public string? Conditions { get; set; }
+
+    // Many-to-many relationship with Project
+    public ICollection<ProjectRate> ProjectRates { get; set; }
 }
 
