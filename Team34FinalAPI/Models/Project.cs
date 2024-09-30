@@ -14,6 +14,7 @@
         public Status? Status { get; set; }
         // This line establishes the one-to-many relationship
         public ICollection<Booking> Bookings { get; set; }
-        public ICollection<Rate> Rates { get; set; }
+        // Many-to-many relationship with Rate
+        public ICollection<ProjectRate> ProjectRates { get; set; }
     }
 }

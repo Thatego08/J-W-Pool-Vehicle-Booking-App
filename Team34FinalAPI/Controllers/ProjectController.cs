@@ -15,15 +15,21 @@ namespace Team34FinalAPI.Controllers
 public class ProjectController : ControllerBase
 {
     private readonly IProjectRepository _projectRepository;
+
     private readonly ILogger<ProjectController> _logger;
+
+        private readonly IRateRepo _rateRepository; // Injecting rate repository
         private readonly IAuditLogRepository _auditLogRepo;
 
-    public ProjectController(IProjectRepository projectRepository, ILogger<ProjectController> logger, IAuditLogRepository auditLogRepo)
-        {
+        public ProjectController(IProjectRepository projectRepository, IRateRepo rateRepository, ILogger<ProjectController> logger,IAuditLogRepository auditLogRepo)
+    {
+            _rateRepository = rateRepository ?? throw new ArgumentNullException(nameof(rateRepository)); // Initialize _rateRepository
+
             _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _auditLogRepo = auditLogRepo;
-        }
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _auditLogRepo = auditLogRepo;
+    }
+
 
         [HttpPost]
     [Route("AddProject")]
@@ -46,6 +52,7 @@ public class ProjectController : ControllerBase
                     ActivityCode = pvm.ActivityCode,
                     StatusId = 1 //Default to availabe status
                 };
+               
 
                 _logger.LogInformation("Adding project: {@Project}", project);
 
