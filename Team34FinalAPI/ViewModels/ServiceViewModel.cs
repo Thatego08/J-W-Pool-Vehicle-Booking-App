@@ -14,10 +14,6 @@ namespace Team34FinalAPI.ViewModels
         [EmailAddress]
         public string AdminEmail { get; set; }
 
-        public string VehicleModelName { get; set; }
-
-        public string VehicleMakeName { get; set; }
-
         public string Description { get; set; } //Additional Details
 
         public DateTime ServiceDate { get; set; }
