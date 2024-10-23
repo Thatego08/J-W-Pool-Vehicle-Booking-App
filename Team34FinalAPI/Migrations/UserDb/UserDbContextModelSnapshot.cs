@@ -8,7 +8,7 @@ using Team34FinalAPI.Models;
 
 #nullable disable
 
-namespace Team34FinalAPI.Migrations.UserDb
+namespace Team34FinalAPI.Migrations
 {
     [DbContext(typeof(UserDbContext))]
     partial class UserDbContextModelSnapshot : ModelSnapshot
@@ -220,6 +220,56 @@ namespace Team34FinalAPI.Migrations.UserDb
                     b.ToTable("Feedbacks");
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.OTP", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Otps");
+                });
+
+            modelBuilder.Entity("Team34FinalAPI.Models.OTPSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ExpirationTimeInMinutes")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OTPSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ExpirationTimeInMinutes = 10
+                        });
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.User", b =>
                 {
                     b.Property<string>("Id")
@@ -272,6 +322,10 @@ namespace Team34FinalAPI.Migrations.UserDb
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ProfilePhotoPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Role")
                         .IsRequired()

@@ -8,12 +8,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Team34FinalAPI.Migrations.BookingDb
 {
     /// <inheritdoc />
-    public partial class booking : Migration
+    public partial class Awaken : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
 
             migrationBuilder.CreateTable(
                 name: "Events",
@@ -29,27 +28,19 @@ namespace Team34FinalAPI.Migrations.BookingDb
                     table.PrimaryKey("PK_Events", x => x.EventID);
                 });
 
-
-
-
             migrationBuilder.CreateTable(
-                name: "RateType",
+                name: "InspectionLists",
                 columns: table => new
                 {
-                    RateTypeID = table.Column<int>(type: "int", nullable: false)
+                    ChecklistID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RateTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Item = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RateType", x => x.RateTypeID);
+                    table.PrimaryKey("PK_InspectionLists", x => x.ChecklistID);
                 });
-
-
-
-
-
-
 
             migrationBuilder.CreateTable(
                 name: "Projects",
@@ -73,39 +64,6 @@ namespace Team34FinalAPI.Migrations.BookingDb
                         principalTable: "Status",
                         principalColumn: "Id");
                 });
-
-
-
-            migrationBuilder.CreateTable(
-                name: "Rate",
-                columns: table => new
-                {
-                    RateID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RateTypeID = table.Column<int>(type: "int", nullable: false),
-                    RateValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ProjectID = table.Column<int>(type: "int", nullable: false),
-                    ApplicableTimePeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Conditions = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Rate", x => x.RateID);
-                    table.ForeignKey(
-                        name: "FK_Rate_Projects_ProjectID",
-                        column: x => x.ProjectID,
-                        principalTable: "Projects",
-                        principalColumn: "ProjectID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Rate_RateType_RateTypeID",
-                        column: x => x.RateTypeID,
-                        principalTable: "RateType",
-                        principalColumn: "RateTypeID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-
 
             migrationBuilder.CreateTable(
                 name: "Bookings",
@@ -144,14 +102,18 @@ namespace Team34FinalAPI.Migrations.BookingDb
                         principalColumn: "VehicleID",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-
-
-
-
-
-
-
+            migrationBuilder.InsertData(
+                table: "InspectionLists",
+                columns: new[] { "ChecklistID", "IsCompleted", "Item" },
+                values: new object[,]
+                {
+                    { 1, false, "Windscreen" },
+                    { 2, false, "TyreCondition" },
+                    { 3, false, "FirstAidKit" },
+                    { 4, false, "Brakes" },
+                    { 5, false, "Mirrors" },
+                    { 6, false, "Lights" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Projects",
@@ -191,56 +153,70 @@ namespace Team34FinalAPI.Migrations.BookingDb
                 table: "Bookings",
                 column: "VehicleId");
 
-
+            
+            
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_StatusId",
                 table: "Projects",
                 column: "StatusId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Rate_ProjectID",
-                table: "Rate",
-                column: "ProjectID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Rate_RateTypeID",
-                table: "Rate",
-                column: "RateTypeID");
-
-
-
-
-
-
-
-
-
-
-        }
+            
+            }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Bookings");
-
-            migrationBuilder.DropTable(
                 name: "Events");
 
+            migrationBuilder.DropTable(
+                name: "InspectionLists");
 
+            migrationBuilder.DropTable(
+                name: "LicenseDisk");
 
             migrationBuilder.DropTable(
                 name: "Rate");
 
+            migrationBuilder.DropTable(
+                name: "RefuelVehicle");
 
+            migrationBuilder.DropTable(
+                name: "RateType");
+
+            migrationBuilder.DropTable(
+                name: "Trip");
+
+            migrationBuilder.DropTable(
+                name: "PreChecklist");
+
+            migrationBuilder.DropTable(
+                name: "Bookings");
 
             migrationBuilder.DropTable(
                 name: "Projects");
 
+            migrationBuilder.DropTable(
+                name: "Vehicles");
 
+            migrationBuilder.DropTable(
+                name: "Colour");
 
+            migrationBuilder.DropTable(
+                name: "InsuranceCover");
 
+            migrationBuilder.DropTable(
+                name: "Status");
+
+            migrationBuilder.DropTable(
+                name: "VehicleFuelType");
+
+            migrationBuilder.DropTable(
+                name: "VehicleModel");
+
+            migrationBuilder.DropTable(
+                name: "VehicleMake");
         }
     }
 }

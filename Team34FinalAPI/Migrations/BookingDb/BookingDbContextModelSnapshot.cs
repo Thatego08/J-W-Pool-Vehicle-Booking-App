@@ -246,6 +246,101 @@ namespace Team34FinalAPI.Migrations.BookingDb
                     b.ToTable("LicenseDisk");
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdditionalComments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BookingID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("BrakeLights")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Brakes")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CheckedByJWSecurity")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("FuelLevel")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Handbrake")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HeadLights")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Horn")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Indicators")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("JWMarketingMagnets")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("JackAndWheelSpannerPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LicenseDiskValid")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Mirrors")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("OilLeaks")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("OpeningKms")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("ParkLights")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ReverseHooter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ReverseLight")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SeatBelts")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SpareWheelPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("StrobeLight")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SunVisor")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("TyreCondition")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("WindscreenWiper")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingID");
+
+                    b.ToTable("PreChecklist");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.Project", b =>
                 {
                     b.Property<int>("ProjectID")
@@ -439,6 +534,9 @@ namespace Team34FinalAPI.Migrations.BookingDb
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("DateChanged")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -451,36 +549,43 @@ namespace Team34FinalAPI.Migrations.BookingDb
                         new
                         {
                             Id = 1,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Available"
                         },
                         new
                         {
                             Id = 2,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Booked"
                         },
                         new
                         {
                             Id = 3,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "In For Service"
                         },
                         new
                         {
                             Id = 4,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Cancelled"
                         },
                         new
                         {
                             Id = 5,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Active"
                         },
                         new
                         {
                             Id = 6,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Complete"
                         },
                         new
                         {
                             Id = 7,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "In-Progress"
                         });
                 });
@@ -508,6 +613,9 @@ namespace Team34FinalAPI.Migrations.BookingDb
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PreChecklistId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("TravelEnd")
                         .HasColumnType("datetime2");
 
@@ -525,41 +633,11 @@ namespace Team34FinalAPI.Migrations.BookingDb
 
                     b.HasIndex("BookingID");
 
+                    b.HasIndex("PreChecklistId");
+
                     b.HasIndex("VehicleID");
 
                     b.ToTable("Trip");
-                });
-
-            modelBuilder.Entity("Team34FinalAPI.Models.TripMedia", b =>
-                {
-                    b.Property<int>("MediaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MediaId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("FileContent")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MediaType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TripId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MediaId");
-
-                    b.HasIndex("TripId");
-
-                    b.ToTable("TripMedia");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
@@ -720,6 +798,17 @@ namespace Team34FinalAPI.Migrations.BookingDb
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
+                {
+                    b.HasOne("Team34FinalAPI.Models.Booking", "Booking")
+                        .WithMany("PreChecklists")
+                        .HasForeignKey("BookingID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.Project", b =>
                 {
                     b.HasOne("Team34FinalAPI.Models.Status", "Status")
@@ -767,22 +856,17 @@ namespace Team34FinalAPI.Migrations.BookingDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Team34FinalAPI.Models.PreChecklist", "PreChecklist")
+                        .WithMany()
+                        .HasForeignKey("PreChecklistId");
+
                     b.HasOne("Team34FinalAPI.Models.Vehicle", null)
                         .WithMany("Trips")
                         .HasForeignKey("VehicleID");
 
                     b.Navigation("Booking");
-                });
 
-            modelBuilder.Entity("Team34FinalAPI.Models.TripMedia", b =>
-                {
-                    b.HasOne("Team34FinalAPI.Models.Trip", "Trip")
-                        .WithMany("TripMedia")
-                        .HasForeignKey("TripId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Trip");
+                    b.Navigation("PreChecklist");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
@@ -849,6 +933,8 @@ namespace Team34FinalAPI.Migrations.BookingDb
 
             modelBuilder.Entity("Team34FinalAPI.Models.Booking", b =>
                 {
+                    b.Navigation("PreChecklists");
+
                     b.Navigation("Trips");
                 });
 
@@ -867,8 +953,6 @@ namespace Team34FinalAPI.Migrations.BookingDb
             modelBuilder.Entity("Team34FinalAPI.Models.Trip", b =>
                 {
                     b.Navigation("RefuelVehicles");
-
-                    b.Navigation("TripMedia");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
