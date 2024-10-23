@@ -9,11 +9,7 @@ public class Rate
     [Key]
     public int RateID { get; set; }
 
-    [Required]
-    [ForeignKey("RateTypeID")]
-    public int RateTypeID { get; set; }
 
-    public RateType RateType { get; set; }
 
     [Required]
     [Column(TypeName = "decimal(18,2)")]
