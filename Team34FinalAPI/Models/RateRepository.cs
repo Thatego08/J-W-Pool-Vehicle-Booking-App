@@ -19,11 +19,9 @@ namespace Team34FinalAPI.Models
         {
             return await _context.Rates
                 .Include(r => r.Project)
-                .Include(r => r.RateType)
                 .Select(r => new RateViewModel
                 {
-
-                    RateTypeName = r.RateType.RateTypeName,
+                    ProjectID = r.ProjectID,
                     RateValue = r.RateValue,
                     ApplicableTimePeriod = r.ApplicableTimePeriod,
                     Conditions = r.Conditions
@@ -36,11 +34,10 @@ namespace Team34FinalAPI.Models
         {
             return await _context.Rates
                 .Include(r => r.Project)
-                .Include(r => r.RateType)
                 .Where(r => r.RateID == rateId)
                 .Select(r => new RateViewModel
                 {
-                    RateTypeName = r.RateType.RateTypeName,
+                    ProjectID = r.ProjectID,
                     RateValue = r.RateValue,
                     ApplicableTimePeriod = r.ApplicableTimePeriod,
                     Conditions = r.Conditions
@@ -62,8 +59,9 @@ namespace Team34FinalAPI.Models
             var existingRate = await _context.Rates.FindAsync(rate.RateID);
             if (existingRate != null)
             {
+                _context.Entry(existingRate).State = EntityState.Modified;
+
                 existingRate.ProjectID = rate.ProjectID;
-                existingRate.RateTypeID = rate.RateTypeID;
                 existingRate.RateValue = rate.RateValue;
                 existingRate.ApplicableTimePeriod = rate.ApplicableTimePeriod;
                 existingRate.Conditions = rate.Conditions;
