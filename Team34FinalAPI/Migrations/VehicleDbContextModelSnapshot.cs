@@ -8,7 +8,7 @@ using Team34FinalAPI.Models;
 
 #nullable disable
 
-namespace Team34FinalAPI.Migrations.VehicleDb
+namespace Team34FinalAPI.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
     partial class VehicleDbContextModelSnapshot : ModelSnapshot
@@ -67,7 +67,7 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
                     b.HasIndex("VehicleId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Booking");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Colour", b =>
@@ -328,10 +328,20 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
                     b.HasKey("PostId");
 
-                    b.HasIndex("VehicleId")
-                        .IsUnique();
+                    b.HasIndex("VehicleId");
 
                     b.ToTable("PostChecklist");
+                });
+
+            modelBuilder.Entity("Team34FinalAPI.Models.PostDocumentation", b =>
+                {
+                    b.Property<bool>("CheckedBySecurity")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LicenseDisks")
+                        .HasColumnType("bit");
+
+                    b.ToTable("PostDocumentation");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
@@ -342,99 +352,55 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BookingId")
+                    b.Property<string>("AdditionalComments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BookingID")
                         .HasColumnType("int");
 
                     b.Property<bool>("BrakeLights")
                         .HasColumnType("bit");
 
-                    b.Property<string>("BrakeLightsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Brakes")
                         .HasColumnType("bit");
 
-                    b.Property<string>("BrakesComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("CheckedByJwSecurity")
+                    b.Property<bool>("CheckedByJWSecurity")
                         .HasColumnType("bit");
 
-                    b.Property<string>("CheckedByJwSecurityComments")
+                    b.Property<string>("Comments")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("FuelLevel")
                         .HasColumnType("bit");
 
-                    b.Property<string>("FuelLevelComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Handbrake")
                         .HasColumnType("bit");
-
-                    b.Property<string>("HandbrakeComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("HeadLights")
                         .HasColumnType("bit");
 
-                    b.Property<string>("HeadLightsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("Horn")
                         .HasColumnType("bit");
-
-                    b.Property<string>("HornComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Indicators")
                         .HasColumnType("bit");
 
-                    b.Property<string>("IndicatorsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("JWMarketingMagnets")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("JackAndWheelSpannerPresent")
                         .HasColumnType("bit");
 
-                    b.Property<string>("JackAndWheelSpannerPresentComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("JwMarketingMagnets")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("JwMarketingMagnetsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("LicenseDiskValid")
                         .HasColumnType("bit");
-
-                    b.Property<string>("LicenseDiskValidComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Mirrors")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MirrorsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("OilLeaks")
                         .HasColumnType("bit");
-
-                    b.Property<string>("OilLeaksComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("OpeningKms")
                         .HasColumnType("decimal(18,2)");
@@ -442,71 +408,35 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                     b.Property<bool>("ParkLights")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ParkLightsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("ReverseHooter")
                         .HasColumnType("bit");
-
-                    b.Property<string>("ReverseHooterComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("ReverseLight")
                         .HasColumnType("bit");
 
-                    b.Property<string>("ReverseLightComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("SeatBelts")
                         .HasColumnType("bit");
 
-                    b.Property<string>("SeatBeltsComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("SparewheelPresent")
+                    b.Property<bool>("SpareWheelPresent")
                         .HasColumnType("bit");
-
-                    b.Property<string>("SparewheelPresentComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("StrobeLight")
                         .HasColumnType("bit");
 
-                    b.Property<string>("StrobeLightComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("SunVisor")
                         .HasColumnType("bit");
-
-                    b.Property<string>("SunVisorComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TyreCondition")
                         .HasColumnType("bit");
 
-                    b.Property<string>("TyreConditionComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("WindscreenWiper")
                         .HasColumnType("bit");
 
-                    b.Property<string>("WindscreenWiperComments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingID");
 
-                    b.ToTable("PreChecklists");
+                    b.ToTable("PreChecklist");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Project", b =>
@@ -704,6 +634,9 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("DateChanged")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -716,36 +649,43 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         new
                         {
                             Id = 1,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Available"
                         },
                         new
                         {
                             Id = 2,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Booked"
                         },
                         new
                         {
                             Id = 3,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "In For Service"
                         },
                         new
                         {
                             Id = 4,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Cancelled"
                         },
                         new
                         {
                             Id = 5,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Active"
                         },
                         new
                         {
                             Id = 6,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Complete"
                         },
                         new
                         {
                             Id = 7,
+                            DateChanged = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "In-Progress"
                         });
                 });
@@ -773,6 +713,9 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PreChecklistId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("TravelEnd")
                         .HasColumnType("datetime2");
 
@@ -790,41 +733,11 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
                     b.HasIndex("BookingID");
 
+                    b.HasIndex("PreChecklistId");
+
                     b.HasIndex("VehicleID");
 
                     b.ToTable("Trip");
-                });
-
-            modelBuilder.Entity("Team34FinalAPI.Models.TripMedia", b =>
-                {
-                    b.Property<int>("MediaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MediaId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("FileContent")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MediaType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TripId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MediaId");
-
-                    b.HasIndex("TripId");
-
-                    b.ToTable("TripMedia");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
@@ -1487,191 +1400,14 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Team34FinalAPI.Models.PostDocumentation", "Documentation", b1 =>
-                        {
-                            b1.Property<int>("PostChecklistPostId")
-                                .HasColumnType("int");
-
-                            b1.Property<bool>("CheckedBySecurity")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("LicenseDisks")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("PostChecklistPostId");
-
-                            b1.ToTable("PostChecklist");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PostChecklistPostId");
-                        });
-
-                    b.OwnsOne("Team34FinalAPI.Models.PostExteriorChecks", "ExteriorChecks", b1 =>
-                        {
-                            b1.Property<int>("PostChecklistPostId")
-                                .HasColumnType("int");
-
-                            b1.Property<bool>("BrakeLights")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("DamageToInteriorBodywork")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("HeadLights")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("MarketingMagnets")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("Mirrors")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("OilWaterLeaks")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("ParkLights")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("ReverseLight")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("SpareWheelPresent")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("StrobeLights")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("TyreCondition")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("PostChecklistPostId");
-
-                            b1.ToTable("PostChecklist");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PostChecklistPostId");
-                        });
-
-                    b.OwnsOne("Team34FinalAPI.Models.PostFunctionalTests", "FunctionalTests", b1 =>
-                        {
-                            b1.Property<int>("PostChecklistPostId")
-                                .HasColumnType("int");
-
-                            b1.Property<bool>("Brakes")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("Handbrake")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("Indicator")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("ReverseHooter")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("PostChecklistPostId");
-
-                            b1.ToTable("PostChecklist");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PostChecklistPostId");
-                        });
-
-                    b.OwnsOne("Team34FinalAPI.Models.PostInteriorChecks", "InteriorChecks", b1 =>
-                        {
-                            b1.Property<int>("PostChecklistPostId")
-                                .HasColumnType("int");
-
-                            b1.Property<bool>("Horn")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("Seatbelt")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("SunVisor")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("Sunblock")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("Windscreen")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("PostChecklistPostId");
-
-                            b1.ToTable("PostChecklist");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PostChecklistPostId");
-                        });
-
-                    b.OwnsOne("Team34FinalAPI.Models.PostSafetyEquipment", "SafetyEquipment", b1 =>
-                        {
-                            b1.Property<int>("PostChecklistPostId")
-                                .HasColumnType("int");
-
-                            b1.Property<bool>("FireExtinguisher")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("InspectionValid")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("JackWheelPresent")
-                                .HasColumnType("bit");
-
-                            b1.Property<bool>("TriangleInPlace3x")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("PostChecklistPostId");
-
-                            b1.ToTable("PostChecklist");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PostChecklistPostId");
-                        });
-
-                    b.OwnsOne("Team34FinalAPI.Models.PostUnderTheHoodChecks", "UnderTheHoodChecks", b1 =>
-                        {
-                            b1.Property<int>("PostChecklistPostId")
-                                .HasColumnType("int");
-
-                            b1.Property<bool>("FuelLevel")
-                                .HasColumnType("bit");
-
-                            b1.HasKey("PostChecklistPostId");
-
-                            b1.ToTable("PostChecklist");
-
-                            b1.WithOwner()
-                                .HasForeignKey("PostChecklistPostId");
-                        });
-
-                    b.Navigation("Documentation")
-                        .IsRequired();
-
-                    b.Navigation("ExteriorChecks")
-                        .IsRequired();
-
-                    b.Navigation("FunctionalTests")
-                        .IsRequired();
-
-                    b.Navigation("InteriorChecks")
-                        .IsRequired();
-
-                    b.Navigation("SafetyEquipment")
-                        .IsRequired();
-
-                    b.Navigation("UnderTheHoodChecks")
-                        .IsRequired();
-
                     b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
                 {
                     b.HasOne("Team34FinalAPI.Models.Booking", "Booking")
-                        .WithMany()
-                        .HasForeignKey("BookingId")
+                        .WithMany("PreChecklists")
+                        .HasForeignKey("BookingID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1725,22 +1461,17 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Team34FinalAPI.Models.PreChecklist", "PreChecklist")
+                        .WithMany()
+                        .HasForeignKey("PreChecklistId");
+
                     b.HasOne("Team34FinalAPI.Models.Vehicle", null)
                         .WithMany("Trips")
                         .HasForeignKey("VehicleID");
 
                     b.Navigation("Booking");
-                });
 
-            modelBuilder.Entity("Team34FinalAPI.Models.TripMedia", b =>
-                {
-                    b.HasOne("Team34FinalAPI.Models.Trip", "Trip")
-                        .WithMany("TripMedia")
-                        .HasForeignKey("TripId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Trip");
+                    b.Navigation("PreChecklist");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
@@ -1995,6 +1726,8 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
             modelBuilder.Entity("Team34FinalAPI.Models.Booking", b =>
                 {
+                    b.Navigation("PreChecklists");
+
                     b.Navigation("Trips");
                 });
 
@@ -2013,8 +1746,6 @@ namespace Team34FinalAPI.Migrations.VehicleDb
             modelBuilder.Entity("Team34FinalAPI.Models.Trip", b =>
                 {
                     b.Navigation("RefuelVehicles");
-
-                    b.Navigation("TripMedia");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>

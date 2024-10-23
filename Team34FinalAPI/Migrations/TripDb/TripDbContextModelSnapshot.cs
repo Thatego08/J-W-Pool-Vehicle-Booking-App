@@ -3,20 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Team34FinalAPI.Models;
 
 #nullable disable
 
-namespace Team34FinalAPI.Migrations
+namespace Team34FinalAPI.Migrations.TripDb
 {
     [DbContext(typeof(TripDbContext))]
-    [Migration("20240823095922_updatedSchema")]
-    partial class updatedSchema
+    partial class TripDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,7 +65,7 @@ namespace Team34FinalAPI.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.PostCheck", b =>
@@ -158,7 +155,7 @@ namespace Team34FinalAPI.Migrations
 
                     b.HasKey("PostCheckId");
 
-                    b.ToTable("PostChecks");
+                    b.ToTable("PostChecks", (string)null);
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
@@ -172,6 +169,9 @@ namespace Team34FinalAPI.Migrations
                     b.Property<string>("AdditionalComments")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("BookingID")
+                        .HasColumnType("int");
 
                     b.Property<bool>("BrakeLights")
                         .HasColumnType("bit");
@@ -248,7 +248,9 @@ namespace Team34FinalAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PreChecklists");
+                    b.HasIndex("BookingID");
+
+                    b.ToTable("PreChecklists", (string)null);
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Project", b =>
@@ -383,6 +385,9 @@ namespace Team34FinalAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("DateChanged")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -464,14 +469,9 @@ namespace Team34FinalAPI.Migrations
                     b.Property<int>("PostCheckId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TripId")
-                        .HasColumnType("int");
-
                     b.HasKey("MediaId");
 
                     b.HasIndex("PostCheckId");
-
-                    b.HasIndex("TripId");
 
                     b.ToTable("TripMedia", (string)null);
                 });
@@ -489,6 +489,17 @@ namespace Team34FinalAPI.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("Status");
+                });
+
+            modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
+                {
+                    b.HasOne("Team34FinalAPI.Models.Booking", "Booking")
+                        .WithMany("PreChecklists")
+                        .HasForeignKey("BookingID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Booking");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Project", b =>
@@ -556,15 +567,13 @@ namespace Team34FinalAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Team34FinalAPI.Models.Trip", null)
-                        .WithMany("TripMedia")
-                        .HasForeignKey("TripId");
-
                     b.Navigation("PostCheck");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Booking", b =>
                 {
+                    b.Navigation("PreChecklists");
+
                     b.Navigation("Trips");
                 });
 
@@ -588,8 +597,6 @@ namespace Team34FinalAPI.Migrations
             modelBuilder.Entity("Team34FinalAPI.Models.Trip", b =>
                 {
                     b.Navigation("RefuelVehicles");
-
-                    b.Navigation("TripMedia");
                 });
 #pragma warning restore 612, 618
         }

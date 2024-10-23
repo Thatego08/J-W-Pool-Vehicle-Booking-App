@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace Team34FinalAPI.Migrations.VehicleDb
+namespace Team34FinalAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class Vehicle : Migration
+    public partial class Awaken : Migration
     {
         /// <inheritdoc />
-       protected override void Up(MigrationBuilder migrationBuilder)
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "Colour",
@@ -52,7 +52,29 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                     table.PrimaryKey("PK_InsuranceCover", x => x.InsuranceCoverId);
                 });
 
-           
+            migrationBuilder.CreateTable(
+                name: "PostDocumentation",
+                columns: table => new
+                {
+                    LicenseDisks = table.Column<bool>(type: "bit", nullable: false),
+                    CheckedBySecurity = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RateType",
+                columns: table => new
+                {
+                    RateTypeID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RateTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RateType", x => x.RateTypeID);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Service",
@@ -92,7 +114,8 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateChanged = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -112,7 +135,29 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                     table.PrimaryKey("PK_VehicleMake", x => x.VehicleMakeID);
                 });
 
-           
+            migrationBuilder.CreateTable(
+                name: "Project",
+                columns: table => new
+                {
+                    ProjectID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProjectNumber = table.Column<int>(type: "int", nullable: false),
+                    JobNo = table.Column<int>(type: "int", nullable: false),
+                    TaskCode = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ActivityCode = table.Column<int>(type: "int", nullable: false),
+                    StatusId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Project", x => x.ProjectID);
+                    table.ForeignKey(
+                        name: "FK_Project_Status_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Status",
+                        principalColumn: "Id");
+                });
+
             migrationBuilder.CreateTable(
                 name: "VehicleModel",
                 columns: table => new
@@ -133,7 +178,34 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         onDelete: ReferentialAction.Cascade);
                 });
 
-          
+            migrationBuilder.CreateTable(
+                name: "Rate",
+                columns: table => new
+                {
+                    RateID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RateTypeID = table.Column<int>(type: "int", nullable: false),
+                    RateValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ProjectID = table.Column<int>(type: "int", nullable: false),
+                    ApplicableTimePeriod = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Conditions = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rate", x => x.RateID);
+                    table.ForeignKey(
+                        name: "FK_Rate_Project_ProjectID",
+                        column: x => x.ProjectID,
+                        principalTable: "Project",
+                        principalColumn: "ProjectID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Rate_RateType_RateTypeID",
+                        column: x => x.RateTypeID,
+                        principalTable: "RateType",
+                        principalColumn: "RateTypeID",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Vehicles",
@@ -196,7 +268,43 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         onDelete: ReferentialAction.Restrict);
                 });
 
-         
+            migrationBuilder.CreateTable(
+                name: "Booking",
+                columns: table => new
+                {
+                    BookingID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Event = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    VehicleId = table.Column<int>(type: "int", nullable: false),
+                    ProjectId = table.Column<int>(type: "int", nullable: true),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ReminderSent = table.Column<bool>(type: "bit", nullable: false),
+                    StatusId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Booking", x => x.BookingID);
+                    table.ForeignKey(
+                        name: "FK_Booking_Project_ProjectId",
+                        column: x => x.ProjectId,
+                        principalTable: "Project",
+                        principalColumn: "ProjectID");
+                    table.ForeignKey(
+                        name: "FK_Booking_Status_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Status",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Booking_Vehicles_VehicleId",
+                        column: x => x.VehicleId,
+                        principalTable: "Vehicles",
+                        principalColumn: "VehicleID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateTable(
                 name: "LicenseDisks",
                 columns: table => new
@@ -227,34 +335,7 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReturnVehicle = table.Column<bool>(type: "bit", nullable: false),
                     OpeningKms = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ClosingKms = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ExteriorChecksMirrors = table.Column<bool>(name: "ExteriorChecks_Mirrors", type: "bit", nullable: false),
-                    ExteriorChecksOilWaterLeaks = table.Column<bool>(name: "ExteriorChecks_OilWaterLeaks", type: "bit", nullable: false),
-                    ExteriorChecksHeadLights = table.Column<bool>(name: "ExteriorChecks_HeadLights", type: "bit", nullable: false),
-                    ExteriorChecksParkLights = table.Column<bool>(name: "ExteriorChecks_ParkLights", type: "bit", nullable: false),
-                    ExteriorChecksBrakeLights = table.Column<bool>(name: "ExteriorChecks_BrakeLights", type: "bit", nullable: false),
-                    ExteriorChecksStrobeLights = table.Column<bool>(name: "ExteriorChecks_StrobeLights", type: "bit", nullable: false),
-                    ExteriorChecksReverseLight = table.Column<bool>(name: "ExteriorChecks_ReverseLight", type: "bit", nullable: false),
-                    ExteriorChecksTyreCondition = table.Column<bool>(name: "ExteriorChecks_TyreCondition", type: "bit", nullable: false),
-                    ExteriorChecksSpareWheelPresent = table.Column<bool>(name: "ExteriorChecks_SpareWheelPresent", type: "bit", nullable: false),
-                    ExteriorChecksDamageToInteriorBodywork = table.Column<bool>(name: "ExteriorChecks_DamageToInteriorBodywork", type: "bit", nullable: false),
-                    ExteriorChecksMarketingMagnets = table.Column<bool>(name: "ExteriorChecks_MarketingMagnets", type: "bit", nullable: false),
-                    InteriorChecksHorn = table.Column<bool>(name: "InteriorChecks_Horn", type: "bit", nullable: false),
-                    InteriorChecksSeatbelt = table.Column<bool>(name: "InteriorChecks_Seatbelt", type: "bit", nullable: false),
-                    InteriorChecksSunVisor = table.Column<bool>(name: "InteriorChecks_SunVisor", type: "bit", nullable: false),
-                    InteriorChecksSunblock = table.Column<bool>(name: "InteriorChecks_Sunblock", type: "bit", nullable: false),
-                    InteriorChecksWindscreen = table.Column<bool>(name: "InteriorChecks_Windscreen", type: "bit", nullable: false),
-                    UnderTheHoodChecksFuelLevel = table.Column<bool>(name: "UnderTheHoodChecks_FuelLevel", type: "bit", nullable: false),
-                    FunctionalTestsIndicator = table.Column<bool>(name: "FunctionalTests_Indicator", type: "bit", nullable: false),
-                    FunctionalTestsReverseHooter = table.Column<bool>(name: "FunctionalTests_ReverseHooter", type: "bit", nullable: false),
-                    FunctionalTestsBrakes = table.Column<bool>(name: "FunctionalTests_Brakes", type: "bit", nullable: false),
-                    FunctionalTestsHandbrake = table.Column<bool>(name: "FunctionalTests_Handbrake", type: "bit", nullable: false),
-                    SafetyEquipmentFireExtinguisher = table.Column<bool>(name: "SafetyEquipment_FireExtinguisher", type: "bit", nullable: false),
-                    SafetyEquipmentInspectionValid = table.Column<bool>(name: "SafetyEquipment_InspectionValid", type: "bit", nullable: false),
-                    SafetyEquipmentTriangleInPlace3x = table.Column<bool>(name: "SafetyEquipment_TriangleInPlace3x", type: "bit", nullable: false),
-                    SafetyEquipmentJackWheelPresent = table.Column<bool>(name: "SafetyEquipment_JackWheelPresent", type: "bit", nullable: false),
-                    DocumentationLicenseDisks = table.Column<bool>(name: "Documentation_LicenseDisks", type: "bit", nullable: false),
-                    DocumentationCheckedBySecurity = table.Column<bool>(name: "Documentation_CheckedBySecurity", type: "bit", nullable: false)
+                    ClosingKms = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -266,8 +347,6 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         principalColumn: "VehicleID",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-          
 
             migrationBuilder.CreateTable(
                 name: "VehicleChecklists",
@@ -318,8 +397,111 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                         onDelete: ReferentialAction.Cascade);
                 });
 
-           
-          
+            migrationBuilder.CreateTable(
+                name: "PreChecklist",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OpeningKms = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OilLeaks = table.Column<bool>(type: "bit", nullable: false),
+                    FuelLevel = table.Column<bool>(type: "bit", nullable: false),
+                    Mirrors = table.Column<bool>(type: "bit", nullable: false),
+                    SunVisor = table.Column<bool>(type: "bit", nullable: false),
+                    SeatBelts = table.Column<bool>(type: "bit", nullable: false),
+                    HeadLights = table.Column<bool>(type: "bit", nullable: false),
+                    Indicators = table.Column<bool>(type: "bit", nullable: false),
+                    ParkLights = table.Column<bool>(type: "bit", nullable: false),
+                    BrakeLights = table.Column<bool>(type: "bit", nullable: false),
+                    StrobeLight = table.Column<bool>(type: "bit", nullable: false),
+                    ReverseLight = table.Column<bool>(type: "bit", nullable: false),
+                    ReverseHooter = table.Column<bool>(type: "bit", nullable: false),
+                    Horn = table.Column<bool>(type: "bit", nullable: false),
+                    WindscreenWiper = table.Column<bool>(type: "bit", nullable: false),
+                    TyreCondition = table.Column<bool>(type: "bit", nullable: false),
+                    SpareWheelPresent = table.Column<bool>(type: "bit", nullable: false),
+                    JackAndWheelSpannerPresent = table.Column<bool>(type: "bit", nullable: false),
+                    Brakes = table.Column<bool>(type: "bit", nullable: false),
+                    Handbrake = table.Column<bool>(type: "bit", nullable: false),
+                    JWMarketingMagnets = table.Column<bool>(type: "bit", nullable: false),
+                    CheckedByJWSecurity = table.Column<bool>(type: "bit", nullable: false),
+                    LicenseDiskValid = table.Column<bool>(type: "bit", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AdditionalComments = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BookingID = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PreChecklist", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PreChecklist_Booking_BookingID",
+                        column: x => x.BookingID,
+                        principalTable: "Booking",
+                        principalColumn: "BookingID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Trip",
+                columns: table => new
+                {
+                    TripId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BookingID = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TravelStart = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TravelEnd = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PreChecklistId = table.Column<int>(type: "int", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VehicleID = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Trip", x => x.TripId);
+                    table.ForeignKey(
+                        name: "FK_Trip_Booking_BookingID",
+                        column: x => x.BookingID,
+                        principalTable: "Booking",
+                        principalColumn: "BookingID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Trip_PreChecklist_PreChecklistId",
+                        column: x => x.PreChecklistId,
+                        principalTable: "PreChecklist",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Trip_Vehicles_VehicleID",
+                        column: x => x.VehicleID,
+                        principalTable: "Vehicles",
+                        principalColumn: "VehicleID");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefuelVehicle",
+                columns: table => new
+                {
+                    RefuelVehicleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TripId = table.Column<int>(type: "int", nullable: false),
+                    OilLevel = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TyrePressure = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TyreCondition = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FuelQuantity = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    FuelCost = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefuelVehicle", x => x.RefuelVehicleId);
+                    table.ForeignKey(
+                        name: "FK_RefuelVehicle_Trip_TripId",
+                        column: x => x.TripId,
+                        principalTable: "Trip",
+                        principalColumn: "TripId",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.InsertData(
                 table: "Colour",
@@ -361,16 +543,16 @@ namespace Team34FinalAPI.Migrations.VehicleDb
 
             migrationBuilder.InsertData(
                 table: "Status",
-                columns: new[] { "Id", "Name" },
+                columns: new[] { "Id", "DateChanged", "Name" },
                 values: new object[,]
                 {
-                    { 1, "Available" },
-                    { 2, "Booked" },
-                    { 3, "In For Service" },
-                    { 4, "Cancelled" },
-                    { 5, "Active" },
-                    { 6, "Complete" },
-                    { 7, "In-Progress" }
+                    { 1, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Available" },
+                    { 2, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Booked" },
+                    { 3, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "In For Service" },
+                    { 4, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Cancelled" },
+                    { 5, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Active" },
+                    { 6, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Complete" },
+                    { 7, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "In-Progress" }
                 });
 
             migrationBuilder.InsertData(
@@ -461,8 +643,20 @@ namespace Team34FinalAPI.Migrations.VehicleDb
                     { 20, new DateTime(2028, 12, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 20 }
                 });
 
-            
-          
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_ProjectId",
+                table: "Booking",
+                column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_StatusId",
+                table: "Booking",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Booking_VehicleId",
+                table: "Booking",
+                column: "VehicleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LicenseDisks_VehicleID",
@@ -473,16 +667,47 @@ namespace Team34FinalAPI.Migrations.VehicleDb
             migrationBuilder.CreateIndex(
                 name: "IX_PostChecklist_VehicleId",
                 table: "PostChecklist",
-                column: "VehicleId",
-                unique: true);
+                column: "VehicleId");
 
-           
+            migrationBuilder.CreateIndex(
+                name: "IX_PreChecklist_BookingID",
+                table: "PreChecklist",
+                column: "BookingID");
 
-          
+            migrationBuilder.CreateIndex(
+                name: "IX_Project_StatusId",
+                table: "Project",
+                column: "StatusId");
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_Rate_ProjectID",
+                table: "Rate",
+                column: "ProjectID");
 
-            
+            migrationBuilder.CreateIndex(
+                name: "IX_Rate_RateTypeID",
+                table: "Rate",
+                column: "RateTypeID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefuelVehicle_TripId",
+                table: "RefuelVehicle",
+                column: "TripId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Trip_BookingID",
+                table: "Trip",
+                column: "BookingID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Trip_PreChecklistId",
+                table: "Trip",
+                column: "PreChecklistId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Trip_VehicleID",
+                table: "Trip",
+                column: "VehicleID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleChecklists_VehicleId",
@@ -529,17 +754,20 @@ namespace Team34FinalAPI.Migrations.VehicleDb
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-           
-
             migrationBuilder.DropTable(
                 name: "LicenseDisks");
 
             migrationBuilder.DropTable(
                 name: "PostChecklist");
 
-           
+            migrationBuilder.DropTable(
+                name: "PostDocumentation");
 
-          
+            migrationBuilder.DropTable(
+                name: "Rate");
+
+            migrationBuilder.DropTable(
+                name: "RefuelVehicle");
 
             migrationBuilder.DropTable(
                 name: "Service");
@@ -547,16 +775,23 @@ namespace Team34FinalAPI.Migrations.VehicleDb
             migrationBuilder.DropTable(
                 name: "ServiceHistory");
 
-          
-
             migrationBuilder.DropTable(
                 name: "VehicleChecklists");
 
-           
+            migrationBuilder.DropTable(
+                name: "RateType");
 
-           
+            migrationBuilder.DropTable(
+                name: "Trip");
 
-          
+            migrationBuilder.DropTable(
+                name: "PreChecklist");
+
+            migrationBuilder.DropTable(
+                name: "Booking");
+
+            migrationBuilder.DropTable(
+                name: "Project");
 
             migrationBuilder.DropTable(
                 name: "Vehicles");
