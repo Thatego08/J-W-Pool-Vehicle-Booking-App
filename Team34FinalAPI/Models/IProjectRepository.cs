@@ -18,5 +18,8 @@
 
 
         Task<Project> GetProjectByNumberAsync(int projectNumber);
+
+        Task<IEnumerable<Project>> GetAllProjectsWithStatusAsync();
+        Task<Project> GetProjectWithStatusAsync(int projectId);
     }
 }

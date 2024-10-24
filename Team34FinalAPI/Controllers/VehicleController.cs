@@ -31,8 +31,11 @@ namespace Team34FinalAPI.Controllers
             _auditLogRepo = auditLogRepo;
         }
 
-        [Authorize(Roles = "Admin")]
+       /* [Authorize(Roles = "Admin")]
+       */
+        
         [HttpGet("GetAllVehicles")]
+
         public async Task<IActionResult> GetAllVehicles()
         {
             try

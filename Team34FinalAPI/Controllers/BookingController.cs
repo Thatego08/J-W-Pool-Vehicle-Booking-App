@@ -394,8 +394,12 @@ namespace Team34FinalAPI.Controllers
 
                 // Update the status of the booking to 'Cancelled'
                 booking.StatusId = 4; // 4 corresponds to 'Cancelled'
-                await _bookingRepository.UpdateBookingAsync(booking);
+               
 
+                //Update End date
+                booking.EndDate = DateTime.Now;
+
+                await _bookingRepository.UpdateBookingAsync(booking);
                 // Save changes
                 await _context.SaveChangesAsync();
 

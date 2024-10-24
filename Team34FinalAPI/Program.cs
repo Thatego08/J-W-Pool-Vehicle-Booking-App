@@ -198,6 +198,8 @@ builder.Services.AddScoped<ISMS_Service, SMS_Service>();
 builder.Services.AddScoped<BookingReminderService>();
 
 builder.Services.AddHostedService<BookingReminderHostedService>();
+builder.Services.AddScoped<IStatusRepository, StatusRepository>();
+
 
 
 

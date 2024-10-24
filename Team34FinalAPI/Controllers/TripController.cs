@@ -261,7 +261,8 @@ namespace Team34FinalAPI.Controllers
                     //Audit Log stuff 
                     await _auditLogRepo.AddLogAsync(new AuditLog
                     {
-                       Action = "Delete Trip",
+                        UserName = "Admin",
+                        Action = "Delete Trip",
                         Details = $"Trip has been deleted by an administrator" ,
                         Timestamp = DateTime.UtcNow
                     });

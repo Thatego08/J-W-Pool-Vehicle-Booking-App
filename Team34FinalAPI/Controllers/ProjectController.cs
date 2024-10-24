@@ -15,14 +15,17 @@ namespace Team34FinalAPI.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IStatusRepository _statusRepository;  // Added status repository for status lookups
         private readonly ILogger<ProjectController> _logger;
 
-        public ProjectController(IProjectRepository projectRepository, ILogger<ProjectController> logger)
+        public ProjectController(IProjectRepository projectRepository, IStatusRepository statusRepository, ILogger<ProjectController> logger)
         {
             _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
+            _statusRepository = statusRepository ?? throw new ArgumentNullException(nameof(statusRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        // POST: Add a new project
         [HttpPost]
         [Route("AddProject")]
         public async Task<IActionResult> AddProject([FromBody] ProjectViewModel pvm)
@@ -35,6 +38,13 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest("Project model is null.");
                 }
 
+                // Validate StatusId
+                var status = await _statusRepository.GetStatusByIdAsync(pvm.StatusId ?? 1); // Default to 1 if null
+                if (status == null)
+                {
+                    return BadRequest("Invalid Status ID.");
+                }
+
                 var project = new Project
                 {
                     ProjectNumber = pvm.ProjectNumber,
@@ -42,7 +52,7 @@ namespace Team34FinalAPI.Controllers
                     Description = pvm.Description,
                     TaskCode = pvm.TaskCode,
                     ActivityCode = pvm.ActivityCode,
-                    StatusId = 1 //Default to availabe status
+                    StatusId = status.Id // Use the validated StatusId
                 };
 
                 _logger.LogInformation("Adding project: {@Project}", project);
@@ -57,40 +67,6 @@ namespace Team34FinalAPI.Controllers
             {
                 _logger.LogError(ex, "Error adding project");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-        [HttpPut]
-        [Route("EditProject/{ProjectID}")]
-        public async Task<IActionResult> EditProject(int ProjectID, [FromBody] ProjectViewModel pvm)
-        {
-            if (pvm == null)
-            {
-                return BadRequest("Project model is null.");
-            }
-
-            try
-            {
-                var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
-                if (existingProject == null)
-                {
-                    return NotFound("Project does not exist.");
-                }
-                existingProject.ProjectID = pvm.ProjectID;
-                existingProject.ProjectNumber = pvm.ProjectNumber;
-                existingProject.Description = pvm.Description;
-                existingProject.JobNo = pvm.JobNo;
-                existingProject.TaskCode = pvm.TaskCode;
-                existingProject.ActivityCode = pvm.ActivityCode;
-
-                await _projectRepository.UpdateProjectAsync(existingProject);
-
-                return Ok(existingProject);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while editing the project.");
-                return StatusCode(500, "Internal server error, contact support.");
             }
         }
 
@@ -111,15 +87,74 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        // PUT: Edit an existing project
+        [HttpPut]
+        [Route("EditProject/{ProjectID}")]
+        public async Task<IActionResult> EditProject(int ProjectID, [FromBody] ProjectViewModel pvm)
+        {
+            if (pvm == null)
+            {
+                return BadRequest("Project model is null.");
+            }
 
+            try
+            {
+                var existingProject = await _projectRepository.GetProjectAsync(ProjectID);
+                if (existingProject == null)
+                {
+                    return NotFound("Project does not exist.");
+                }
+
+                // Validate StatusId if provided
+                if (pvm.StatusId.HasValue)
+                {
+                    var status = await _statusRepository.GetStatusByIdAsync(pvm.StatusId.Value);
+                    if (status == null)
+                    {
+                        return BadRequest("Invalid Status ID.");
+                    }
+                    existingProject.StatusId = pvm.StatusId.Value;  // Update status
+                }
+
+                // Update other fields
+                existingProject.ProjectNumber = pvm.ProjectNumber;
+                existingProject.Description = pvm.Description;
+                existingProject.JobNo = pvm.JobNo;
+                existingProject.TaskCode = pvm.TaskCode;
+                existingProject.ActivityCode = pvm.ActivityCode;
+
+                await _projectRepository.UpdateProjectAsync(existingProject);
+
+                return Ok(existingProject);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while editing the project.");
+                return StatusCode(500, "Internal server error, contact support.");
+            }
+        }
+
+        // GET: Get all projects with status names
         [HttpGet]
         [Route("GetAllProjects")]
         public async Task<IActionResult> GetAllProjects()
         {
             try
             {
-                var results = await _projectRepository.GetAllProjectsAsync();
-                return Ok(results);
+                var projects = await _projectRepository.GetAllProjectsWithStatusAsync(); // Modified to include status
+                var projectViewModels = projects.Select(p => new ProjectViewModel
+                {
+                    ProjectID = p.ProjectID,
+                    ProjectNumber = p.ProjectNumber,
+                    JobNo = p.JobNo,
+                    TaskCode = p.TaskCode,
+                    Description = p.Description,
+                    ActivityCode = p.ActivityCode,
+                    StatusId = p.StatusId,
+                    StatusName = p.Status.Name // Include status name in response
+                }).ToList();
+
+                return Ok(projectViewModels);
             }
             catch (Exception ex)
             {
@@ -128,20 +163,32 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        // GET: Get a single project by ID with status name
         [HttpGet]
         [Route("GetProject/{ProjectID}")]
         public async Task<IActionResult> GetProject(int ProjectID)
         {
             try
             {
-                var result = await _projectRepository.GetProjectAsync(ProjectID);
-
-                if (result == null)
+                var project = await _projectRepository.GetProjectWithStatusAsync(ProjectID); // Modified to include status
+                if (project == null)
                 {
                     return NotFound("Project does not exist.");
                 }
 
-                return Ok(result);
+                var projectViewModel = new ProjectViewModel
+                {
+                    ProjectID = project.ProjectID,
+                    ProjectNumber = project.ProjectNumber,
+                    JobNo = project.JobNo,
+                    TaskCode = project.TaskCode,
+                    Description = project.Description,
+                    ActivityCode = project.ActivityCode,
+                    StatusId = project.StatusId,
+                    StatusName = project.Status.Name // Include status name
+                };
+
+                return Ok(projectViewModel);
             }
             catch (Exception ex)
             {
@@ -150,6 +197,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        // DELETE: Delete a project by ID
         [HttpDelete]
         [Route("DeleteProject/{ProjectID}")]
         public async Task<IActionResult> DeleteProject(int ProjectID)
@@ -179,5 +227,6 @@ namespace Team34FinalAPI.Controllers
             return BadRequest("Your request is invalid.");
         }
     }
+
 
 }
