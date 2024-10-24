@@ -69,6 +69,17 @@ namespace Team34FinalAPI.Models
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<IEnumerable<Project>> GetAllProjectsWithStatusAsync()
+        {
+            return await _context.Projects.Include(p => p.Status).ToListAsync();
+        }
+
+        public async Task<Project> GetProjectWithStatusAsync(int projectId)
+        {
+            return await _context.Projects.Include(p => p.Status).FirstOrDefaultAsync(p => p.ProjectID == projectId);
+        }
+
     }
 
 }

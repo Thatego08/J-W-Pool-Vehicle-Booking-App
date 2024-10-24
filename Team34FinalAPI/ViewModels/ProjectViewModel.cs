@@ -11,6 +11,7 @@
         public List<int> RateID { get; set; }  // New addition for handling rates
 
         public int? StatusId { get; set; }
+        public string StatusName { get; set; }
 
     }
 

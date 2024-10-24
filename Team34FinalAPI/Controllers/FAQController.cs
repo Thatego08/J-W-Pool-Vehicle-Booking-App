@@ -51,7 +51,7 @@ namespace Team34FinalAPI.Controllers
             //Audit Log stuff 
             await _auditLogRepo.AddLogAsync(new AuditLog
             {
-               
+               UserName = "Admin",
                 Action = "New FAQ Added",
                 Details = $"New Frequently Asked Question Added by an Administrator" ,
                 Timestamp = DateTime.UtcNow
@@ -82,7 +82,7 @@ namespace Team34FinalAPI.Controllers
             //Audit Log stuff 
             await _auditLogRepo.AddLogAsync(new AuditLog
             {
-
+                UserName = "Admin",
                 Action = "FAQ Details Updated",
                 Details = $"Frequently Asked Question Details updated by an Administrator",
                 Timestamp = DateTime.UtcNow
@@ -107,7 +107,7 @@ namespace Team34FinalAPI.Controllers
             //Audit Log stuff 
             await _auditLogRepo.AddLogAsync(new AuditLog
             {
-
+                UserName = "Admin",
                 Action = "FAQ Deleted",
                 Details = $"Frequently Asked Question Deleted by an Administrator",
                 Timestamp = DateTime.UtcNow
