@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualBasic.FileIO;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Team34FinalAPI.Models
 {
@@ -18,7 +19,10 @@ namespace Team34FinalAPI.Models
 
         public int InsuranceCoverID { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public string VehicleType { get; set; }
 
+        
 
         public string VIN { get; set; }
 

@@ -41,7 +41,8 @@ namespace Team34FinalAPI.Models
 
         Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate);
 
-
+        // Updated VehicleRepository interface
+        Task<List<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate, string vehicleType = null);
         Task<Vehicle> GetVehicleByNameAsync(string name);
 
         Task<Vehicle> GetVehicleByIdAsync(int vehicleId);

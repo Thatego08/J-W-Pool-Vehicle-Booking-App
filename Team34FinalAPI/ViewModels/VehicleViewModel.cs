@@ -29,5 +29,7 @@
         public int FuelTypeID { get; set; }
 
         public int StatusID { get; set; }
+
+        public string VehicleType { get; set; }
     }
 }
