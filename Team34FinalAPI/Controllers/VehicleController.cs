@@ -93,6 +93,7 @@ namespace Team34FinalAPI.Controllers
                     EngineNo = vehicleViewModel.EngineNo,
                     ColourID = vehicleViewModel.ColourID,
                     FuelTypeID = vehicleViewModel.FuelTypeID,
+                    VehicleType = vehicleViewModel.VehicleType,
                     StatusID = 1
                 };
 
@@ -179,7 +180,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         // GET: api/vehicle/available
-        [HttpGet("GetAvailableVehicles")]
+    /*    [HttpGet("GetAvailableVehicles")]
         public async Task<ActionResult<IEnumerable<Vehicle>>> GetAvailableVehicles()
         {
             var availableVehicles = await _vehicleRepository.GetAvailableVehicles();
@@ -190,6 +191,25 @@ namespace Team34FinalAPI.Controllers
             }
 
             return Ok(availableVehicles);
+        }*/
+
+        // VehicleController.cs
+        [HttpGet("GetAvailableVehicles")]
+        public async Task<ActionResult<IEnumerable<Vehicle>>> GetAvailableVehicles(
+            [FromQuery] DateTime startDate,
+            [FromQuery] DateTime endDate,
+            [FromQuery] string vehicleType = null)
+        {
+            try
+            {
+                var vehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate, vehicleType);
+                return Ok(vehicles);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting available vehicles");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         [Authorize(Roles = "Admin")]

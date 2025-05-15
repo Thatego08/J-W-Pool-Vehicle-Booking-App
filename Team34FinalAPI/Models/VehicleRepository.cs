@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
 using Org.BouncyCastle.Crypto;
+using iText.Kernel.Counter.Context;
 
 namespace Team34FinalAPI.Models
 {
@@ -95,6 +96,7 @@ namespace Team34FinalAPI.Models
                 .Where(b => (b.StartDate < endDate && b.EndDate > startDate)) // Conflict in date ranges
                 .Select(b => b.VehicleId)
                 .ToListAsync();
+         
 
             // Return all vehicles that are not in the unavailable list
             return await _context.Vehicles
@@ -102,6 +104,31 @@ namespace Team34FinalAPI.Models
                 .ToListAsync();
         }
 
+        public async Task<List<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate, string vehicleType = null)
+        {
+            // Get conflicting bookings
+            var conflictingBookings = await _bContext.Bookings
+                .Where(b => b.StartDate < endDate && b.EndDate > startDate)
+                .Select(b => b.VehicleId)
+                .ToListAsync();
+
+            // Build base query
+            var query = _context.Vehicles
+                .Where(v => v.StatusID == 1)
+                .Where(v => !conflictingBookings.Contains(v.VehicleID));
+
+            // Apply vehicle type filter
+            if (!string.IsNullOrEmpty(vehicleType) && vehicleType != "All")
+            {
+                query = query.Where(v =>
+                    (vehicleType == "Double Cab" && v.Description.Contains("DC")) ||
+                    (vehicleType == "Single Cab" && v.Description.Contains("SC")) ||
+                    (vehicleType == "Extra Cab" && v.Description.Contains("Extra Cab"))
+                );
+            }
+
+            return await query.ToListAsync();
+        }
         public async Task<Vehicle> GetVehicleByNameAsync(string name)
         {
             return await _context.Vehicles.SingleOrDefaultAsync(v => v.Name == name);
