@@ -359,11 +359,59 @@ namespace Team34FinalAPI.Controllers
             return Ok(bookingViewModels);
         }
 
+        /* [HttpGet("GetAvailableVehicles")]
+         public async Task<IActionResult> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate)
+         {
+             var availableVehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate);
+
+             var vehicleViewModels = availableVehicles.Select(v => new VehicleViewModel
+             {
+                 VehicleID = v.VehicleID,
+                 Name = v.Name,
+                 Description = v.Description,
+                 // ... other properties ...,
+
+                 // New properties
+                 CabinType = v.CabinType,
+                 DriveType = v.DriveType,
+                 Transmission = v.Transmission,
+                 HasTowBar = v.HasTowBar,
+                 HasCanopy = v.HasCanopy
+             }).ToList();
+
+             return Ok(vehicleViewModels);
+             return Ok(availableVehicles);
+         }*/
+
         [HttpGet("GetAvailableVehicles")]
-        public async Task<IActionResult> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate)
+        public async Task<IActionResult> GetAvailableVehiclesAsync(
+    [FromQuery] DateTime startDate,
+    [FromQuery] DateTime endDate,
+    [FromQuery] string? cabinType = null)
         {
-            var availableVehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate);
-            return Ok(availableVehicles);
+            _logger.LogInformation($"GetAvailableVehicles called: {startDate} to {endDate}");
+
+            try
+            {
+                var vehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate, cabinType);
+
+                _logger.LogInformation($"Returning {vehicles.Count} vehicles:");
+                foreach (var v in vehicles)
+                {
+                    _logger.LogInformation(
+                        $"ID: {v.VehicleID} | Name: {v.Name} | " +
+                        $"Cabin: {v.CabinType} | Drive: {v.DriveType} | " +
+                        $"Trans: {v.Transmission} | Tow: {v.HasTowBar} | Canopy: {v.HasCanopy}"
+                    );
+                }
+
+                return Ok(vehicles);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting available vehicles");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
 

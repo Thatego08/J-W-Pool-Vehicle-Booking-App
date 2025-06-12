@@ -3,17 +3,20 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Team34FinalAPI.Models;
 
 #nullable disable
 
-namespace Team34FinalAPI.Migrations
+namespace Team34FinalAPI.Migrations.VehicleDb
 {
     [DbContext(typeof(VehicleDbContext))]
-    partial class VehicleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250612173625_NewPolo")]
+    partial class NewPolo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -302,6 +305,101 @@ namespace Team34FinalAPI.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.PostCheck", b =>
+                {
+                    b.Property<int>("PostCheckId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostCheckId"));
+
+                    b.Property<string>("AdditionalComments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("BrakeLights")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Brakes")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CheckedByJWSecurity")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("ClosingKms")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Comments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("FuelLevel")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Handbrake")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HeadLights")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Horn")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Indicators")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("JWMarketingMagnets")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("JackAndWheelSpannerPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LicenseDiskValid")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Mirrors")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("OilLeaks")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ParkLights")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ReverseHooter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ReverseLight")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SeatBelts")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SpareWheelPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("StrobeLight")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SunVisor")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("TripId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("TyreCondition")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("WindscreenWiper")
+                        .HasColumnType("bit");
+
+                    b.HasKey("PostCheckId");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("PostCheck");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.PostChecklist", b =>
                 {
                     b.Property<int>("PostId")
@@ -490,9 +588,6 @@ namespace Team34FinalAPI.Migrations
                     b.Property<int>("ProjectID")
                         .HasColumnType("int");
 
-                    b.Property<int>("RateTypeID")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("RateValue")
                         .HasColumnType("decimal(18,2)");
 
@@ -500,26 +595,7 @@ namespace Team34FinalAPI.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.HasIndex("RateTypeID");
-
                     b.ToTable("Rate");
-                });
-
-            modelBuilder.Entity("Team34FinalAPI.Models.RateType", b =>
-                {
-                    b.Property<int>("RateTypeID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RateTypeID"));
-
-                    b.Property<string>("RateTypeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RateTypeID");
-
-                    b.ToTable("RateType");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.RefuelVehicle", b =>
@@ -740,6 +816,38 @@ namespace Team34FinalAPI.Migrations
                     b.ToTable("Trip");
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.TripMedia", b =>
+                {
+                    b.Property<int>("MediaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MediaId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("FileContent")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MediaType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PostCheckId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MediaId");
+
+                    b.HasIndex("PostCheckId");
+
+                    b.ToTable("TripMedia");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
                 {
                     b.Property<int>("VehicleID")
@@ -748,8 +856,17 @@ namespace Team34FinalAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VehicleID"));
 
+                    b.Property<string>("CabinType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<int>("ColourID")
                         .HasColumnType("int");
+
+                    b.Property<string>("Compliance")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("DateAcquired")
                         .HasColumnType("datetime2");
@@ -758,12 +875,27 @@ namespace Team34FinalAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DriveType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("EngineNo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("FuelTypeID")
                         .HasColumnType("int");
+
+                    b.Property<bool>("HasCanopy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("HasTowBar")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("InsuranceCoverID")
                         .HasColumnType("int");
@@ -775,12 +907,21 @@ namespace Team34FinalAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Protection")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("RegistrationNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("StatusID")
                         .HasColumnType("int");
+
+                    b.Property<string>("Transmission")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("VIN")
                         .IsRequired()
@@ -791,6 +932,12 @@ namespace Team34FinalAPI.Migrations
 
                     b.Property<int>("VehicleModelID")
                         .HasColumnType("int");
+
+                    b.Property<string>("VehicleType")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("nvarchar(max)")
+                        .HasComputedColumnSql("CASE \r\n        WHEN Description LIKE '%DC%' THEN 'Double Cab'\r\n        WHEN Description LIKE '%SC%' THEN 'Single Cab'\r\n        WHEN Description LIKE '%Extra Cab%' THEN 'Extra Cab'\r\n        ELSE 'Other'\r\n    END");
 
                     b.HasKey("VehicleID");
 
@@ -812,16 +959,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 1,
+                            CabinType = "Hatch",
                             ColourID = 2,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2024, 2, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "i20",
+                            DriveType = "4x2",
                             EngineNo = "G4LFPV302509",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2024, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Hyundai 1",
+                            Protection = "None",
                             RegistrationNumber = "LN 68 YM GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "MALBG512LPM254886",
                             VehicleMakeID = 7,
                             VehicleModelID = 7
@@ -829,16 +983,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 2,
+                            CabinType = "Extra",
                             ColourID = 2,
+                            Compliance = "Sasol Sasolburg",
                             DateAcquired = new DateTime(2019, 1, 26, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Extra Cab 2.4 GD-6 RB SRX 6MT ",
+                            DriveType = "4x2",
                             EngineNo = "2GDC598667",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 1",
+                            Protection = "None",
                             RegistrationNumber = "JF 72 WJ GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB8DC404730166",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -846,16 +1007,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 3,
+                            CabinType = "Extra",
                             ColourID = 2,
+                            Compliance = "Private Use",
                             DateAcquired = new DateTime(2020, 12, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Extra Cab 2.4 GD-6 RB SRX 6MT",
+                            DriveType = "4x2",
                             EngineNo = "2GDC765766",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2022, 11, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 2",
+                            Protection = "None",
                             RegistrationNumber = "JT 99 LF GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB3DCX04490835",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -863,16 +1031,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 4,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "Sasol Secunda",
                             DateAcquired = new DateTime(2024, 7, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "DC HILUX 2.4 GD-6 RAIDER 4X4 A/T",
+                            DriveType = "4x4",
                             EngineNo = "2GDD364709",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = true,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2028, 5, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 3",
+                            Protection = "None",
                             RegistrationNumber = "LR 01 CT GP",
                             StatusID = 1,
+                            Transmission = "Automatic",
                             VIN = "AHTKB3CD802676867",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -880,16 +1055,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 5,
+                            CabinType = "Single",
                             ColourID = 2,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2019, 3, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " SC 2.4 GD6 RB SRX MT (Z50) 2019",
+                            DriveType = "4x2",
                             EngineNo = "2GDC503748",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 4",
+                            Protection = "None",
                             RegistrationNumber = "HY 06 DR GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB8DB104579407",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -897,16 +1079,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 6,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "Venetia",
                             DateAcquired = new DateTime(2012, 2, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "DC, Raider 2.7 D, 4X4, ROPS ",
+                            DriveType = "4x4",
                             EngineNo = "2KD5635798",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2028, 2, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 5",
+                            Protection = "ROPS",
                             RegistrationNumber = "BT 11 SL GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTFR22G906054497",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -914,16 +1103,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 7,
+                            CabinType = "Extra",
                             ColourID = 7,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2005, 6, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "DC",
+                            DriveType = "4x2",
                             EngineNo = "1KD7486383",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = true,
                             InsuranceCoverID = 3,
                             LicenseExpiryDate = new DateTime(2023, 10, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 6",
+                            Protection = "None",
                             RegistrationNumber = "WZV 941 GP",
                             StatusID = 1,
+                            Transmission = "Automatic",
                             VIN = "AHTEZ39G207010469",
                             VehicleMakeID = 11,
                             VehicleModelID = 7
@@ -931,16 +1127,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 8,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "Sasol Secunda",
                             DateAcquired = new DateTime(2016, 11, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "DC, 4X4 ( With Canopy ) ",
+                            DriveType = "4x4",
                             EngineNo = "2GD0195958",
                             FuelTypeID = 2,
+                            HasCanopy = true,
+                            HasTowBar = true,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 10, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 7",
+                            Protection = "None",
                             RegistrationNumber = "FN 57 RR GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTKB3CD302604992",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -948,16 +1151,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 9,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "Sishen",
                             DateAcquired = new DateTime(2016, 11, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "DC, 4x4",
+                            DriveType = "4x4",
                             EngineNo = "2GD0207661",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 10, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 8",
+                            Protection = "None",
                             RegistrationNumber = "FN 57 ST GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTK3CD202605213",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -965,16 +1175,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 10,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2017, 4, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "2.8 GD-6DC, 4x4 Auto ( With Canopy ) ",
+                            DriveType = "4x4",
                             EngineNo = "1GD0252789",
                             FuelTypeID = 2,
+                            HasCanopy = true,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 10, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 9",
+                            Protection = "None",
                             RegistrationNumber = "FV 25 XR GP",
                             StatusID = 1,
+                            Transmission = "Automatic",
                             VIN = "AHTHA3CD403417011",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -982,16 +1199,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 11,
+                            CabinType = "Single",
                             ColourID = 2,
+                            Compliance = "Medupi",
                             DateAcquired = new DateTime(2017, 6, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " SC 2.4 GD-6RB, SRX 4x2 ",
+                            DriveType = "4x2",
                             EngineNo = "2GD0284816",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 10",
+                            Protection = "None",
                             RegistrationNumber = "FX 22 YD GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB8DB504573626",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -999,16 +1223,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 12,
+                            CabinType = "Single",
                             ColourID = 2,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2017, 6, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " SC 2.4 GD-6RB, SRX 4x2 ",
+                            DriveType = "4x2",
                             EngineNo = "2GD0284247",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 11",
+                            Protection = "None",
                             RegistrationNumber = "FX 23 BX GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB8DB304573608",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -1016,16 +1247,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 13,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2022, 5, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " DC 2.4 GD-6RB SR MT ",
+                            DriveType = "4x2",
                             EngineNo = "2GDC910427",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 12",
+                            Protection = "None",
                             RegistrationNumber = "KP 05 MC GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB3DD504527511",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -1033,16 +1271,23 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 14,
+                            CabinType = "Double",
                             ColourID = 2,
+                            Compliance = "Sasol Secunda",
                             DateAcquired = new DateTime(2022, 11, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " DC 2.4 GD6 RB RAI MT ( With Canopy ) ",
+                            DriveType = "4x2",
                             EngineNo = "2GDD036238",
                             FuelTypeID = 2,
+                            HasCanopy = true,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2024, 4, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 13",
+                            Protection = "None",
                             RegistrationNumber = "KW 51 TL GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB3DD304529631",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -1050,16 +1295,21 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 15,
+                            CabinType = "Extra",
                             ColourID = 2,
                             DateAcquired = new DateTime(2023, 4, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " Extra Cab HiluxXC 2.4 GD6 RBRAI 6MT ( A1P )  ",
+                            DriveType = "4x2",
                             EngineNo = "2GDD138062",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 10, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 14",
                             RegistrationNumber = "LB 93 JV GP",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "AHTJB3DC104496782",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
@@ -1067,84 +1317,45 @@ namespace Team34FinalAPI.Migrations
                         new
                         {
                             VehicleID = 16,
+                            CabinType = "SUV",
                             ColourID = 2,
                             DateAcquired = new DateTime(2022, 10, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "1.8 XR CVT ",
+                            Description = "SUV 1.8 XR CVT ",
+                            DriveType = "4x2",
                             EngineNo = "2ZRW975634",
                             FuelTypeID = 2,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2023, 9, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Toyota 15",
                             RegistrationNumber = "KV 84 DV GP ",
                             StatusID = 1,
+                            Transmission = "Automatic",
                             VIN = "AHTKFBAG500614236",
                             VehicleMakeID = 11,
                             VehicleModelID = 2
                         },
                         new
                         {
-                            VehicleID = 17,
-                            ColourID = 2,
-                            DateAcquired = new DateTime(2020, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "DC 2.8 GD-6RB, 4x2",
-                            EngineNo = "1GD0374210",
-                            FuelTypeID = 2,
-                            InsuranceCoverID = 1,
-                            LicenseExpiryDate = new DateTime(2022, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Toyota S1",
-                            RegistrationNumber = " HH 91 VZ GP ",
-                            StatusID = 1,
-                            VIN = "AHTGA3DD900968871",
-                            VehicleMakeID = 11,
-                            VehicleModelID = 2
-                        },
-                        new
-                        {
-                            VehicleID = 18,
-                            ColourID = 2,
-                            DateAcquired = new DateTime(2021, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = " SC 2.4 GD-6RB, SRX 4x2 ",
-                            EngineNo = "",
-                            FuelTypeID = 2,
-                            InsuranceCoverID = 1,
-                            LicenseExpiryDate = new DateTime(2028, 6, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Toyota S2",
-                            RegistrationNumber = " FV 69 WP GP ",
-                            StatusID = 1,
-                            VIN = "",
-                            VehicleMakeID = 11,
-                            VehicleModelID = 2
-                        },
-                        new
-                        {
-                            VehicleID = 19,
-                            ColourID = 2,
-                            DateAcquired = new DateTime(2005, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = " SC 2.4 GD-6RB, SRX 4x2",
-                            EngineNo = "2GD0329959",
-                            FuelTypeID = 2,
-                            InsuranceCoverID = 1,
-                            LicenseExpiryDate = new DateTime(2027, 8, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Name = "Toyota S3",
-                            RegistrationNumber = "HC 85 FY GP",
-                            StatusID = 1,
-                            VIN = "AHTJB8DBX04575081",
-                            VehicleMakeID = 11,
-                            VehicleModelID = 2
-                        },
-                        new
-                        {
                             VehicleID = 20,
+                            CabinType = "Single",
                             ColourID = 2,
+                            Compliance = "None",
                             DateAcquired = new DateTime(2021, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = " DC DMAX 2.2",
+                            DriveType = "4x2",
                             EngineNo = "4JK1VT8141",
                             FuelTypeID = 1,
+                            HasCanopy = false,
+                            HasTowBar = false,
                             InsuranceCoverID = 1,
                             LicenseExpiryDate = new DateTime(2028, 12, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Name = "Isuzu 1",
+                            Protection = "None",
                             RegistrationNumber = " ND 836-010",
                             StatusID = 1,
+                            Transmission = "Manual",
                             VIN = "ACVNRCHR3K1070230",
                             VehicleMakeID = 9,
                             VehicleModelID = 2
@@ -1392,6 +1603,17 @@ namespace Team34FinalAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.PostCheck", b =>
+                {
+                    b.HasOne("Team34FinalAPI.Models.Trip", "Trip")
+                        .WithMany("PostChecks")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trip");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.PostChecklist", b =>
                 {
                     b.HasOne("Team34FinalAPI.Models.Vehicle", "Vehicle")
@@ -1431,15 +1653,7 @@ namespace Team34FinalAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Team34FinalAPI.Models.RateType", "RateType")
-                        .WithMany("Rates")
-                        .HasForeignKey("RateTypeID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Project");
-
-                    b.Navigation("RateType");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.RefuelVehicle", b =>
@@ -1472,6 +1686,17 @@ namespace Team34FinalAPI.Migrations
                     b.Navigation("Booking");
 
                     b.Navigation("PreChecklist");
+                });
+
+            modelBuilder.Entity("Team34FinalAPI.Models.TripMedia", b =>
+                {
+                    b.HasOne("Team34FinalAPI.Models.PostCheck", "PostCheck")
+                        .WithMany("TripMedia")
+                        .HasForeignKey("PostCheckId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PostCheck");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.Vehicle", b =>
@@ -1731,6 +1956,11 @@ namespace Team34FinalAPI.Migrations
                     b.Navigation("Trips");
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.PostCheck", b =>
+                {
+                    b.Navigation("TripMedia");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.Project", b =>
                 {
                     b.Navigation("Bookings");
@@ -1738,13 +1968,10 @@ namespace Team34FinalAPI.Migrations
                     b.Navigation("Rates");
                 });
 
-            modelBuilder.Entity("Team34FinalAPI.Models.RateType", b =>
-                {
-                    b.Navigation("Rates");
-                });
-
             modelBuilder.Entity("Team34FinalAPI.Models.Trip", b =>
                 {
+                    b.Navigation("PostChecks");
+
                     b.Navigation("RefuelVehicles");
                 });
 
