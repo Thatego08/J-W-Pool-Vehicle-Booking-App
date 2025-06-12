@@ -318,7 +318,14 @@ namespace Team34FinalAPI.Models
                 new VehicleModel { VehicleModelID = 9, VehicleModelName = " Ranger", VehicleMakeID = 4 }
                 );
 
-
+            modelBuilder.Entity<Vehicle>()
+    .Property(v => v.VehicleType)
+    .HasComputedColumnSql(@"CASE 
+        WHEN Description LIKE '%DC%' THEN 'Double Cab'
+        WHEN Description LIKE '%SC%' THEN 'Single Cab'
+        WHEN Description LIKE '%Extra Cab%' THEN 'Extra Cab'
+        ELSE 'Other'
+    END");
             //PostChecklist
 
             modelBuilder.Entity<PostChecklist>(entity =>

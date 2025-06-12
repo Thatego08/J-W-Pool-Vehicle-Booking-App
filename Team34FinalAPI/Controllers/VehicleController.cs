@@ -145,11 +145,14 @@ namespace Team34FinalAPI.Controllers
                     ColourID = vehicleViewModel.ColourID,
                     FuelTypeID = vehicleViewModel.FuelTypeID,
                     VehicleType = vehicleViewModel.VehicleType,
+
                     CabinType = vehicleViewModel.CabinType,
                     DriveType = vehicleViewModel.DriveType,
                     Transmission = vehicleViewModel.Transmission,
                     HasTowBar = vehicleViewModel.HasTowBar,
                     HasCanopy = vehicleViewModel.HasCanopy,
+
+
                     StatusID = 1
                 };
 
@@ -241,7 +244,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         // GET: api/vehicle/available
-        [HttpGet("GetAvailableVehicles")]
+    /*    [HttpGet("GetAvailableVehicles")]
         public async Task<ActionResult<IEnumerable<Vehicle>>> GetAvailableVehicles()
         {
             var availableVehicles = await _vehicleRepository.GetAvailableVehicles();
@@ -265,7 +268,6 @@ namespace Team34FinalAPI.Controllers
             {
                 var vehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate, vehicleType);
                 return Ok(vehicles);
-
 
             }
             catch (Exception ex)
