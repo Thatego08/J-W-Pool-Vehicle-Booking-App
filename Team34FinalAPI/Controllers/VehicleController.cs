@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 
 namespace Team34FinalAPI.Controllers
@@ -21,14 +23,17 @@ namespace Team34FinalAPI.Controllers
         private readonly IVehicleRepository _vehicleRepository;
         private readonly ILogger<VehicleController> _logger;
         private readonly IAuditLogRepository _auditLogRepo;
+        private readonly VehicleDbContext _vehicleContext;
 
 
-        public VehicleController(IVehicleRepository vehicleRepository, IWebHostEnvironment environment, ILogger<VehicleController> logger, IAuditLogRepository auditLogRepo)
+        public VehicleController(IVehicleRepository vehicleRepository, IWebHostEnvironment environment, ILogger<VehicleController> logger, IAuditLogRepository auditLogRepo, VehicleDbContext context)
         {
             _vehicleRepository = vehicleRepository;
             _environment = environment;
             _logger = logger;
             _auditLogRepo = auditLogRepo;
+            _vehicleContext = context;
+
         }
 
        /* [Authorize(Roles = "Admin")]
@@ -38,16 +43,62 @@ namespace Team34FinalAPI.Controllers
 
         public async Task<IActionResult> GetAllVehicles()
         {
+            /* try
+             {
+                 var results = await _vehicleRepository.GetAllVehiclesAsync();
+                 return Ok(results);
+             }
+             catch (Exception ex )
+             {
+                 _logger.LogError(ex, "An error occured when retrieving vehicles");
+                 return StatusCode(500, "Internal Server Error: Unable to retrieve vehicles.");
+             }*/
             try
             {
-                var results = await _vehicleRepository.GetAllVehiclesAsync();
-                return Ok(results);
+
+                var vehicles = _vehicleContext.Vehicles
+               .Include(v => v.Status)
+               .Select(v => new VehicleViewModel
+               {
+                   VehicleID = v.VehicleID,
+                   Name = v.Name,
+                   Description = v.Description,
+                   VehicleMakeID = v.VehicleMakeID,
+                   VehicleModelID = v.VehicleModelID,
+                   DateAcquired = v.DateAcquired,
+                   LicenseExpiryDate = v.LicenseExpiryDate,
+                   RegistrationNumber = v.RegistrationNumber,
+                   InsuranceCoverID = v.InsuranceCoverID,
+                   VIN = v.VIN,
+                   EngineNo = v.EngineNo,
+                   ColourID = v.ColourID,
+                   FuelTypeID = v.FuelTypeID,
+                   StatusID = v.StatusID,
+                   VehicleType = v.VehicleType,
+
+                   // New properties
+                   CabinType = v.CabinType,
+                   DriveType = v.DriveType,
+                   Transmission = v.Transmission,
+                   HasTowBar = v.HasTowBar,
+                   HasCanopy = v.HasCanopy,
+                   Compliance = v.Compliance ?? string.Empty,
+                   Protection = v.Protection ?? string.Empty
+               })
+               .ToList();
+
+                return Ok(vehicles);
+
+
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occured when retrieving vehicles");
-                return StatusCode(500, "Internal Server Error: Unable to retrieve vehicles.");
+                // Log error
+                return StatusCode(500, "Internal server error");
             }
+
+
+
         }
 
         [HttpGet("GetVehicle/{vehicleId}")]
@@ -93,6 +144,12 @@ namespace Team34FinalAPI.Controllers
                     EngineNo = vehicleViewModel.EngineNo,
                     ColourID = vehicleViewModel.ColourID,
                     FuelTypeID = vehicleViewModel.FuelTypeID,
+                    VehicleType = vehicleViewModel.VehicleType,
+                    CabinType = vehicleViewModel.CabinType,
+                    DriveType = vehicleViewModel.DriveType,
+                    Transmission = vehicleViewModel.Transmission,
+                    HasTowBar = vehicleViewModel.HasTowBar,
+                    HasCanopy = vehicleViewModel.HasCanopy,
                     StatusID = 1
                 };
 
@@ -157,6 +214,11 @@ namespace Team34FinalAPI.Controllers
                 existingVehicle.LicenseExpiryDate = vehicleModel.LicenseExpiryDate;
                 existingVehicle.StatusID = vehicleModel.StatusID;
                 existingVehicle.VIN = vehicleModel.VIN;
+                existingVehicle.CabinType = vehicleModel.CabinType;
+                existingVehicle.DriveType = vehicleModel.DriveType;
+                existingVehicle.Transmission = vehicleModel.Transmission;
+                existingVehicle.HasTowBar = vehicleModel.HasTowBar;
+                existingVehicle.HasCanopy = vehicleModel.HasCanopy;
 
                 if (await _vehicleRepository.SaveChangesAsync())
                 {
@@ -190,6 +252,27 @@ namespace Team34FinalAPI.Controllers
             }
 
             return Ok(availableVehicles);
+        }*/
+
+        // VehicleController.cs
+        [HttpGet("GetAvailableVehicles")]
+        public async Task<ActionResult<IEnumerable<Vehicle>>> GetAvailableVehicles(
+            [FromQuery] DateTime startDate,
+            [FromQuery] DateTime endDate,
+            [FromQuery] string vehicleType = null)
+        {
+            try
+            {
+                var vehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate, vehicleType);
+                return Ok(vehicles);
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting available vehicles");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         [Authorize(Roles = "Admin")]

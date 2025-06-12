@@ -92,7 +92,7 @@ namespace Team34FinalAPI.Models
         {
             // Get the IDs of vehicles that have conflicting bookings
             var unavailableVehicleIds = await _bContext.Bookings
-                .Where(b => (b.StartDate < endDate && b.EndDate > startDate)) // Conflict in date ranges
+                .Where(b => (b.StartDate < endDate && b.EndDate > startDate && b.StatusId == 1)).Include(b => b.Status) // Conflict in date ranges
                 .Select(b => b.VehicleId)
                 .ToListAsync();
 

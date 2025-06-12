@@ -48,5 +48,17 @@ namespace Team34FinalAPI.Models
 
         public Status? Status { get; set; }
 
+        //Salvage additions
+       
+        public string CabinType { get; set; }      // 'Double', 'Single', 'Extra', 'Hatch', 'SUV'
+        public string DriveType { get; set; }      // '4x4', '4x2'
+        public string Transmission { get; set; }   // 'Manual', 'Automatic'
+        public bool HasTowBar { get; set; }
+        public bool HasCanopy { get; set; }
+
+        public string? Compliance { get; set; }
+        public string? Protection { get; set; }
+
+
     }
 }
