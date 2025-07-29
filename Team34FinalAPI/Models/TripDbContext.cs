@@ -12,6 +12,8 @@ namespace Team34FinalAPI.Models
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<PreChecklist> PreChecklists { get; set; }
         public DbSet<PostCheck> PostChecks { get; set; }
+        public DbSet<Project> Projects { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,15 +31,19 @@ namespace Team34FinalAPI.Models
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PostCheck>()
+   .HasOne(p => p.Trip)
+   .WithMany(t => t.PostChecks)
+   .HasForeignKey(p => p.TripId)
+   .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PostCheck>()
                 .HasMany(p => p.TripMedia)
                 .WithOne(t => t.PostCheck)
                 .HasForeignKey(t => t.PostCheckId);
 
-            modelBuilder.Entity<PostCheck>()
-       .HasOne(p => p.Trip)
-       .WithMany(t => t.PostChecks) // Trip has many PostChecks
-       .HasForeignKey(p => p.TripId) // Foreign key relationship
-       .OnDelete(DeleteBehavior.Cascade); // Adjust based on your desired behavior
+
+
+
 
             modelBuilder.Entity<PreChecklist>()
        .HasOne(pc => pc.Booking)
@@ -56,7 +62,7 @@ namespace Team34FinalAPI.Models
             // Adding the foreign key for BookingID in PreChecklist
 
 
-      
+
 
             modelBuilder.Entity<Trip>()
                 .HasMany(t => t.RefuelVehicles)
