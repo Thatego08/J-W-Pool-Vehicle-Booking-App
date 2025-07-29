@@ -64,20 +64,20 @@ namespace Team34FinalAPI.Report_DTO_s
 
 
         //Count of bookings a user made in the specific month
-        public class UserBookingReportDto 
+        public class UserBookingReportDto
         {
             public string UserName { get; set; }
             public int Month { get; set; }
             public int Year { get; set; }
-            public int BookingCount { get; set; } 
+            public int BookingCount { get; set; }
         }
 
         //Number of cancelled bookings per month
         public class CancelledBookingReportDto
         {
-            public string UserName { get; set; } 
-            public int BookingID { get; set; }   
-            public DateTime CancelledDate { get; set; } 
+            public string UserName { get; set; }
+            public int BookingID { get; set; }
+            public DateTime CancelledDate { get; set; }
         }
 
 

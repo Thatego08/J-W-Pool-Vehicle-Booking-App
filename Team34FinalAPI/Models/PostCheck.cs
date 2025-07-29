@@ -39,7 +39,7 @@ namespace Team34FinalAPI.Models
         public bool CheckedByJWSecurity { get; set; }
         public bool LicenseDiskValid { get; set; }
 
-       
+
 
         public string Comments { get; set; }
         public string AdditionalComments { get; set; }

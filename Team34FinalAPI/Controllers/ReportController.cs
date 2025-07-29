@@ -6,6 +6,7 @@ using Team34FinalAPI.Services;
 using Team34FinalAPI.ViewModels;
 using static Team34FinalAPI.Report_DTO_s.ReportData;
 using static Team34FinalAPI.ViewModels.ReportViewModel;
+using OfficeOpenXml;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -62,7 +63,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpGet]
-       
+
         [Route("vehicle-fuel-report")]
         public async Task<ActionResult<IEnumerable<FuelExpenditureReportViewModel>>> GetFuelExpendituresReport()
         {
@@ -194,6 +195,86 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("trip-duration-report")]
+        public async Task<IActionResult> GetTripDurationReport()
+        {
+            try
+            {
+                var report = await _reportService.GetTripDurationReportAsync();
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching trip duration report.");
+                return StatusCode(500, "Internal server error.");
+            }
+        }
+
+        [HttpGet("trip-report/export")]
+        public async Task<IActionResult> ExportTripReportToExcel()
+        {
+            try
+            {
+                var trips = await _reportService.GetTripDurationReportAsync();
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Trip Report");
+
+                // Headers
+                worksheet.Cells[1, 1].Value = "Trip ID";
+                worksheet.Cells[1, 2].Value = "Vehicle Name";
+                worksheet.Cells[1, 3].Value = "Location";
+                worksheet.Cells[1, 4].Value = "Booking Start";
+                worksheet.Cells[1, 5].Value = "Booking End";
+                worksheet.Cells[1, 6].Value = "Travel Start";
+                worksheet.Cells[1, 7].Value = "Travel End";
+                worksheet.Cells[1, 8].Value = "Earliest Start";
+                worksheet.Cells[1, 9].Value = "Duration (hh:mm:ss)";
+                worksheet.Cells[1, 10].Value = "Opening Kms";
+                worksheet.Cells[1, 11].Value = "Closing Kms";
+                worksheet.Cells[1, 12].Value = "Travelled Kms";
+                worksheet.Cells[1, 13].Value = "Project Number"; // NEW COLUMN
+
+                int row = 2;
+                foreach (var trip in trips)
+                {
+                    worksheet.Cells[row, 1].Value = trip.TripId;
+                    worksheet.Cells[row, 2].Value = trip.VehicleName;
+                    worksheet.Cells[row, 3].Value = trip.Location;
+                    worksheet.Cells[row, 4].Value = trip.BookingStart.ToString("g");
+                    worksheet.Cells[row, 5].Value = trip.BookingEnd.ToString("g");
+                    worksheet.Cells[row, 6].Value = trip.TravelStart.ToString("g");
+                    worksheet.Cells[row, 7].Value = trip.TravelEnd.ToString("g");
+                    worksheet.Cells[row, 8].Value = trip.EarliestStart.ToString("g");
+
+                    // Duration
+                    var duration = trip.Duration;
+                    worksheet.Cells[row, 9].Value = $"{duration} Day{(duration == 1 ? "" : "s")}";
+
+
+                    worksheet.Cells[row, 10].Value = trip.OpeningKms;
+                    worksheet.Cells[row, 11].Value = trip.ClosingKms;
+                    worksheet.Cells[row, 12].Value = trip.TravelledKms;
+                    worksheet.Cells[row, 13].Value = trip.ProjectNumber; // NEW VALUE
+
+                    row++;
+                }
+
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                var excelData = package.GetAsByteArray();
+                return File(excelData,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            "TripReport.xlsx");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting trip report to Excel.");
+                return StatusCode(500, "Internal server error.");
+            }
+        }
+
 
         //Available vehicles for the month
         //[HttpGet("available-vehicles-for-month")]

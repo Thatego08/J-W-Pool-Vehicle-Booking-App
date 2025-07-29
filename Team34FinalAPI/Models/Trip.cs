@@ -12,7 +12,7 @@ namespace Team34FinalAPI.Models
         public Booking Booking { get; set; }
         public string Name { get; set; } // Replace VehicleId with Name
         public string Location { get; set; }
-     
+
         public string Comment { get; set; }
         public DateTime TravelStart { get; set; }
         public DateTime TravelEnd { get; set; }
@@ -20,8 +20,8 @@ namespace Team34FinalAPI.Models
         // Foreign key for PreChecklist
         public int? PreChecklistId { get; set; }
         public PreChecklist PreChecklist { get; set; } // Navigation property
-      
-      
+
+
         public string UserName { get; set; }
         public ICollection<RefuelVehicle> RefuelVehicles { get; set; }
         public ICollection<PostCheck> PostChecks { get; set; } = new List<PostCheck>(); // Navigation property for PostChecks

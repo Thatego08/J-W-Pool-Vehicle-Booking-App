@@ -24,10 +24,14 @@ namespace Team34FinalAPI.Services
         Task<List<BookingPerUserReportViewModel>> GetBookingsPerUserPerMonthAsync();
         Task<List<CancelledBookingReportViewModel>> GetCancelledBookingsPerMonthAsync();
         //Task<List<AvailableVehiclesReportViewModel>> GetAvailableVehiclesForMonthAsync();
+        Task<IEnumerable<TripDurationReportViewModel>> GetTripDurationReportAsync();
+
+
+
 
 
     }
-    public class ReportService:IReportService
+    public class ReportService : IReportService
     {
         private readonly VehicleDbContext _vehicleDbContext;
         private readonly BookingDbContext _bookingDbContext;
@@ -155,7 +159,7 @@ namespace Team34FinalAPI.Services
         public async Task<TripReportDto> GetTripReport()
         {
             var totalTrips = await _tripDbContext.Trips.CountAsync();
-           // var tripsWithAccidents = await _tripDbContext.Trips.CountAsync(t => t.HasAccidents);
+            // var tripsWithAccidents = await _tripDbContext.Trips.CountAsync(t => t.HasAccidents);
 
             return new TripReportDto
             {
@@ -185,7 +189,7 @@ namespace Team34FinalAPI.Services
                 {
                     Status = g.Key,
                     Count = g.Count(),
-                   
+
                 }).ToListAsync();
         }
 
@@ -210,7 +214,7 @@ namespace Team34FinalAPI.Services
                 query = query.Where(b => b.Type == bookingType);
             }
 
-            
+
 
             if (startDate.HasValue)
             {
@@ -233,13 +237,13 @@ namespace Team34FinalAPI.Services
                 .ToListAsync();
         }
 
-        public async Task<List<ProjectReportDto>> GetFilteredProjectsAsync( string projectStatus)
+        public async Task<List<ProjectReportDto>> GetFilteredProjectsAsync(string projectStatus)
         {
             // Start with the base query
             var query = _bookingDbContext.Projects.AsQueryable();
 
             // Apply filters based on provided parameters
-           
+
 
             if (!string.IsNullOrEmpty(projectStatus))
             {
@@ -259,25 +263,25 @@ namespace Team34FinalAPI.Services
         }
 
 
-  public async Task<IEnumerable<UserTripReportDto>> GetTripsPerUserPerMonthAsync()
-    {
-         var trips = await _tripDbContext.Trips
-        .GroupBy(t => new
+        public async Task<IEnumerable<UserTripReportDto>> GetTripsPerUserPerMonthAsync()
         {
-            t.UserName,
-            Month = t.TravelStart.Month,  // Keep Month as int
-            Year = t.TravelStart.Year
-        })
-        .Select(g => new
-        {
-            UserName = g.Key.UserName,
-            Month = g.Key.Month,
-            Year = g.Key.Year,
-            TripCount = g.Count()
-        })
-        .ToListAsync(); // Perform the query and get the result from the database
+            var trips = await _tripDbContext.Trips
+           .GroupBy(t => new
+           {
+               t.UserName,
+               Month = t.TravelStart.Month,  // Keep Month as int
+               Year = t.TravelStart.Year
+           })
+           .Select(g => new
+           {
+               UserName = g.Key.UserName,
+               Month = g.Key.Month,
+               Year = g.Key.Year,
+               TripCount = g.Count()
+           })
+           .ToListAsync(); // Perform the query and get the result from the database
 
-         // Now convert the month number to month name in memory (client-side)
+            // Now convert the month number to month name in memory (client-side)
             return trips
         .Select(g => new UserTripReportDto
         {
@@ -326,6 +330,55 @@ namespace Team34FinalAPI.Services
 
             return cancelledBookings;
         }
+
+
+        public async Task<IEnumerable<TripDurationReportViewModel>> GetTripDurationReportAsync()
+        {
+            var report = await (
+                from trip in _tripDbContext.Trips
+                join pre in _tripDbContext.PreChecklists on trip.PreChecklistId equals pre.Id into preGroup
+                from pre in preGroup.DefaultIfEmpty()
+
+                join post in _tripDbContext.PostChecks on trip.TripId equals post.TripId into postGroup
+                from post in postGroup.DefaultIfEmpty()
+
+                join booking in _tripDbContext.Bookings on trip.BookingID equals booking.BookingID
+
+                join project in _tripDbContext.Projects on booking.ProjectId equals project.ProjectID into projectGroup
+                from project in projectGroup.DefaultIfEmpty()
+
+
+                select new TripDurationReportViewModel
+                {
+                    TripId = trip.TripId,
+                    VehicleName = trip.Name,
+                    Location = trip.Location,
+
+                    BookingStart = booking.StartDate,
+                    BookingEnd = booking.EndDate,
+
+                    TravelStart = trip.TravelStart,
+                    TravelEnd = trip.TravelEnd,
+
+                    EarliestStart = booking.StartDate < trip.TravelStart ? booking.StartDate : trip.TravelStart,
+
+                    Duration = (trip.TravelEnd.Date - trip.TravelStart.Date).Days + 1,
+
+
+
+                    OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
+                    ClosingKms = post != null ? post.ClosingKms : (decimal?)null,
+                    TravelledKms = (pre != null && post != null)
+                        ? (decimal?)(post.ClosingKms - pre.OpeningKms)
+                        : null,
+
+                    ProjectNumber = project != null ? project.ProjectNumber : (int?)null
+                }
+            ).ToListAsync();
+
+            return report;
+        }
+
 
 
 

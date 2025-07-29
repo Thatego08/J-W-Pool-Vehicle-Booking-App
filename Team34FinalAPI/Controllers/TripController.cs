@@ -82,7 +82,7 @@ namespace Team34FinalAPI.Controllers
                 {
                     UserName = userName,
                     Action = "Create New Trip",
-                    Details = $"Trip created for vehicle booking. Trip created by : " + userName +" with the following comments: "+trip.Comment,
+                    Details = $"Trip created for vehicle booking. Trip created by : " + userName + " with the following comments: " + trip.Comment,
                     Timestamp = DateTime.UtcNow
                 });
 
@@ -99,6 +99,29 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(trip);
         }
+        [HttpGet("{tripId}/opening-kms")]
+        public async Task<IActionResult> GetOpeningKms(int tripId)
+        {
+            var trip = await _context.Trips
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.TripId == tripId);
+
+            if (trip == null)
+                return NotFound("Trip not found.");
+
+            if (trip.PreChecklistId == null)
+                return NotFound("Pre-checklist ID not set for this trip.");
+
+            var preChecklist = await _context.PreChecklists
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == trip.PreChecklistId);
+
+            if (preChecklist == null)
+                return NotFound("Pre-checklist record not found.");
+
+            return Ok(new { openingKms = preChecklist.OpeningKms });
+        }
+
 
 
 
@@ -139,7 +162,7 @@ namespace Team34FinalAPI.Controllers
                 {
                     UserName = trip.UserName,
                     Action = "Update Trip",
-                    Details = $"Trip details for "+ tvm.Name + " have been updated by: " + trip.UserName,
+                    Details = $"Trip details for " + tvm.Name + " have been updated by: " + trip.UserName,
                     Timestamp = DateTime.UtcNow
                 });
             }
@@ -242,6 +265,31 @@ namespace Team34FinalAPI.Controllers
             return _context.Trips.Any(e => e.TripId == id);
         }
 
+        [HttpGet("GetVehicleDetailsWithClosingKms/{tripId}")]
+        public async Task<IActionResult> GetVehicleDetailsWithClosingKms(int tripId)
+        {
+            var tripDetails = await _context.Trips
+                .Where(t => t.TripId == tripId)
+                .Select(t => new
+                {
+                    VehicleName = t.Name,
+                    ClosingKms = _context.PostChecks
+                        .Where(pc => pc.TripId == tripId)
+                        .OrderByDescending(pc => pc.PostCheckId) // Assuming PostCheckId indicates the latest check
+                        .Select(pc => pc.ClosingKms)
+                        .FirstOrDefault()
+                })
+                .FirstOrDefaultAsync();
+
+            if (tripDetails == null)
+            {
+                return NotFound("Trip not found.");
+            }
+
+            return Ok(tripDetails);
+        }
+
+
         [HttpDelete]
         [Route("DeleteTrip/{TripId}")]
         public async Task<IActionResult> DeleteTrip(int TripId)
@@ -263,7 +311,7 @@ namespace Team34FinalAPI.Controllers
                     {
                         UserName = "Admin",
                         Action = "Delete Trip",
-                        Details = $"Trip has been deleted by an administrator" ,
+                        Details = $"Trip has been deleted by an administrator",
                         Timestamp = DateTime.UtcNow
                     });
                     return Ok(existingTrip);
@@ -279,3 +327,4 @@ namespace Team34FinalAPI.Controllers
         }
     }
 }
+
