@@ -80,6 +80,22 @@ namespace Team34FinalAPI.Report_DTO_s
             public DateTime CancelledDate { get; set; } 
         }
 
+        public class TripDurationReportDto
+        {
+            public int TripId { get; set; }
+            public string VehicleName { get; set; }
+            public string Location { get; set; }
+            public decimal? OpeningKms { get; set; }  // from PreChecklist, nullable in case no PreChecklist
+            public decimal? ClosingKms { get; set; }
+            public TimeSpan Duration { get; set; }    // calculated as TravelEnd - TravelStart
+            public DateTime TravelStart { get; set; }
+            public DateTime TravelEnd { get; set; }
+            public DateTime EarliestStart { get; set; }
+            public int? ProjectNumber { get; set; }
+            public DateTime BookingStart { get; set; } // booking.StartDate
+            public DateTime BookingEnd { get; set; }   // booking.EndDate
+        }
+
 
         //Available vehicles for the month
         //public class AvailableVehicleReportDto

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace Team34FinalAPI.Models
@@ -12,8 +13,9 @@ namespace Team34FinalAPI.Models
 
         // Foreign key property for Trip
         public int TripId { get; set; }
-
+        [ForeignKey(nameof(TripId))]  // <-- Explicit FK configuration
         [JsonIgnore] // Avoid circular references in JSON serialization
+      
         public Trip Trip { get; set; } // Navigation property
         public decimal ClosingKms { get; set; }
         public bool OilLeaks { get; set; }

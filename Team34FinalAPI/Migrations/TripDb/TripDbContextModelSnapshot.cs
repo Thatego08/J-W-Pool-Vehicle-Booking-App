@@ -147,6 +147,9 @@ namespace Team34FinalAPI.Migrations.TripDb
                     b.Property<bool>("SunVisor")
                         .HasColumnType("bit");
 
+                    b.Property<int>("TripId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("TyreCondition")
                         .HasColumnType("bit");
 
@@ -154,6 +157,8 @@ namespace Team34FinalAPI.Migrations.TripDb
                         .HasColumnType("bit");
 
                     b.HasKey("PostCheckId");
+
+                    b.HasIndex("TripId");
 
                     b.ToTable("PostChecks", (string)null);
                 });
@@ -173,78 +178,100 @@ namespace Team34FinalAPI.Migrations.TripDb
                     b.Property<int>("BookingID")
                         .HasColumnType("int");
 
-                    b.Property<bool>("BrakeLights")
-                        .HasColumnType("bit");
+                    b.Property<string>("BrakeLights")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Brakes")
-                        .HasColumnType("bit");
+                    b.Property<string>("Brakes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("CheckedByJWSecurity")
-                        .HasColumnType("bit");
+                    b.Property<string>("CheckedByJWSecurity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Comments")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("FuelLevel")
-                        .HasColumnType("bit");
+                    b.Property<string>("FuelLevel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Handbrake")
-                        .HasColumnType("bit");
+                    b.Property<string>("Handbrake")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("HeadLights")
-                        .HasColumnType("bit");
+                    b.Property<string>("HeadLights")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Horn")
-                        .HasColumnType("bit");
+                    b.Property<string>("Horn")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Indicators")
-                        .HasColumnType("bit");
+                    b.Property<string>("Indicators")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("JWMarketingMagnets")
-                        .HasColumnType("bit");
+                    b.Property<string>("JWMarketingMagnets")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("JackAndWheelSpannerPresent")
-                        .HasColumnType("bit");
+                    b.Property<string>("JackAndWheelSpannerPresent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("LicenseDiskValid")
-                        .HasColumnType("bit");
+                    b.Property<string>("LicenseDiskValid")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Mirrors")
-                        .HasColumnType("bit");
+                    b.Property<string>("Mirrors")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("OilLeaks")
-                        .HasColumnType("bit");
+                    b.Property<string>("OilLeaks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("OpeningKms")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("ParkLights")
-                        .HasColumnType("bit");
+                    b.Property<string>("ParkLights")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("ReverseHooter")
-                        .HasColumnType("bit");
+                    b.Property<string>("ReverseHooter")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("ReverseLight")
-                        .HasColumnType("bit");
+                    b.Property<string>("ReverseLight")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("SeatBelts")
-                        .HasColumnType("bit");
+                    b.Property<string>("SeatBelts")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("SpareWheelPresent")
-                        .HasColumnType("bit");
+                    b.Property<string>("SpareWheelPresent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("StrobeLight")
-                        .HasColumnType("bit");
+                    b.Property<string>("StrobeLight")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("SunVisor")
-                        .HasColumnType("bit");
+                    b.Property<string>("SunVisor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("TyreCondition")
-                        .HasColumnType("bit");
+                    b.Property<string>("TyreCondition")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("WindscreenWiper")
-                        .HasColumnType("bit");
+                    b.Property<string>("WindscreenWiper")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -304,9 +331,6 @@ namespace Team34FinalAPI.Migrations.TripDb
                     b.Property<int>("ProjectID")
                         .HasColumnType("int");
 
-                    b.Property<int>("RateTypeID")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("RateValue")
                         .HasColumnType("decimal(18,2)");
 
@@ -314,26 +338,7 @@ namespace Team34FinalAPI.Migrations.TripDb
 
                     b.HasIndex("ProjectID");
 
-                    b.HasIndex("RateTypeID");
-
                     b.ToTable("Rate");
-                });
-
-            modelBuilder.Entity("Team34FinalAPI.Models.RateType", b =>
-                {
-                    b.Property<int>("RateTypeID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RateTypeID"));
-
-                    b.Property<string>("RateTypeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RateTypeID");
-
-                    b.ToTable("RateType");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.RefuelVehicle", b =>
@@ -491,6 +496,17 @@ namespace Team34FinalAPI.Migrations.TripDb
                     b.Navigation("Status");
                 });
 
+            modelBuilder.Entity("Team34FinalAPI.Models.PostCheck", b =>
+                {
+                    b.HasOne("Team34FinalAPI.Models.Trip", "Trip")
+                        .WithMany("PostChecks")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trip");
+                });
+
             modelBuilder.Entity("Team34FinalAPI.Models.PreChecklist", b =>
                 {
                     b.HasOne("Team34FinalAPI.Models.Booking", "Booking")
@@ -519,15 +535,7 @@ namespace Team34FinalAPI.Migrations.TripDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Team34FinalAPI.Models.RateType", "RateType")
-                        .WithMany("Rates")
-                        .HasForeignKey("RateTypeID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Project");
-
-                    b.Navigation("RateType");
                 });
 
             modelBuilder.Entity("Team34FinalAPI.Models.RefuelVehicle", b =>
@@ -589,13 +597,10 @@ namespace Team34FinalAPI.Migrations.TripDb
                     b.Navigation("Rates");
                 });
 
-            modelBuilder.Entity("Team34FinalAPI.Models.RateType", b =>
-                {
-                    b.Navigation("Rates");
-                });
-
             modelBuilder.Entity("Team34FinalAPI.Models.Trip", b =>
                 {
+                    b.Navigation("PostChecks");
+
                     b.Navigation("RefuelVehicles");
                 });
 #pragma warning restore 612, 618
