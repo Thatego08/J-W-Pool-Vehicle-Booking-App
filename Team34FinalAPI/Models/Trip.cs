@@ -20,13 +20,11 @@ namespace Team34FinalAPI.Models
         // Foreign key for PreChecklist
         public int? PreChecklistId { get; set; }
         public PreChecklist PreChecklist { get; set; } // Navigation property
-
-        //public PostCheck PostCheck { get; set; } // Navigation property
-
+      
+      
         public string UserName { get; set; }
         public ICollection<RefuelVehicle> RefuelVehicles { get; set; }
-        public ICollection<PostCheck> PostChecks { get; set; } = new List<PostCheck>();// Navigation property for PostChecks
-
+        public ICollection<PostCheck> PostChecks { get; set; } = new List<PostCheck>(); // Navigation property for PostChecks
 
 
     }

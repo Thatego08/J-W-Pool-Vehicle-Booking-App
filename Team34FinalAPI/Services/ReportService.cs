@@ -24,10 +24,6 @@ namespace Team34FinalAPI.Services
         Task<List<BookingPerUserReportViewModel>> GetBookingsPerUserPerMonthAsync();
         Task<List<CancelledBookingReportViewModel>> GetCancelledBookingsPerMonthAsync();
         //Task<List<AvailableVehiclesReportViewModel>> GetAvailableVehiclesForMonthAsync();
-        Task<IEnumerable<TripDurationReportViewModel>> GetTripDurationReportAsync();
-
-
-
 
 
     }
@@ -330,55 +326,6 @@ namespace Team34FinalAPI.Services
 
             return cancelledBookings;
         }
-
-
-        public async Task<IEnumerable<TripDurationReportViewModel>> GetTripDurationReportAsync()
-        {
-            var report = await (
-                from trip in _tripDbContext.Trips
-                join pre in _tripDbContext.PreChecklists on trip.PreChecklistId equals pre.Id into preGroup
-                from pre in preGroup.DefaultIfEmpty()
-
-                join post in _tripDbContext.PostChecks on trip.TripId equals post.TripId into postGroup
-                from post in postGroup.DefaultIfEmpty()
-
-                join booking in _tripDbContext.Bookings on trip.BookingID equals booking.BookingID
-
-                join project in _tripDbContext.Projects on booking.ProjectId equals project.ProjectID into projectGroup
-                from project in projectGroup.DefaultIfEmpty()
-
-
-                select new TripDurationReportViewModel
-                {
-                    TripId = trip.TripId,
-                    VehicleName = trip.Name,
-                    Location = trip.Location,
-
-                    BookingStart = booking.StartDate,
-                    BookingEnd = booking.EndDate,
-
-                    TravelStart = trip.TravelStart,
-                    TravelEnd = trip.TravelEnd,
-
-                    EarliestStart = booking.StartDate < trip.TravelStart ? booking.StartDate : trip.TravelStart,
-
-                    Duration = (trip.TravelEnd.Date - trip.TravelStart.Date).Days + 1,
-
-
-
-                    OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
-                    ClosingKms = post != null ? post.ClosingKms : (decimal?)null,
-                    TravelledKms = (pre != null && post != null)
-                        ? (decimal?)(post.ClosingKms - pre.OpeningKms)
-                        : null,
-
-                    ProjectNumber = project != null ? project.ProjectNumber : (int?)null
-                }
-            ).ToListAsync();
-
-            return report;
-        }
-
 
 
 
