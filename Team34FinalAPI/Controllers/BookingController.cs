@@ -393,10 +393,10 @@ namespace Team34FinalAPI.Controllers
 
             try
             {
-                var vehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate, cabinType);
+                var AvailableVehicles = await _vehicleRepository.GetAvailableVehiclesAsync(startDate, endDate, cabinType);
 
-                _logger.LogInformation($"Returning {vehicles.Count} vehicles:");
-                foreach (var v in vehicles)
+                _logger.LogInformation($"Returning {AvailableVehicles.Count} vehicles:");
+                foreach (var v in AvailableVehicles)
                 {
                     _logger.LogInformation(
                         $"ID: {v.VehicleID} | Name: {v.Name} | " +
@@ -405,7 +405,46 @@ namespace Team34FinalAPI.Controllers
                     );
                 }
 
-                return Ok(vehicles);
+                // Convert to ViewModel first
+                var vehicleViewModels = AvailableVehicles.Select(v => new VehicleViewModel
+                {
+                    VehicleID = v.VehicleID,
+                    Name = v.Name,
+                    RegistrationNumber = v.RegistrationNumber,
+                    CabinType = v.CabinType,
+                    DriveType = v.DriveType,
+                    Transmission = v.Transmission,
+                    HasTowBar = v.HasTowBar,
+                    HasCanopy = v.HasCanopy,
+                    Compliance = v.Compliance,
+                    Protection = v.Protection,
+                    Description = v.Description,
+                    StatusID = v.StatusID
+                    // Add other properties as needed
+                }).ToList();
+
+
+                // Additional check: Filter out vehicles with conflicting bookings
+                // Filter out conflicting bookings
+                var filteredVehicles = new List<VehicleViewModel>();
+                foreach (var vehicle in vehicleViewModels)
+                {
+                    var isConflicting = await _bookingRepository.GetConflictingBookingAsync(
+                        vehicle.VehicleID,
+                        startDate,
+                        endDate) != null;
+
+                    if (!isConflicting)
+                    {
+                        filteredVehicles.Add(vehicle);
+                    }
+                }
+
+                _logger.LogInformation($"Returning {filteredVehicles.Count} available vehicles");
+                return Ok(filteredVehicles);
+
+
+               // return Ok(AvailableVehicles);
             }
             catch (Exception ex)
             {
