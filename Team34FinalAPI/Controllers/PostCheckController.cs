@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.ViewModels;
-using iText.Kernel.Counter.Context;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Team34FinalAPI.Controllers
@@ -25,6 +24,7 @@ namespace Team34FinalAPI.Controllers
             _context = context;
             _logger = logger;
         }
+
         [HttpPost("CreatePostCheck")]
         [RequestSizeLimit(10_000_000)]
         public async Task<IActionResult> CreatePostCheck([FromForm] PostCheckViewModel pcvm)
@@ -65,12 +65,12 @@ namespace Team34FinalAPI.Controllers
                 JWMarketingMagnets = pcvm.JWMarketingMagnets,
                 CheckedByJWSecurity = pcvm.CheckedByJWSecurity,
                 LicenseDiskValid = pcvm.LicenseDiskValid,
+
                 Comments = pcvm.Comments,
                 AdditionalComments = pcvm.AdditionalComments,
-                TripMedia = new List<TripMedia>() // Initialize the list
+                TripMedia = new List<TripMedia>()
             };
 
-            // Handle MediaFiles as optional
             if (pcvm.MediaFiles != null && pcvm.MediaFiles.Count > 0)
             {
                 foreach (var file in pcvm.MediaFiles)
@@ -84,7 +84,7 @@ namespace Team34FinalAPI.Controllers
 
                             var tripMedia = new TripMedia
                             {
-                                Description = pcvm.MediaDescription, // No need to take FirstOrDefault
+                                Description = pcvm.MediaDescription,
                                 FileName = file.FileName,
                                 FileContent = fileBytes,
                                 MediaType = file.ContentType
@@ -119,12 +119,12 @@ namespace Team34FinalAPI.Controllers
         public async Task<IActionResult> GetPostCheckByIdAsync(int postCheckId)
         {
             var postCheck = await _context.PostChecks
-                                           .Include(pc => pc.TripMedia) // Include related TripMedia
-                                           .FirstOrDefaultAsync(pc => pc.PostCheckId == postCheckId); // Use PostCheckId
+                                           .Include(pc => pc.TripMedia)
+                                           .FirstOrDefaultAsync(pc => pc.PostCheckId == postCheckId);
 
             if (postCheck == null)
             {
-                return NotFound(); // Return 404 if PostCheck not found
+                return NotFound();
             }
 
             var postCheckDto = new
@@ -158,27 +158,27 @@ namespace Team34FinalAPI.Controllers
                 postCheck.AdditionalComments,
                 TripMedia = postCheck.TripMedia.Select(tm => new
                 {
-                    tm.MediaId, // Adjust if necessary
+                    tm.MediaId,
                     tm.FileName,
                     tm.MediaType,
-                    // Serve URL or Base64 for images
                     FileContent = Convert.ToBase64String(tm.FileContent)
                 }).ToList()
             };
 
-            return Ok(postCheckDto); // Return PostCheck along with media
+            return Ok(postCheckDto);
         }
+
         [Authorize(Roles = "Admin")]
         [HttpGet("GetAllPostChecks")]
         public async Task<IActionResult> GetAllPostChecksAsync()
         {
             var postChecks = await _context.PostChecks
-                                            .Include(pc => pc.TripMedia) // Include related TripMedia
-                                            .ToListAsync(); // Fetch all PostChecks
+                                            .Include(pc => pc.TripMedia)
+                                            .ToListAsync();
 
             if (postChecks == null || !postChecks.Any())
             {
-                return NotFound(); // Return 404 if no PostChecks are found
+                return NotFound();
             }
 
             var postCheckDtos = postChecks.Select(postCheck => new
@@ -212,17 +212,15 @@ namespace Team34FinalAPI.Controllers
                 postCheck.AdditionalComments,
                 TripMedia = postCheck.TripMedia.Select(tm => new
                 {
-                    tm.MediaId, // Adjust if necessary
+                    tm.MediaId,
                     tm.FileName,
                     tm.MediaType,
-                    // Serve URL or Base64 for images
                     FileContent = Convert.ToBase64String(tm.FileContent)
                 }).ToList()
             }).ToList();
 
-            return Ok(postCheckDtos); // Return the list of PostChecks with media
+            return Ok(postCheckDtos);
         }
-
 
         [HttpDelete("{postCheckId}")]
         public async Task<IActionResult> DeletePostCheckAsync(int postCheckId)
@@ -233,33 +231,30 @@ namespace Team34FinalAPI.Controllers
 
             if (postCheck == null)
             {
-                return NotFound(); // Return 404 if PostCheck not found
+                return NotFound();
             }
 
             try
             {
-                // Remove associated media files
                 if (postCheck.TripMedia != null)
                 {
                     _context.TripMedia.RemoveRange(postCheck.TripMedia);
                 }
 
-                // Remove the post check
                 _context.PostChecks.Remove(postCheck);
                 await _context.SaveChangesAsync();
 
-                return NoContent(); // Return 204 No Content on successful deletion
+                return NoContent();
             }
             catch (DbUpdateException dbEx)
             {
                 var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
-                return StatusCode(500, $"Database update error: {innerExceptionMessage}"); // Returns in case of database update exception
+                return StatusCode(500, $"Database update error: {innerExceptionMessage}");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Unexpected error: {ex.Message}"); // Returns in case of other exceptions
+                return StatusCode(500, $"Unexpected error: {ex.Message}");
             }
         }
-
     }
 }
