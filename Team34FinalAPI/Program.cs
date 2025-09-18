@@ -294,10 +294,12 @@ catch (Exception ex)
 
 //Console.WriteLine("Email sent successfully.");
 // Configure the HTTP request pipeline.
+// Always enable Swagger (useful during Azure debugging)
+app.UseSwagger();
+app.UseSwaggerUI();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
 }
 else
@@ -305,6 +307,7 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
