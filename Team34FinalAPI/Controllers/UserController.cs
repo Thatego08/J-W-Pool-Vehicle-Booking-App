@@ -4,12 +4,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Team34FinalAPI.Models;
 using Team34FinalAPI.Services;
 using Team34FinalAPI.Tools;
 using Team34FinalAPI.ViewModels;
+using System.Text;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -110,17 +113,23 @@ namespace Team34FinalAPI.Controllers
                 // Handle the profile photo
                 if (profilePhoto != null && profilePhoto.Length > 0)
                 {
-                    var filePath = Path.Combine("Images/Uploads", $"{username}_profile.jpg"); // Example storage path
+                    // Create folder if it doesn't exist
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Uploads");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    var filePath = Path.Combine(uploadsFolder, $"{username}_profile.jpg");
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await profilePhoto.CopyToAsync(stream);
                     }
-                    user.ProfilePhotoPath = filePath; // Save the file path or URL in the user entity
+                    user.ProfilePhotoPath = Path.Combine("Images", "Uploads", $"{username}_profile.jpg");
                 }
 
+                // **Create the user outside of the photo block**
                 var result = await _userManager.CreateAsync(user, model.Password);
-
-
 
                 if (result.Succeeded)
                 {
@@ -139,8 +148,35 @@ namespace Team34FinalAPI.Controllers
                     }
                     await _userManager.AddToRoleAsync(user, model.Role);
 
-                    
-                    return Ok(new { message = "User registered successfully", username = user.UserName });
+
+                    // Generate JWT token manually
+                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                    var claims = new[]
+                    {
+    new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+    new Claim(ClaimTypes.Role, user.Role),
+    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+};
+
+                    var token = new JwtSecurityToken(
+                        issuer: _configuration["Jwt:Issuer"],
+                        audience: _configuration["Jwt:Audience"],
+                        claims: claims,
+                        expires: DateTime.UtcNow.AddHours(3),
+                        signingCredentials: creds
+                    );
+
+                    var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+                    return Ok(new
+                    {
+                        message = "User registered successfully",
+                        username = user.UserName,
+                        token = tokenString
+                    });
+
                 }
                 else
                 {

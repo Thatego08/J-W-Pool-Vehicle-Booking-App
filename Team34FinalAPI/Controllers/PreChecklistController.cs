@@ -28,46 +28,62 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(preChecklist);
         }
+
         [HttpPost]
         public async Task<ActionResult> CreatePreChecklist([FromBody] PreChecklist preChecklist)
         {
-            if (preChecklist == null)
+            try
             {
-                return BadRequest("PreChecklist cannot be null.");
-            }
+                if (preChecklist == null)
+                {
+                    return BadRequest("PreChecklist cannot be null.");
+                }
 
-            // Check if BookingID is valid (optional)
-            if (preChecklist.BookingID <= 0)
+                // Check if BookingID is valid
+                if (preChecklist.BookingID <= 0)
+                {
+                    return BadRequest("Invalid BookingID.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Verify Booking exists
+                var booking = await _context.Bookings.FindAsync(preChecklist.BookingID);
+                if (booking == null)
+                {
+                    return NotFound("Booking not found.");
+                }
+
+                preChecklist.Booking = booking;
+
+                // Add PreChecklist and save
+                _context.PreChecklists.Add(preChecklist);
+                await _context.SaveChangesAsync();
+
+                // Return created Id
+                return Ok(new { id = preChecklist.Id });
+            }
+            catch (DbUpdateException dbEx)
             {
-                return BadRequest("Invalid BookingID.");
+                // Detailed database error for debugging
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = "Database update error occurred.",
+                    details = dbEx.InnerException?.Message ?? dbEx.Message
+                });
             }
-
-            if (!ModelState.IsValid)
+            catch (Exception ex)
             {
-                return BadRequest(ModelState);
+                // Catch-all for other errors
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = "An unexpected error occurred.",
+                    details = ex.Message
+                });
             }
-
-            // Assign the Booking based on BookingID
-            var booking = await _context.Bookings.FindAsync(preChecklist.BookingID);
-            if (booking == null)
-            {
-                return NotFound("Booking not found.");
-            }
-
-            preChecklist.Booking = booking;
-
-            // Add the new PreChecklist and save changes
-            _context.PreChecklists.Add(preChecklist);
-            await _context.SaveChangesAsync();
-
-            // Return the Id in the response
-            return Ok(new { id = preChecklist.Id });
         }
-
-
-        // private bool PreChecklistExists(int tripId)
-        // {
-        //   return _context.PreChecklists.Any(e => e.TripId == tripId);
-        // }
     }
 }
