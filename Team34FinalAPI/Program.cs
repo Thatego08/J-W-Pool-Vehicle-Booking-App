@@ -31,18 +31,23 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder =>
+        policy =>
         {
-            builder.WithOrigins("http://localhost:4200") // Adjust this to match the frontend's origin
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
+            policy.WithOrigins(
+                    "http://localhost:4200",
+                    "https://polite-cliff-020409010.2.azurestaticapps.net"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials(); // Add this if you’re using cookies/auth headers
         });
 });
 
 
+
 builder.Services.AddControllers();
 
- 
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -181,7 +186,7 @@ builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IInspectionListRepository, InspectionRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IRefuelVehicleRepository, RefuelVehicleRepository>();
-builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>(); 
+builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IRateRepo, RateRepository>();
@@ -310,7 +315,7 @@ else
 
 
 app.UseHttpsRedirection();
-app.UseCors("AllowSpecificOrigin");
+
 
 
 // Add this line to serve files from Images directory
@@ -320,9 +325,11 @@ app.UseStaticFiles(new StaticFileOptions
         Path.Combine(Directory.GetCurrentDirectory(), "Images")),
     RequestPath = "/Images"
 });
+app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseSwagger();
+app.UseSwaggerUI();
 app.MapControllers();
 
 
@@ -333,7 +340,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = services.GetRequiredService<UserManager<User>>(); 
+    var userManager = services.GetRequiredService<UserManager<User>>();
     try
     {
         await RoleInitializer.SeedRoles(roleManager);
