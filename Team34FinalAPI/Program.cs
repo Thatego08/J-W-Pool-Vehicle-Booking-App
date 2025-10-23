@@ -15,25 +15,20 @@ using DinkToPdf;
 using Microsoft.AspNetCore.Builder;
 using OfficeOpenXml;
 using System.IO;
-using Team34FinalAPI.Models;
 using Team34FinalAPI.Data;
-using Mailjet.Client;
-using Mailjet.Client.Resources;
-using Newtonsoft.Json.Linq;
 using User = Team34FinalAPI.Models.User;
-using Org.BouncyCastle.Crypto.Tls;
 using Microsoft.Extensions.FileProviders;
-
+using MailJetOptions = Team34FinalAPI.Services.MailJetOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
-        builder =>
+    options.AddPolicy("AllowAngularApp",
+        policy =>
         {
-            builder.WithOrigins("http://localhost:4200") // Adjust this to match the frontend's origin
+            policy.WithOrigins("http://localhost:4200")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
@@ -41,14 +36,9 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.AddControllers();
-
- 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
-
-//My Changes For Jwt Auth for Login purposes
-
+// Swagger configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Team 34 API", Version = "v1" });
@@ -77,74 +67,54 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-
-//Inspection List exporting
+// PDF and Excel configuration
 var context = new CustomAssemblyLoadContext();
 context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "wkhtmltox.dll"));
-
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
-
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+// *** EMAIL SERVICE CONFIGURATION ***
+// Configure MailJet settings from appsettings.json
+builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
+// Register the MailJetService as the IEmailService implementation
+builder.Services.AddScoped<IEmailService, MailJetService>();
 
-//Feedback config.
-
+// Logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-
-//Config DbContexts
-//Configure AppDbContext
+// Database Contexts
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//Configure BookingDbContext
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-// Configure TripDbContext
 builder.Services.AddDbContext<TripDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-// Configure VehicleDbContext
 builder.Services.AddDbContext<VehicleDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure UserDbContext & Identity
 builder.Services.AddDbContext<UserDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//Identity config
-
+// Identity configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
-    // User settings
-    // options.User.RequireUniqueEmail = true;
-
-
-    // Password settings (optional)
     options.Password.RequiredLength = 8;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
-
-    // Lockout settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
-
 })
-    .AddEntityFrameworkStores<UserDbContext>()
-    .AddDefaultTokenProviders();
-builder.Services.Configure<IdentityOptions>(options =>
-{
-    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-    //options.User.RequireUniqueEmail = true;
-});
-// Configure JWT authentication
+.AddEntityFrameworkStores<UserDbContext>()
+.AddDefaultTokenProviders();
+
+// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -163,15 +133,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
-// Configure authorization policies
+// Authorization policies
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
     options.AddPolicy("DriverPolicy", policy => policy.RequireRole("Driver", "Admin"));
 });
 
-//Add repositories and services
+// Repository and Service registrations
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IAdminRepo, AdminRepo>();
@@ -181,7 +150,7 @@ builder.Services.AddScoped<IServiceRepository, ServiceRepository>();
 builder.Services.AddScoped<IInspectionListRepository, InspectionRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IRefuelVehicleRepository, RefuelVehicleRepository>();
-builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>(); 
+builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<IRateRepo, RateRepository>();
@@ -194,107 +163,38 @@ builder.Services.AddScoped<IOTPRepository, OTPRepository>();
 builder.Services.AddScoped<IOTPService, OTPService>();
 
 builder.Services.AddScoped<OTPSettingsService>();
-builder.Services.AddScoped<ISMS_Service, SMS_Service>();
 builder.Services.AddScoped<BookingReminderService>();
 
 builder.Services.AddHostedService<BookingReminderHostedService>();
 builder.Services.AddScoped<IStatusRepository, StatusRepository>();
 
-
-
-
-// Configure MailJet settings
-builder.Services.Configure<MailJetOptions>(builder.Configuration.GetSection("MailJet"));
-
-//Configure OTP Settings'
+// OTP Settings
 builder.Services.Configure<OTPSettings>(builder.Configuration.GetSection("OtpSettings"));
-
-// Register the MailJetService
-builder.Services.AddScoped<IEmailService, MailJetService>();
-
-
-
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-
-
-builder.Services.AddLogging();
 
 var app = builder.Build();
 
-//Mail Configs
-
-// Temporary logging to check the API credentials
-
-var mailJetSettings = builder.Configuration.GetSection("MailJet");
-var apiKey = mailJetSettings["ApiKey"];
-var secretKey = mailJetSettings["SecretKey"];
-var senderEmail = mailJetSettings["SenderEmail"];
-var senderName = mailJetSettings["SenderName"];
+// *** REMOVED THE DUPLICATE EMAIL TESTING CODE FROM HERE ***
+// This was causing conflicts with the registered IEmailService
 
 
-Console.WriteLine($"API Key: {apiKey}");
-Console.WriteLine($"Secret Key: {secretKey}");
-Console.WriteLine($"Sender Email: {senderEmail}");
-Console.WriteLine($"Sender Name: {senderName}");
+// Add CORS policy
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowAngularApp",
+//        policy =>
+//        {
+//            policy.WithOrigins("http://localhost:4200")
+//                  .AllowAnyHeader()
+//                  .AllowAnyMethod();
+//        });
+//});
 
-// Validate configuration values
-if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey) ||
-    string.IsNullOrEmpty(senderEmail) || string.IsNullOrEmpty(senderName))
-{
-    throw new Exception("MailJet settings are not properly configured.");
-}
-
-
-// Create Mailjet client
-var client = new MailjetClient(apiKey, secretKey);
+// Use CORS (add this before UseAuthorization)
 
 
-var request = new MailjetRequest
-{
-    Resource = Send.Resource,
-}
-.Property(Send.FromEmail, senderEmail)
-.Property(Send.FromName, senderName)
-.Property(Send.Subject, "Test Email")
-.Property(Send.HtmlPart, "This is a test email.")
-.Property(Send.Recipients, new JArray
-{
-    new JObject
-    {
-        {"Email", "www.sabzayj7@gmailcom"}
-    }
-})
-.Property(Send.SandboxMode, false); // Enable sandbox mode
 
-/*var response = await client.PostAsync(request);
-if (!response.IsSuccessStatusCode)
-{
-    var errorMessage = response.GetErrorMessage();
-    Console.WriteLine($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
-    throw new Exception($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
-}*/
 
-try
-{
-    var response = await client.PostAsync(request);
-    if (!response.IsSuccessStatusCode)
-    {
-        var errorMessage = response.GetErrorMessage();
-        Console.WriteLine($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
-        throw new Exception($"Failed to send email. Status: {response.StatusCode}, Message: {errorMessage}");
-    }
-
-    Console.WriteLine("Email sent successfully.");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Exception: {ex.Message}");
-    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-}
-
-//Console.WriteLine("Email sent successfully.");
-// Configure the HTTP request pipeline.
-// Always enable Swagger (useful during Azure debugging)
+// Configure the HTTP request pipeline
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -308,42 +208,39 @@ else
     app.UseHsts();
 }
 
-
 app.UseHttpsRedirection();
+app.UseCors("AllowAngularApp");
 app.UseCors("AllowSpecificOrigin");
 
-
-// Add this line to serve files from Images directory
+// Static files
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(Directory.GetCurrentDirectory(), "Images")),
     RequestPath = "/Images"
 });
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-
-//Role seeding. Happens during runtime
-
-// Seed roles and assign roles to users
+// Role seeding
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = services.GetRequiredService<UserManager<User>>(); 
+    var userManager = services.GetRequiredService<UserManager<User>>();
     try
     {
         await RoleInitializer.SeedRoles(roleManager);
-        await RoleInitializer.AssignRolesToUsers(userManager);
     }
     catch (Exception ex)
     {
         Console.WriteLine("An error occurred while seeding roles: " + ex.Message);
     }
 }
+
 app.Run();
 
 public static class RoleInitializer
@@ -359,39 +256,4 @@ public static class RoleInitializer
             }
         }
     }
-
-    public static async Task AssignRolesToUsers(UserManager<User> userManager)
-    {
-        // Add your usernames and roles here
-        var userRoles = new[]
-        {
-            new { Username = "admin", Role = "Admin", Password = "Admin@123" },
-            new { Username = "user", Role = "User", Password = "User@123" },
-            new { Username = "driver", Role = "Driver", Password = "Driver@123" }
-        };
-
-        foreach (var userRole in userRoles)
-        {
-            var user = await userManager.FindByNameAsync(userRole.Username);
-            if (user == null)
-            {
-                // Create a new user
-                user = new User
-                {
-                    UserName = userRole.Username,
-                    Email = $"{userRole.Username}@example.com",
-                    Name = userRole.Username,
-                    Surname = "User", // Set the surname appropriately
-                    Role = userRole.Role,
-                };
-                await userManager.CreateAsync(user, userRole.Password);
-            }
-
-            if (!await userManager.IsInRoleAsync(user, userRole.Role))
-            {
-                await userManager.AddToRoleAsync(user, userRole.Role);
-            }
-        }
-    }
-
 }

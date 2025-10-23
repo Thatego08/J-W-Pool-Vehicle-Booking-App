@@ -10,7 +10,7 @@ using OfficeOpenXml;
 
 namespace Team34FinalAPI.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [ApiController]
     [Route("api/[controller]")]
     public class ReportsController : ControllerBase

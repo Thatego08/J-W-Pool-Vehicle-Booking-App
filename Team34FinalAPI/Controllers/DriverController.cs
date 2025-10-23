@@ -19,7 +19,7 @@ namespace Team34FinalAPI.Controllers
 {
 
     //Comment to disable locking
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class DriverController : ControllerBase
@@ -39,7 +39,7 @@ namespace Team34FinalAPI.Controllers
             _auditLogRepo = auditLogRepository;
         }
 
-        [Authorize(Roles = "Admin")]
+      //  [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("GetAllDrivers")] //Displays All The Drivers Stored On The Database
 
@@ -57,7 +57,7 @@ namespace Team34FinalAPI.Controllers
 
         }
 
-        [Authorize(Roles = "Driver,Admin")]
+        //[Authorize(Roles = "Driver,Admin")]
 
         [HttpGet]
         [Route("SearchDriver/{userName}")]
@@ -76,7 +76,7 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("RegisterDriver")]
         public async Task<IActionResult> RegisterDriver(DriverViewModel dvm)
@@ -199,7 +199,7 @@ namespace Team34FinalAPI.Controllers
 
 
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpDelete]
         [Route("DeleteDriver/{userName}")]
 

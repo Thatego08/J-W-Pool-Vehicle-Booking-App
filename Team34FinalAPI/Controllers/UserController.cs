@@ -30,9 +30,22 @@ namespace Team34FinalAPI.Controllers
         private IAuditLogRepository _auditLogRepository;
         private readonly IOTPService _otpService;
         private readonly IOTPRepository _otpRepository;
-        private readonly ISMS_Service _smsService;
 
-        public UserController(UserManager<User> userManager,ISMS_Service smsService,IOTPService otpService,IOTPRepository otpRepository, IAuthService authService, IEmailService emailService,  SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager, IAuditLogRepository auditLogRepository, UserDbContext userDbContext,  IUserRepository userRepository, ILogger<UserController> Logger, IUserClaimsPrincipalFactory<User> userClaimsPrincipal, IConfiguration configuration)
+        // REMOVED ISMS_Service from constructor parameters
+        public UserController(
+            UserManager<User> userManager,
+            IOTPService otpService,
+            IOTPRepository otpRepository,
+            IAuthService authService,
+            IEmailService emailService,
+            SignInManager<User> signInManager,
+            RoleManager<IdentityRole> roleManager,
+            IAuditLogRepository auditLogRepository,
+            UserDbContext userDbContext,
+            IUserRepository userRepository,
+            ILogger<UserController> Logger,
+            IUserClaimsPrincipalFactory<User> userClaimsPrincipal,
+            IConfiguration configuration)
         {
             this._userDbContext = userDbContext;
             _userRepository = userRepository;
@@ -46,11 +59,12 @@ namespace Team34FinalAPI.Controllers
             _auditLogRepository = auditLogRepository;
             _otpService = otpService;
             _otpRepository = otpRepository;
-
-            //_userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _emailService = emailService;
-            _smsService = smsService;
         }
+
+        // ... rest of your controller methods
+    
+
 
         [HttpGet]
         [Route("GetAllUsers")]
@@ -72,6 +86,7 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromForm] UserViewModel model, IFormFile profilePhoto)
         {
@@ -79,72 +94,97 @@ namespace Team34FinalAPI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            _logger.LogInformation("Registering user: {@Model}", model);
 
-            string username = GenerateUsername(model.Name, model.Surname);
+            //// Validate JAWS email domain
+            //if (!model.Email.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase))
+            //{
+            //    return BadRequest(new { Message = "Only JAWS email addresses (@jaws.co.za) are allowed." });
+            //}
+
+            _logger.LogInformation("Registering user: {@Model}", model);
 
             try
             {
+                // Check if email already exists
+                var existingUserByEmail = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUserByEmail != null)
+                {
+                    return BadRequest(new { Message = "Email already exists." });
+                }
+
                 var user = new User
                 {
-                    UserName = username,
+                    UserName = model.Email, // Use email as username
                     Name = model.Name,
                     Surname = model.Surname,
                     PhoneNumber = model.PhoneNumber,
                     Email = model.Email,
-                    Password = Pass.hashPassword(model.Password),
-                    EmailConfirmed = false,
+                    //Password = model.Password,
+                    EmailConfirmed = true,
                     PhoneNumberConfirmed = false,
                     TwoFactorEnabled = false,
                     LockoutEnabled = false,
                     AccessFailedCount = 0,
-                    Role = model.Role
+                    Role = "Driver" // Auto-assign as Driver
                 };
 
-                var existingUser = await _userManager.FindByNameAsync(user.UserName);
-                if (existingUser != null)
-                {
-                    return BadRequest(new { Message = "Username already exists." });
-                }
-
-                // Handle the profile photo
+                // Handle profile photo
                 if (profilePhoto != null && profilePhoto.Length > 0)
                 {
-                    var filePath = Path.Combine("Images/Uploads", $"{username}_profile.jpg"); // Example storage path
+                    var filePath = Path.Combine("Images/Uploads", $"{user.Email.Replace("@", "_")}_profile.jpg");
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await profilePhoto.CopyToAsync(stream);
                     }
-                    user.ProfilePhotoPath = filePath; // Save the file path or URL in the user entity
+                    user.ProfilePhotoPath = filePath;
                 }
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
-
-
                 if (result.Succeeded)
                 {
-                    //Audit Log Stuff
+                    //// Generate OTP for email verification
+                    //var otp = await _otpService.GenerateAndSaveOtpAsync(model.Email);
+
+                    //// Send OTP via email using Twilio
+                    //try
+                    //{
+                    //    await _emailService.SendVerificationEmailAsync(
+                    //        model.Email,
+                    //        "Verify your JAWS account",
+                    //        $"Your OTP for email verification is: {otp}. This OTP will expire in 10 minutes."
+                    //    );
+                    //}
+                    //catch (Exception emailEx)
+                    //{
+                    //    _logger.LogError(emailEx, "Failed to send verification email");
+                    //    // Continue with registration even if email fails, but log it
+                    //}
+
+                    // Create Driver role if it doesn't exist
+                    if (!await _roleManager.RoleExistsAsync("Driver"))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("Driver"));
+                    }
+                    await _userManager.AddToRoleAsync(user, "Driver");
+
+                    // Audit Log
                     await _auditLogRepository.AddLogAsync(new AuditLog
                     {
-                        UserName = username,
+                        UserName = user.Email, // Use email instead of username
                         Action = "Register",
-                        Details = $"User registered with username: "+ username,
+                        Details = $"User registered with email: {model.Email}",
                         Timestamp = DateTime.UtcNow
                     });
 
-                    if (!await _roleManager.RoleExistsAsync(model.Role))
+                    return Ok(new
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(model.Role));
-                    }
-                    await _userManager.AddToRoleAsync(user, model.Role);
-
-                    
-                    return Ok(new { message = "User registered successfully", username = user.UserName });
+                        message = "User registered successfully. Please check your email for the OTP to verify your account.",
+                        email = user.Email
+                    });
                 }
                 else
                 {
-
                     foreach (var error in result.Errors)
                     {
                         _logger.LogInformation("User creation error: {Error}", error.Description);
@@ -152,65 +192,164 @@ namespace Team34FinalAPI.Controllers
                     }
                     return BadRequest(ModelState);
                 }
-                // Check if the error is due to duplicate username
-                if (result.Errors.Any(e => e.Code == "DuplicateUserName"))
-                {
-                    return BadRequest(new { message = "Username already exists." });
-                }
-                return BadRequest(new { message = "Registration failed." });
-            }
-            catch (DbUpdateException dbEx)
-            {
-                var sqlException = dbEx.GetBaseException() as SqlException;
-                if (sqlException != null)
-                {
-                    _logger.LogError(sqlException, "SQL Error Number: {ErrorNumber}, Message: {ErrorMessage}", sqlException.Number, sqlException.Message);
-                    return StatusCode(500, $"A database error occurred: {sqlException.Message}");
-                }
-
-                _logger.LogError(dbEx, "A database error occurred while registering the user.");
-                return StatusCode(500, "A database error occurred. Please check the details.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while registering the user.");
-                if (ex.InnerException != null)
-                {
-                    _logger.LogError(ex.InnerException, "Inner exception details.");
-                }
-                return BadRequest(new { Message = ex.Message });
+                return BadRequest(new { Message = "Registration failed. Please try again." });
             }
         }
-
-        private string GenerateUsername(string firstName, string lastName)
-        {
-            string firstPart = firstName.Length >= 4 ? firstName.Substring(0, 4) : firstName;
-            string lastPart = lastName.Length >= 2 ? lastName.Substring(0, 2) : lastName;
-            return firstPart + lastPart;
-        }
-
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         {
             try
             {
-                var result = await _authService.LoginAsync(model.UserName, model.Password);
+                _logger.LogInformation("Login attempt for: {UserName}", model.UserName);
+
+                // Since we're using email as username, find user by email
+                // Try to find user by email first (since we use email as username)
+                var user = await _userManager.FindByEmailAsync(model.UserName);
+                if (user == null)
+                {
+                    // If not found by email, try by username
+                    user = await _userManager.FindByNameAsync(model.UserName);
+                    if (user == null)
+                    {
+
+                        _logger.LogWarning("User not found for email: {UserName}", model.UserName);
+                        return Unauthorized(new { Message = "Invalid login attempt." });
+                    }
+                }
+                //Temporary removal
+                // Check if email is confirmed
+                //if (!user.EmailConfirmed)
+                //{
+                //    return Unauthorized(new { Message = "Please verify your email before logging in." });
+                //}
+
+                _logger.LogInformation("User found: {Email}, attempting login with username: {UserName}",
+            user.Email, user.UserName);
+                // Use the email as username for login
+                var result = await _authService.LoginAsync(user.Email, model.Password);
+
                 await _auditLogRepository.AddLogAsync(new AuditLog
                 {
-                    UserName = model.UserName,
+                    UserName = user.Email, // Use email
                     Action = "Login",
                     Details = "User logged in.",
                     Timestamp = DateTime.UtcNow
                 });
+
                 return Ok(new { Token = result });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred during login.");
-
                 return Unauthorized(new { Message = ex.Message });
             }
         }
+        // New endpoint for email verification OTP
+        [HttpPost("verify-email-otp")]
+        public async Task<IActionResult> VerifyEmailOtp([FromBody] VerifyOTPViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var otp = await _otpService.GetOtpAsync(model.Email);
+            if (otp == null || otp.IsUsed || otp.ExpiryTime < DateTime.UtcNow)
+                return BadRequest("Invalid or expired OTP.");
+
+            if (!otp.Code.Trim().Equals(model.OTP.Trim()))
+                return BadRequest("Incorrect OTP.");
+
+            // Mark OTP as used
+            await _otpService.MarkOtpAsUsedAsync(model.Email);
+
+            // Find user by email and confirm their email
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return NotFound("User not found.");
+
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new { message = "Email verified successfully. You can now login." });
+        }
+
+        // Updated Forgot Password to use Twilio
+        
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Generate OTP
+            var otp = await _otpService.GenerateAndSaveOtpAsync(model.Email);
+
+            // Send OTP via MailJet with HTML template
+            await _emailService.SendPasswordResetEmailAsync(user.Email, otp);
+
+            await _auditLogRepository.AddLogAsync(new AuditLog
+            {
+                UserName = user.UserName,
+                Action = "Forgot Password",
+                Details = "Password reset OTP sent.",
+                Timestamp = DateTime.UtcNow
+            });
+
+            return Ok(new { message = "OTP has been sent to your email." });
+        }
+        // Updated Reset Password
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return NotFound("User not found");
+
+            // Validate OTP
+            var isValidOtp = await _otpService.ValidateOtpAsync(model.Email, model.OTP);
+            if (!isValidOtp)
+                return BadRequest("Invalid or expired OTP.");
+
+            // Generate a password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Reset the password
+            var resetResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+
+            if (resetResult.Succeeded)
+            {
+                await _auditLogRepository.AddLogAsync(new AuditLog
+                {
+                    UserName = user.UserName,
+                    Action = "Reset Password",
+                    Details = "Password reset successfully.",
+                    Timestamp = DateTime.UtcNow
+                });
+
+                return Ok(new { message = "Password has been reset successfully." });
+            }
+            else
+            {
+                foreach (var error in resetResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return BadRequest(ModelState);
+            }
+        }
+
+
+        
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -306,7 +445,7 @@ namespace Team34FinalAPI.Controllers
                 existingUser.PhoneNumber = uvm.PhoneNumber;
                 existingUser.Email = uvm.Email;
                 existingUser.Password = Pass.hashPassword(uvm.Password);
-                existingUser.Role = uvm.Role;
+              //  existingUser.Role = uvm.Role;
                 existingUser.EmailConfirmed = false;
                 existingUser.PhoneNumberConfirmed = false;
                 existingUser.TwoFactorEnabled = false;
@@ -323,21 +462,7 @@ namespace Team34FinalAPI.Controllers
                     }
                 }
 
-                if (!await _roleManager.RoleExistsAsync(uvm.Role))
-                {
-                    var createRoleResult = await _roleManager.CreateAsync(new IdentityRole(uvm.Role));
-                    if (!createRoleResult.Succeeded)
-                    {
-                        return BadRequest($"Failed to create role '{uvm.Role}': {string.Join(", ", createRoleResult.Errors.Select(e => e.Description))}");
-                    }
-                }
-
-                var addToRoleResult = await _userManager.AddToRoleAsync(existingUser, uvm.Role);
-                if (!addToRoleResult.Succeeded)
-                {
-                    return BadRequest($"Failed to assign user to role '{uvm.Role}': {string.Join(", ", addToRoleResult.Errors.Select(e => e.Description))}");
-                }
-
+                
                 var saveResult = await _userManager.UpdateAsync(existingUser);
 
                 if (saveResult.Succeeded)
@@ -535,43 +660,67 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-
-        [HttpPost]
-        [Route("forgot-password")]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        // 2. Generate unique username with first 3 letters of name and 2 of surname
+        private async Task<string> GenerateUniqueUsername(string firstName, string lastName)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            string firstPart = firstName.Length >= 3 ? firstName.Substring(0, 3) : firstName.PadRight(3, 'x');
+            string lastPart = lastName.Length >= 2 ? lastName.Substring(0, 2) : lastName.PadRight(2, 'x');
 
-            var user = await _userRepository.FindByEmailAsync(model.Email); // Fetch user by email
+            string baseUsername = (firstPart + lastPart).ToLower();
+            string username = baseUsername;
+            int counter = 1;
+
+            // Check if username exists and append numbers if needed
+            while (await _userManager.FindByNameAsync(username) != null)
+            {
+                username = $"{baseUsername}{counter}";
+                counter++;
+
+                if (counter > 100) // Safety limit
+                {
+                    throw new Exception("Could not generate unique username");
+                }
+            }
+
+            return username;
+        }
+
+
+        // 9. Email confirmation endpoint
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Invalid confirmation link.");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return NotFound("User not found");
-
-            // Generate OTP
-            var otp = new OTP
             {
-                Email = model.Email,
-                Code = new Random().Next(100000, 999999).ToString(), // Generate 6-digit OTP
-                ExpiryTime = DateTime.UtcNow.AddMinutes(10), // OTP valid for 10 minutes
-                IsUsed = false
-            };
+                return NotFound("User not found.");
+            }
 
-            // Save OTP in the OTP table
-            await _otpRepository.SaveOtpAsync(otp);
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
 
-            // Send OTP via email
-            await _emailService.SendEmailAsync(user.Email, "Your OTP", $"Your OTP for password reset is: {otp.Code}");
-
-            //  await _smsService.SendSmsAsync(user.PhoneNumber, $"Your OTP for password reset is: {otp.Code}");
-
-            await _auditLogRepository.AddLogAsync(new AuditLog
             {
-                UserName = User.Identity.Name,
-                Action = "Forgot Password",
-                Details = "User has successfully reset their password.",
-                Timestamp = DateTime.UtcNow
-            });
-            return Ok(new { message = "OTP has been sent to your email." });
+                return Ok(new { message = "Email confirmed successfully. You can now login." });
+            }
+
+            return BadRequest("Error confirming email.");
+        }
+
+        // Method to send confirmation email (implement based on your email service)
+        private async Task SendConfirmationEmail(string email, string confirmationLink)
+        {
+            // Implement your email sending logic here
+            // This could use SMTP, SendGrid, etc.
+            var subject = "Confirm your JAWS account";
+            var body = $"Please confirm your account by clicking this link: {confirmationLink}";
+
+            // Your email sending implementation
+            await _emailService.SendEmailAsync(email, subject, body);
         }
 
        
@@ -601,46 +750,7 @@ namespace Team34FinalAPI.Controllers
 
 
 
-        [HttpPost]
-        [Route("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var user = await _userRepository.FindByEmailAsync(model.Email);
-            if (user == null)
-                return NotFound("User not found");
-
-            // Validate OTP (use your existing logic)
-            var otp = await _otpRepository.GetOtpAsync(model.Email);
-            if (otp == null || otp.Code != model.OTP || otp.ExpiryTime < DateTime.UtcNow || otp.IsUsed)
-                return BadRequest("Invalid or expired OTP.");
-
-            // Mark OTP as used
-            await _otpRepository.MarkOtpAsUsedAsync(model.Email);
-
-            // Generate a password reset token
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            // Reset the user's password using UserManager's ResetPasswordAsync
-            var resetResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
-
-            if (resetResult.Succeeded)
-            {
-                return Ok(new { message = "Password has been reset successfully." });
-            }
-            else
-            {
-                foreach (var error in resetResult.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return BadRequest(ModelState);
-            }
-        }
-
-
+    
     [HttpGet]
     public async Task<IActionResult> GetAuditLogs([FromQuery] string username)
     {

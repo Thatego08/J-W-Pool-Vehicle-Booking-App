@@ -15,7 +15,7 @@ namespace Team34FinalAPI.Controllers
 {
 
     //Comment to disable locking
-    [Authorize(Roles = "Admin")]
+   // [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
         [ApiController]
         public class InspectionChecklistController : ControllerBase

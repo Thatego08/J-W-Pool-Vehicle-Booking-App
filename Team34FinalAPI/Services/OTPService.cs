@@ -38,7 +38,7 @@ namespace Team34FinalAPI.Services
 
         public async Task<bool> ValidateOtpAsync(string email, string otp)
         {
-            var otpEntity = await _otpRepository.GetOtpAsync(email);
+            var otpEntity = await GetOtpAsync(email);
             if (otpEntity == null || otpEntity.IsUsed)
             {
                 return false;
@@ -52,12 +52,11 @@ namespace Team34FinalAPI.Services
             var isValid = otpEntity.Code == otp;
             if (isValid)
             {
-                await _otpRepository.MarkOtpAsUsedAsync(email);
+                await MarkOtpAsUsedAsync(email);
             }
 
             return isValid;
         }
-
         public async Task MarkOtpAsUsedAsync(string email)
         {
             await _otpRepository.MarkOtpAsUsedAsync(email);

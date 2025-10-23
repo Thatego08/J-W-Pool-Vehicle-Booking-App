@@ -7,7 +7,7 @@ using Team34FinalAPI.ViewModels;
 namespace Team34FinalAPI.Controllers
 {
     //Comment to disable locking
-    [Authorize(Roles = "Admin,Driver")]
+   // [Authorize(Roles = "Admin,Driver")]
     [Route("api/[controller]")]
     [ApiController]
     public class FeedbackController : ControllerBase

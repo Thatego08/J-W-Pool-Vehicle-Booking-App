@@ -168,7 +168,7 @@ namespace Team34FinalAPI.Controllers
 
             return Ok(postCheckDto); // Return PostCheck along with media
         }
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpGet("GetAllPostChecks")]
         public async Task<IActionResult> GetAllPostChecksAsync()
         {

@@ -34,7 +34,7 @@ namespace Team34FinalAPI.Controllers
             _auditLogRepo = auditLogRepository;
         }
 
-        [Authorize(Roles = "Admin")]
+      //  [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("getAllAdmins")]
         public async Task<IActionResult> GetAllAdmins()
@@ -51,7 +51,7 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("UpdateAdmin/{userName}")]
         public async Task<ActionResult<AdminViewModel>> UpdateAdmin(string userName, AdminViewModel adminModel)
@@ -89,7 +89,7 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
+//        [Authorize(Roles = "Admin")]
 
         [HttpGet]
         [Route("SearchAdmin/{userName}")]
@@ -168,7 +168,7 @@ namespace Team34FinalAPI.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
+  //      [Authorize(Roles = "Admin")]
         [HttpDelete]
 
         [Route("DeleteAdmin/{userName}")]
