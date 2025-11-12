@@ -25,7 +25,7 @@ namespace Team34FinalAPI.Controllers
             _auditLogRepo = auditLogRepo;
         }
 
-        [Authorize(Roles = "Driver")]
+        //[Authorize(Roles = "Driver")]
         [HttpPost("createTrip")]
         public async Task<IActionResult> CreateTrip([FromForm] TripViewModel tvm)
         {
@@ -125,7 +125,7 @@ namespace Team34FinalAPI.Controllers
 
 
 
-        [Authorize(Roles = "Driver")]
+        //[Authorize(Roles = "Driver")]
         [HttpPut("UpdateTrip/{id}")]
         public async Task<IActionResult> UpdateTrip(int id, [FromBody] TripViewModel tvm)
         {
@@ -184,7 +184,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(new { Message = "Trip updated successfully" });
         }
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpGet("GetAllTrips")]
         public async Task<IActionResult> GetAllTrips()
         {
@@ -233,7 +233,7 @@ namespace Team34FinalAPI.Controllers
 
 
 
-        [Authorize(Roles = "Driver")]
+       // [Authorize(Roles = "Driver")]
         [HttpGet("GetPreviousTripsByUserName/{userName}")]
         public async Task<IActionResult> GetPreviousTripsByUserName(string userName)
         {
