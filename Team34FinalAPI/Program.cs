@@ -27,6 +27,12 @@ using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load environment-specific appsettings
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -35,11 +41,14 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:4200",
-                    "https://polite-cliff-020409010.2.azurestaticapps.net"
+                    "https://localhost:4200",
+                    "https://jwvehicles.vercel.app",
+                    "https://jwvehicles-*.vercel.app"
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials(); // Add this if you’re using cookies/auth headers
+                .AllowCredentials()
+                .SetIsOriginAllowedToAllowWildcardSubdomains();
         });
 });
 

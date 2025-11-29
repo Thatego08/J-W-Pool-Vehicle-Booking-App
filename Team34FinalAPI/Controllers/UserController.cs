@@ -13,6 +13,7 @@ using Team34FinalAPI.Services;
 using Team34FinalAPI.Tools;
 using Team34FinalAPI.ViewModels;
 using System.Text;
+using Azure.Storage.Blobs;
 
 namespace Team34FinalAPI.Controllers
 {
@@ -108,22 +109,66 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest(new { Message = "Email already exists." });
                 }
 
-                // Handle the profile photo
+                // In your UserController Register method, replace the file upload section with:
+
                 if (profilePhoto != null && profilePhoto.Length > 0)
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Uploads");
-                    if (!Directory.Exists(uploadsFolder))
+                    try
                     {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
+                        var connectionString = _configuration.GetConnectionString("AzureStorage");
+                        if (!string.IsNullOrEmpty(connectionString))
+                        {
+                            // Azure Blob Storage upload
+                            var blobServiceClient = new BlobServiceClient(connectionString);
+                            var containerClient = blobServiceClient.GetBlobContainerClient("profile-photos");
 
-                    var filePath = Path.Combine(uploadsFolder, $"{user.UserName}_profile.jpg");
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await profilePhoto.CopyToAsync(stream);
+                            // Create container if it doesn't exist
+                            await containerClient.CreateIfNotExistsAsync();
+
+                            var blobClient = containerClient.GetBlobClient($"{user.UserName}_profile.jpg");
+                            await blobClient.UploadAsync(profilePhoto.OpenReadStream(), true);
+                            user.ProfilePhotoPath = blobClient.Uri.ToString();
+                        }
+                        else
+                        {
+                            // Fallback to local storage (for development)
+                            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Uploads");
+                            if (!Directory.Exists(uploadsFolder))
+                            {
+                                Directory.CreateDirectory(uploadsFolder);
+                            }
+
+                            var filePath = Path.Combine(uploadsFolder, $"{user.UserName}_profile.jpg");
+                            using (var stream = new FileStream(filePath, FileMode.Create))
+                            {
+                                await profilePhoto.CopyToAsync(stream);
+                            }
+                            user.ProfilePhotoPath = Path.Combine("Images", "Uploads", $"{user.UserName}_profile.jpg");
+                        }
                     }
-                    user.ProfilePhotoPath = Path.Combine("Images", "Uploads", $"{user.UserName}_profile.jpg");
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error uploading profile photo");
+                        // Continue without photo - don't fail registration
+                    }
                 }
+
+                // Handle the profile photo
+                //if (profilePhoto != null && profilePhoto.Length > 0)
+                //{
+                //    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Uploads");
+                //    if (!Directory.Exists(uploadsFolder))
+                //    {
+                //        Directory.CreateDirectory(uploadsFolder);
+                //    }
+
+                //    var filePath = Path.Combine(uploadsFolder, $"{user.UserName}_profile.jpg");
+                //    using (var stream = new FileStream(filePath, FileMode.Create))
+                //    {
+                //        await profilePhoto.CopyToAsync(stream);
+                //    }
+                //    user.ProfilePhotoPath = Path.Combine("Images", "Uploads", $"{user.UserName}_profile.jpg");
+                //}
 
                 // Create user with password - Identity will handle hashing
                 var result = await _userManager.CreateAsync(user, model.Password);
