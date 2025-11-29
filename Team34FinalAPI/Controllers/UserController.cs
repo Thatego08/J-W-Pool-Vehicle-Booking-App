@@ -82,20 +82,18 @@ namespace Team34FinalAPI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            _logger.LogInformation("Registering user: {@Model}", model);
 
-            string username = GenerateUsername(model.Name, model.Surname);
+            _logger.LogInformation("Registering user: {@Model}", model);
 
             try
             {
                 var user = new User
                 {
-                    UserName = username,
+                    UserName = model.Email, // Use email as username
                     Name = model.Name,
                     Surname = model.Surname,
                     PhoneNumber = model.PhoneNumber,
                     Email = model.Email,
-                    Password = Pass.hashPassword(model.Password),
                     EmailConfirmed = false,
                     PhoneNumberConfirmed = false,
                     TwoFactorEnabled = false,
@@ -104,41 +102,40 @@ namespace Team34FinalAPI.Controllers
                     Role = model.Role
                 };
 
-                var existingUser = await _userManager.FindByNameAsync(user.UserName);
+                var existingUser = await _userManager.FindByEmailAsync(model.Email);
                 if (existingUser != null)
                 {
-                    return BadRequest(new { Message = "Username already exists." });
+                    return BadRequest(new { Message = "Email already exists." });
                 }
 
                 // Handle the profile photo
                 if (profilePhoto != null && profilePhoto.Length > 0)
                 {
-                    // Create folder if it doesn't exist
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Uploads");
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
                     }
 
-                    var filePath = Path.Combine(uploadsFolder, $"{username}_profile.jpg");
+                    var filePath = Path.Combine(uploadsFolder, $"{user.UserName}_profile.jpg");
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await profilePhoto.CopyToAsync(stream);
                     }
-                    user.ProfilePhotoPath = Path.Combine("Images", "Uploads", $"{username}_profile.jpg");
+                    user.ProfilePhotoPath = Path.Combine("Images", "Uploads", $"{user.UserName}_profile.jpg");
                 }
 
-                // **Create the user outside of the photo block**
+                // Create user with password - Identity will handle hashing
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    //Audit Log Stuff
+                    // Rest of your success code remains the same...
                     await _auditLogRepository.AddLogAsync(new AuditLog
                     {
-                        UserName = username,
+                        UserName = user.UserName,
                         Action = "Register",
-                        Details = $"User registered with username: "+ username,
+                        Details = $"User registered with email: " + user.Email,
                         Timestamp = DateTime.UtcNow
                     });
 
@@ -148,17 +145,17 @@ namespace Team34FinalAPI.Controllers
                     }
                     await _userManager.AddToRoleAsync(user, model.Role);
 
-
-                    // Generate JWT token manually
+                    // Generate JWT token
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
                     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                     var claims = new[]
                     {
-    new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-    new Claim(ClaimTypes.Role, user.Role),
-    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-};
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
                     var token = new JwtSecurityToken(
                         issuer: _configuration["Jwt:Issuer"],
@@ -173,14 +170,12 @@ namespace Team34FinalAPI.Controllers
                     return Ok(new
                     {
                         message = "User registered successfully",
-                        username = user.UserName,
+                        email = user.Email,
                         token = tokenString
                     });
-
                 }
                 else
                 {
-
                     foreach (var error in result.Errors)
                     {
                         _logger.LogInformation("User creation error: {Error}", error.Description);
@@ -188,41 +183,12 @@ namespace Team34FinalAPI.Controllers
                     }
                     return BadRequest(ModelState);
                 }
-                // Check if the error is due to duplicate username
-                if (result.Errors.Any(e => e.Code == "DuplicateUserName"))
-                {
-                    return BadRequest(new { message = "Username already exists." });
-                }
-                return BadRequest(new { message = "Registration failed." });
-            }
-            catch (DbUpdateException dbEx)
-            {
-                var sqlException = dbEx.GetBaseException() as SqlException;
-                if (sqlException != null)
-                {
-                    _logger.LogError(sqlException, "SQL Error Number: {ErrorNumber}, Message: {ErrorMessage}", sqlException.Number, sqlException.Message);
-                    return StatusCode(500, $"A database error occurred: {sqlException.Message}");
-                }
-
-                _logger.LogError(dbEx, "A database error occurred while registering the user.");
-                return StatusCode(500, "A database error occurred. Please check the details.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while registering the user.");
-                if (ex.InnerException != null)
-                {
-                    _logger.LogError(ex.InnerException, "Inner exception details.");
-                }
                 return BadRequest(new { Message = ex.Message });
             }
-        }
-
-        private string GenerateUsername(string firstName, string lastName)
-        {
-            string firstPart = firstName.Length >= 4 ? firstName.Substring(0, 4) : firstName;
-            string lastPart = lastName.Length >= 2 ? lastName.Substring(0, 2) : lastName;
-            return firstPart + lastPart;
         }
 
         [HttpPost("login")]
@@ -341,7 +307,7 @@ namespace Team34FinalAPI.Controllers
                 existingUser.Surname = uvm.Surname;
                 existingUser.PhoneNumber = uvm.PhoneNumber;
                 existingUser.Email = uvm.Email;
-                existingUser.Password = Pass.hashPassword(uvm.Password);
+                //existingUser.Password = Pass.hashPassword(uvm.Password);
                 existingUser.Role = uvm.Role;
                 existingUser.EmailConfirmed = false;
                 existingUser.PhoneNumberConfirmed = false;
@@ -412,7 +378,7 @@ namespace Team34FinalAPI.Controllers
                 existingUser.Surname = uvm.Surname;
                 existingUser.PhoneNumber = uvm.PhoneNumber;
                 existingUser.Email = uvm.Email;
-                existingUser.Password = Pass.hashPassword(uvm.Password);
+               // existingUser.Password = Pass.hashPassword(uvm.Password);
                 existingUser.EmailConfirmed = true;
                 existingUser.PhoneNumberConfirmed = true;
                 existingUser.TwoFactorEnabled = true;
