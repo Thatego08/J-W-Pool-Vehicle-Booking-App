@@ -61,46 +61,44 @@ namespace Team34FinalAPI.Services
 
         public async Task<string> RegisterAsync(string username, string password, string role, User Uvm)
         {
-            //try
+            var user = new User
             {
-                var user = new User
-                {
-                    UserName = Uvm.UserName,
-                    Name = Uvm.Name,
-                    Surname = Uvm.Surname,
-                    PhoneNumber = Uvm.PhoneNumber,
-                    Email = Uvm.Email,
-                    Password = Uvm.Password
-                    // Include other necessary properties
-                };
-                var result = await _userManager.CreateAsync(user, password);
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, role);
+                UserName = Uvm.UserName,
+                Name = Uvm.Name,
+                Surname = Uvm.Surname,
+                PhoneNumber = Uvm.PhoneNumber,
+                Email = Uvm.Email
+                // Remove custom Password assignment
+            };
 
-                    return await GenerateJwtToken(user); // Await here
-                }
-
-            }
-            //catch
-            //(Exception ex)
+            var result = await _userManager.CreateAsync(user, password);
+            if (result.Succeeded)
             {
-                throw new Exception("Registration failed");
+                await _userManager.AddToRoleAsync(user, role);
+                return await GenerateJwtToken(user);
             }
-
-
-
+            else
+            {
+                throw new Exception("Registration failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
         }
 
         public async Task<string> LoginAsync(string username, string password)
         {
-            var user = await _userManager.FindByNameAsync(username);
+            // Try to find user by email (which is also their username)
+            var user = await _userManager.FindByEmailAsync(username);
+            if (user == null)
+            {
+                // If not found by email, try by username for backward compatibility
+                user = await _userManager.FindByNameAsync(username);
+            }
+
             if (user == null || !await _userManager.CheckPasswordAsync(user, password))
             {
                 throw new Exception("Invalid login attempt");
             }
 
-            return await GenerateJwtToken(user); // Await here
+            return await GenerateJwtToken(user);
         }
     }
 }

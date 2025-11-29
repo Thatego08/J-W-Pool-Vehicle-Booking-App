@@ -89,7 +89,7 @@ namespace Team34FinalAPI.Controllers
 
             string username = GenerateUsername(dvm.Name, dvm.Surname);
 
-            var driver = new User { UserName = username, Name = dvm.Name, Surname = dvm.Surname, Email = dvm.Email, Password = Pass.hashPassword(dvm.Password), PhoneNumber = dvm.PhoneNumber, Role = "Driver" };
+            var driver = new User { UserName = username, Name = dvm.Name, Surname = dvm.Surname, Email = dvm.Email,  PhoneNumber = dvm.PhoneNumber, Role = "Driver" };
 
             try
             {
