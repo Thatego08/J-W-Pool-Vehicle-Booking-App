@@ -35,7 +35,8 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     "http://localhost:4200",
-                    "https://polite-cliff-020409010.2.azurestaticapps.net"
+                    "https://polite-cliff-020409010.2.azurestaticapps.net",
+                    "https://team34angular-b9cjgnbqg6afajhg.southafricanorth-01.azurewebsites.net/auth"
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
@@ -325,6 +326,7 @@ app.UseStaticFiles(new StaticFileOptions
         Path.Combine(Directory.GetCurrentDirectory(), "Images")),
     RequestPath = "/Images"
 });
+app.UseRouting();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
