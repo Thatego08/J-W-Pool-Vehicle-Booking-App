@@ -144,7 +144,7 @@ namespace Team34FinalAPI.Controllers
 
                     if (!await _roleManager.RoleExistsAsync(userRole))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                        await _roleManager.CreateAsync(new IdentityRole(userRole));
                     }
                     await _userManager.AddToRoleAsync(user, userRole);
 

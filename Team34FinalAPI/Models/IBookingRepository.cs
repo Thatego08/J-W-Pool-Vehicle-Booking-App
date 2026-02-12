@@ -7,7 +7,7 @@
         Task<Booking> AddBookingAsync(Booking booking);
         Task UpdateBookingAsync(Booking booking);
 
-        Task<bool> HasOverlapAsync(int vehicleId, DateTime start, DateTime end, int? excludeBookingId = null);
+        //Task<bool> HasOverlapAsync(int vehicleId, DateTime start, DateTime end, int? excludeBookingId = null);
         Task DeleteBookingAsync(int id);
         bool BookingExists(int id);
         Task<IEnumerable<Booking>> GetBookingsByUserNameAsync(string username);
