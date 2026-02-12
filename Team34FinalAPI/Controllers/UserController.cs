@@ -87,6 +87,7 @@ namespace Team34FinalAPI.Controllers
 
             try
             {
+                var userRole = string.IsNullOrWhiteSpace(model.Role) ? "Driver" : model.Role;
                 var user = new User
                 {
                     UserName = model.Email, // Use email as username
@@ -99,7 +100,7 @@ namespace Team34FinalAPI.Controllers
                     TwoFactorEnabled = false,
                     LockoutEnabled = false,
                     AccessFailedCount = 0,
-                    Role = model.Role
+                    Role = userRole
                 };
 
                 var existingUser = await _userManager.FindByEmailAsync(model.Email);
@@ -139,11 +140,13 @@ namespace Team34FinalAPI.Controllers
                         Timestamp = DateTime.UtcNow
                     });
 
-                    if (!await _roleManager.RoleExistsAsync(model.Role))
+
+
+                    if (!await _roleManager.RoleExistsAsync(userRole))
                     {
                         await _roleManager.CreateAsync(new IdentityRole(model.Role));
                     }
-                    await _userManager.AddToRoleAsync(user, model.Role);
+                    await _userManager.AddToRoleAsync(user, userRole);
 
                     // Generate JWT token
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -568,7 +571,7 @@ namespace Team34FinalAPI.Controllers
 
             await _auditLogRepository.AddLogAsync(new AuditLog
             {
-                UserName = User.Identity.Name,
+                UserName = user.Email,
                 Action = "Forgot Password",
                 Details = "User has successfully reset their password.",
                 Timestamp = DateTime.UtcNow

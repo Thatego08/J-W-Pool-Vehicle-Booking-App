@@ -34,9 +34,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                    "http://localhost:4200",
-                    "https://polite-cliff-020409010.2.azurestaticapps.net",
-                    "https://team34angular-b9cjgnbqg6afajhg.southafricanorth-01.azurewebsites.net/auth"
+                    "http://localhost:4200"
+                    
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
