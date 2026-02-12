@@ -29,11 +29,13 @@ namespace Team34FinalAPI.Controllers
         private readonly ILogger<DriverController> _logger;
         private readonly UserManager<User> _userManager;
         private readonly IAuditLogRepository _auditLogRepo;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
 
-        public DriverController(IDriverRepository driverRepository, IAuditLogRepository auditLogRepository,UserManager<User> userManager, ILogger<DriverController> Logger)
+        public DriverController(IDriverRepository driverRepository, IAuditLogRepository auditLogRepository,UserManager<User> userManager, ILogger<DriverController> Logger, RoleManager<IdentityRole> roleManager)
         {
             _driverRepository = driverRepository;
+            _roleManager = roleManager;
             this._userManager = userManager;
             _logger = Logger;
             _auditLogRepo = auditLogRepository;
@@ -141,7 +143,7 @@ namespace Team34FinalAPI.Controllers
             return firstPart + lastPart;
         }
 
-
+        [Authorize(Roles = "Admin")]   // <-- IMPORTANT: Add this attribute!
         [HttpPut]
         [Route("UpdateDriver/{userName}")]
         public async Task<IActionResult> UpdateDriver(string userName, DriverViewModel driverModel)
@@ -153,33 +155,58 @@ namespace Team34FinalAPI.Controllers
 
             try
             {
-                // Get the driver by username from _userManager
                 var existingDriver = await _userManager.FindByNameAsync(userName);
                 if (existingDriver == null)
                 {
                     return NotFound($"Driver with username '{userName}' does not exist.");
                 }
 
-                // Update driver fields (but not PasswordHash)
+                // Update basic fields
                 existingDriver.Name = driverModel.Name;
                 existingDriver.Surname = driverModel.Surname;
                 existingDriver.Email = driverModel.Email;
                 existingDriver.PhoneNumber = driverModel.PhoneNumber;
 
-                // Save the changes using _userManager
+                // --- Role update logic ---
+                var newRole = driverModel.Role;
+                bool roleChanged = !string.Equals(existingDriver.Role, newRole, StringComparison.OrdinalIgnoreCase);
+
+                if (roleChanged)
+                {
+                    // Ensure the role exists
+                    if (!await _roleManager.RoleExistsAsync(newRole))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(newRole));
+                    }
+
+                    // Remove current roles, add new role
+                    var currentRoles = await _userManager.GetRolesAsync(existingDriver);
+                    await _userManager.RemoveFromRolesAsync(existingDriver, currentRoles);
+                    await _userManager.AddToRoleAsync(existingDriver, newRole);
+
+                    // Update custom Role property
+                    existingDriver.Role = newRole;
+                }
+
+                // Save changes
                 var updateResult = await _userManager.UpdateAsync(existingDriver);
 
                 if (updateResult.Succeeded)
                 {
-                    return Ok(existingDriver);
-                    //Audit Log stuff 
+                    // Audit log
+                    string details = $"Driver details updated by {User.Identity.Name}";
+                    if (roleChanged)
+                        details += $". Role changed from '{existingDriver.Role}' to '{newRole}'";
+
                     await _auditLogRepo.AddLogAsync(new AuditLog
                     {
                         UserName = userName,
                         Action = "Driver Details Update",
-                        Details = $"Driver details updated by : " + userName,
+                        Details = details,
                         Timestamp = DateTime.UtcNow
                     });
+
+                    return Ok(existingDriver);
                 }
                 else
                 {

@@ -23,10 +23,13 @@ namespace Team34FinalAPI.Controllers
         private readonly OTPSettingsService _otpSettingsService;
         private readonly IOTPService _otpService;
         private readonly IAuditLogRepository _auditLogRepo;
-        public AdminController(IAdminRepo adminRepo, IOTPService otpService,IAuditLogRepository auditLogRepository, IConfiguration configuration, OTPSettingsService otpSettingsService, UserManager<User> userManager, ILogger<AdminController> logger)
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public AdminController(IAdminRepo adminRepo, IOTPService otpService,IAuditLogRepository auditLogRepository, IConfiguration configuration, OTPSettingsService otpSettingsService, UserManager<User> userManager, ILogger<AdminController> logger, RoleManager<IdentityRole> roleManager)
         {
             _adminRepo = adminRepo;
             _userManager = userManager;
+            _roleManager = roleManager;
             _logger = logger;
             _configuration = configuration;
             _otpService = otpService;
@@ -66,47 +69,80 @@ namespace Team34FinalAPI.Controllers
                 existingAdmin.Email = adminModel.Email;
                 existingAdmin.PhoneNumber = adminModel.PhoneNumber;
 
-                if (await _adminRepo.SaveChangesAync())
+                //Role Update
+                var newRole = adminModel.Role;
+
+                bool roleChanged = !string.Equals(existingAdmin.Role, newRole, StringComparison.OrdinalIgnoreCase);
+
+                if (roleChanged)
                 {
-                    //Audit Log stuff 
+                    // Ensure the new role exists
+                    if (!await _roleManager.RoleExistsAsync(newRole))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole(newRole));
+                    }
+
+                    // Remove from current role(s) – assuming single role
+                    var currentRoles = await _userManager.GetRolesAsync(existingAdmin);
+                    await _userManager.RemoveFromRolesAsync(existingAdmin, currentRoles);
+
+                    // Add to new role
+                    await _userManager.AddToRoleAsync(existingAdmin, newRole);
+
+                    // Update the custom Role property
+                    existingAdmin.Role = newRole;
+                }
+
+                // Save all changes via UserManager (includes Role property now)
+                var updateResult = await _userManager.UpdateAsync(existingAdmin);
+
+                if (updateResult.Succeeded)
+                {
+                    // Audit log – include role change details if applicable
+                    string details = $"Admin details updated by {User.Identity.Name}";
+                    if (roleChanged)
+                        details += $". Role changed from '{existingAdmin.Role}' to '{newRole}'";
+
                     await _auditLogRepo.AddLogAsync(new AuditLog
                     {
                         UserName = userName,
                         Action = "Update admin details",
-                        Details = $"Admin details have been updated by: " + userName,
+                        Details = details,
                         Timestamp = DateTime.UtcNow
                     });
 
-
                     return Ok(existingAdmin);
+                }
+                else
+                {
+                    foreach (var error in updateResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return BadRequest(ModelState);
                 }
             }
             catch (Exception)
             {
                 return StatusCode(500, "Internal server error. Please contact support");
             }
-            return BadRequest("Your request is invalid");
         }
 
-
         [Authorize(Roles = "Admin")]
-
-        [HttpGet]
-        [Route("SearchAdmin/{userName}")]
-        public async Task<IActionResult> GetAdminAsync(string userName)
+        [HttpGet("search/{userName}")]
+        public async Task<IActionResult> SearchAdmin(string userName)
         {
             try
             {
-                var results = await _adminRepo.GetAdminAsync(userName);
-                if (results == null) return NotFound("Admin does not exist. Enter a valid admin");
-                return Ok(results);
-
+                var admin = await _adminRepo.GetAdminAsync(userName);
+                if (admin == null)
+                    return NotFound("Admin does not exist. Enter a valid admin.");
+                return Ok(admin);
             }
             catch (Exception)
             {
-                return StatusCode(500, "Internal server error. Please contact support");
+                return StatusCode(500, "Internal server error. Please contact support.");
             }
-            return BadRequest("Your request is invalid");
         }
 
 
@@ -167,6 +203,24 @@ namespace Team34FinalAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("{userName}")]          //  RESTful route
+        public async Task<IActionResult> GetAdminByUserName(string userName)
+        {
+            try
+            {
+                var admin = await _adminRepo.GetAdminAsync(userName);
+                if (admin == null)
+                    return NotFound($"Admin '{userName}' not found.");
+
+                // Ensure the Role property is populated (should be, if your repo returns the full User)
+                return Ok(admin);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal server error. Please contact support.");
+            }
+        }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete]
