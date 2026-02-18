@@ -5,7 +5,8 @@
         public int RateTypeID { get; set; }  // For creating/updating a rate
         public string RateTypeName { get; set; }
      */
-        
+        public int RateID { get; set; }
+
         public int  ProjectID { get; set; }
         public decimal RateValue { get; set; }
         

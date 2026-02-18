@@ -36,7 +36,8 @@ namespace Team34FinalAPI.Controllers
                 AdminName = service.AdminName,
                 AdminEmail = service.AdminEmail,
                 Description = service.Description,
-                ServiceDate = service.ServiceDate
+                StartDate = service.StartDate,
+                EndDate = service.EndDate
             }).ToList();
 
             return Ok(serviceDtos);
@@ -59,7 +60,8 @@ namespace Team34FinalAPI.Controllers
                 AdminName = service.AdminName,
                 AdminEmail = service.AdminEmail,
                 Description = service.Description,
-                ServiceDate = service.ServiceDate
+                StartDate = service.StartDate,
+                EndDate = service.EndDate
             };
 
             return Ok(serviceDto);
@@ -69,23 +71,34 @@ namespace Team34FinalAPI.Controllers
         [HttpPost("CreateService")]
         public async Task<ActionResult<ServiceDto>> CreateService(ServiceDto serviceDto)
         {
+            // Validate dates
+            if (serviceDto.EndDate < serviceDto.StartDate)
+                return BadRequest("End date cannot be before start date.");
+
+            // Check for overlapping service for the same vehicle
+            var overlapping = await _context.Service
+                .AnyAsync(s => s.VehicleID == serviceDto.VehicleID
+                            && s.StartDate < serviceDto.EndDate
+                            && s.EndDate > serviceDto.StartDate);
+            if (overlapping)
+                return BadRequest("Vehicle already has a service scheduled during that period.");
+
             var service = new Service
             {
                 VehicleID = serviceDto.VehicleID,
                 AdminName = serviceDto.AdminName,
                 AdminEmail = serviceDto.AdminEmail,
                 Description = serviceDto.Description,
-                ServiceDate = serviceDto.ServiceDate
+                StartDate = serviceDto.StartDate,
+                EndDate = serviceDto.EndDate
             };
 
             _context.Service.Add(service);
             await _context.SaveChangesAsync();
 
             serviceDto.ServiceID = service.ServiceID;
-
             return CreatedAtAction(nameof(GetServiceById), new { serviceId = service.ServiceID }, serviceDto);
         }
-
         // PUT: api/service/{id}
         [HttpPut("UpdateService/{id}")]
         public async Task<IActionResult> UpdateService(int id, ServiceDto serviceDto)
@@ -105,8 +118,8 @@ namespace Team34FinalAPI.Controllers
             service.AdminName = serviceDto.AdminName;
             service.AdminEmail = serviceDto.AdminEmail;
             service.Description = serviceDto.Description;
-            service.ServiceDate = serviceDto.ServiceDate;
-
+            service.StartDate = serviceDto.StartDate;
+            service.EndDate = serviceDto.EndDate;
             try
             {
                 await _context.SaveChangesAsync();

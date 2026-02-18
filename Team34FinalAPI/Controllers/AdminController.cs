@@ -38,22 +38,30 @@ namespace Team34FinalAPI.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet]
-        [Route("getAllAdmins")]
+        [HttpGet("getAllAdmins")]
         public async Task<IActionResult> GetAllAdmins()
         {
             try
             {
-                var results = await _adminRepo.GetAllAdminsAsync();
-                return Ok(results);
+                var admins = await _userManager.GetUsersInRoleAsync("Admin");
+                // Optional: project to a DTO that shows the role as "Admin"
+                var result = admins.Select(u => new
+                {
+                    u.UserName,
+                    u.Name,
+                    u.Surname,
+                    u.Email,
+                    u.PhoneNumber,
+                    Role = "Admin"  // Hardcode or fetch actual roles if needed
+                });
+                return Ok(result);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error fetching admins");
                 return StatusCode(500, "Internal Server Error. Please Contact Support");
             }
         }
-
-
         [Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("UpdateAdmin/{userName}")]

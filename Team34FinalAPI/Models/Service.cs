@@ -16,7 +16,10 @@ namespace Team34FinalAPI.Models
 
         public string Description { get; set; } //Additional Details
 
-        public DateTime ServiceDate { get; set; }
+        //public DateTime ServiceDate { get; set; }
+
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
 
     }
 }

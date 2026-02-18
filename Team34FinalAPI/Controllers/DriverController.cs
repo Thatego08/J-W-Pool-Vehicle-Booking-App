@@ -142,8 +142,7 @@ namespace Team34FinalAPI.Controllers
             string lastPart = lastName.Length >= 2 ? lastName.Substring(0, 2) : lastName;
             return firstPart + lastPart;
         }
-
-        [Authorize(Roles = "Admin")]   // <-- IMPORTANT: Add this attribute!
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         [Route("UpdateDriver/{userName}")]
         public async Task<IActionResult> UpdateDriver(string userName, DriverViewModel driverModel)
@@ -170,41 +169,62 @@ namespace Team34FinalAPI.Controllers
                 // --- Role update logic ---
                 var newRole = driverModel.Role;
                 bool roleChanged = !string.Equals(existingDriver.Role, newRole, StringComparison.OrdinalIgnoreCase);
+                IList<string> oldRoles = null; // Declared here to be accessible in audit log
 
                 if (roleChanged)
                 {
-                    // Ensure the role exists
-                    if (!await _roleManager.RoleExistsAsync(newRole))
+                    // Capture the old roles for audit logging
+                    oldRoles = await _userManager.GetRolesAsync(existingDriver);
+
+                    // Ensure the new role exists (case‑sensitive as per Identity defaults)
+                    var role = await _roleManager.FindByNameAsync(newRole);
+                    if (role == null)
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(newRole));
+                        role = new IdentityRole(newRole);
+                        await _roleManager.CreateAsync(role);
                     }
 
-                    // Remove current roles, add new role
-                    var currentRoles = await _userManager.GetRolesAsync(existingDriver);
-                    await _userManager.RemoveFromRolesAsync(existingDriver, currentRoles);
+                    // Remove current roles
+                    if (oldRoles.Any())
+                    {
+                        await _userManager.RemoveFromRolesAsync(existingDriver, oldRoles);
+                    }
+
+                    // Add to new role
                     await _userManager.AddToRoleAsync(existingDriver, newRole);
 
-                    // Update custom Role property
-                    existingDriver.Role = newRole;
+                    // DO NOT set existingDriver.Role manually – it's read‑only after save
+                    // existingDriver.Role = newRole;   // <-- REMOVED
                 }
 
-                // Save changes
+                // Save changes to basic fields
                 var updateResult = await _userManager.UpdateAsync(existingDriver);
 
                 if (updateResult.Succeeded)
                 {
                     // Audit log
-                    string details = $"Driver details updated by {User.Identity.Name}";
+                    string details = $"Driver details updated by {User.Identity?.Name}";
                     if (roleChanged)
-                        details += $". Role changed from '{existingDriver.Role}' to '{newRole}'";
-
-                    await _auditLogRepo.AddLogAsync(new AuditLog
                     {
-                        UserName = userName,
-                        Action = "Driver Details Update",
-                        Details = details,
-                        Timestamp = DateTime.UtcNow
-                    });
+                        details += $". Role changed from '{string.Join(", ", oldRoles)}' to '{newRole}'";
+                    }
+
+                    // Wrap audit log in try-catch to prevent 500 if it fails
+                    try
+                    {
+                        await _auditLogRepo.AddLogAsync(new AuditLog
+                        {
+                            UserName = userName,
+                            Action = "Driver Details Update",
+                            Details = details,
+                            Timestamp = DateTime.UtcNow
+                        });
+                    }
+                    catch (Exception auditEx)
+                    {
+                        _logger.LogError(auditEx, "Audit log failed for driver {UserName}", userName);
+                        // Still return success – main update succeeded
+                    }
 
                     return Ok(existingDriver);
                 }
@@ -223,7 +243,6 @@ namespace Team34FinalAPI.Controllers
                 return StatusCode(500, "Internal server error. Please contact support.");
             }
         }
-
 
 
         [Authorize(Roles = "Admin")]

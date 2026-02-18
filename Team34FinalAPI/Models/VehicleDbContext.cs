@@ -363,16 +363,18 @@ namespace Team34FinalAPI.Models
             modelBuilder.Entity<Service>(entity =>
             {
                 entity.HasKey(f => f.ServiceID);
-                entity.HasAlternateKey(f => f.VehicleID);
+             //   entity.HasAlternateKey(f => f.VehicleID);
                 entity.Property(f => f.AdminName).IsRequired();
-                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(25);
+                entity.Property(f => f.AdminEmail).IsRequired().HasMaxLength(500); // Change to Max for prod
                 entity.Property(f => f.Description).IsRequired();
-                entity.Property(f => f.ServiceDate).IsRequired();
+                //entity.Property(f => f.ServiceDate).IsRequired();
+                entity.Property(f => f.StartDate).IsRequired();
+                entity.Property(f => f.EndDate).IsRequired();
             });
 
 
             modelBuilder.Entity<Service>().HasData(
-                new Service { ServiceID = 1, VehicleID = 1, AdminEmail = "u22492161@tuks.co.za", AdminName = "Busi", Description = " Doors not closing", ServiceDate = new DateTime(2024, 7, 25)}
+                new Service { ServiceID = 1, VehicleID = 1, AdminEmail = "u22492161@tuks.co.za", AdminName = "Busi", Description = " Doors not closing", StartDate= new DateTime(2026, 2, 25), EndDate = new DateTime(2026,2,28)}
                 );
 
         }

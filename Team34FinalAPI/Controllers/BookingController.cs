@@ -570,6 +570,7 @@ namespace Team34FinalAPI.Controllers
                     StartDate = booking.StartDate,
                     EndDate = booking.EndDate,
                     VehicleName = vehicleName,
+                    VehicleRegistration = booking.Vehicle.RegistrationNumber,
                     ProjectNumber = projectNumber
                 };
 
