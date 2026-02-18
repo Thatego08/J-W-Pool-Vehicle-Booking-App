@@ -22,7 +22,7 @@ namespace Team34FinalAPI.Models
         Task<VehicleFuelType[]> GetAllFuelTypeAsync();
         Task<Colour[]> GetAllColoursAsync();
         Task<InsuranceCover[]> GetInsuranceCoverAsync();
-        Task<LicenseDisk[]> GetAllLicenseDiskAsync();
+        Task<IEnumerable<object>> GetAllLicenseDiskAsync();
         Task<IEnumerable<VehicleChecklist>> GetChecklistsAsync();
 
         Task<Status[]> GetAllStatusAsync();

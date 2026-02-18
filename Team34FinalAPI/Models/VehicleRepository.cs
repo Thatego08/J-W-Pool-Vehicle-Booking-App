@@ -91,16 +91,27 @@ namespace Team34FinalAPI.Models
 
         public async Task<IEnumerable<Vehicle>> GetAvailableVehiclesAsync(DateTime startDate, DateTime endDate)
         {
+            // Log input dates
+            Console.WriteLine($"GetAvailableVehiclesAsync called with start={startDate}, end={endDate}");
+
             // Get the IDs of vehicles that have conflicting bookings
             var unavailableVehicleIds = await _bContext.Bookings
                 .Where(b => (b.StartDate < endDate && b.EndDate > startDate && b.StatusId == 1)).Include(b => b.Status) // Conflict in date ranges
                 .Select(b => b.VehicleId)
                 .ToListAsync();
-         
+
+            // Get vehicles that have a service on any day within the range
+            var unavailableServiceIds = await _context.Service
+                .Where(s => s.StartDate < endDate && s.EndDate > startDate)
+                .Select(s => s.VehicleID)
+                .ToListAsync();
+
+            // Combine both sets of unavailable vehicle IDs
+            var unavailableBookingIDs = unavailableVehicleIds.Union(unavailableServiceIds).Distinct().ToList();
 
             // Return all vehicles that are not in the unavailable list
             return await _context.Vehicles
-                .Where(v => !unavailableVehicleIds.Contains(v.VehicleID)) // Available vehicles not booked
+                .Where(v => !unavailableBookingIDs.Contains(v.VehicleID)) // Available vehicles not booked
                 .ToListAsync();
         }
 
@@ -112,10 +123,17 @@ namespace Team34FinalAPI.Models
                 .Select(b => b.VehicleId)
                 .ToListAsync();
 
+            var conflictingServiceIds = await _context.Service
+           .Where(s => s.StartDate < endDate && s.EndDate > startDate)
+           .Select(s => s.VehicleID)
+           .ToListAsync();
+
+            var unavailableVehicleIds = conflictingBookings.Union(conflictingServiceIds).Distinct().ToList();
+
             // Build base query
             var query = _context.Vehicles
                 .Where(v => v.StatusID == 1)
-                .Where(v => !conflictingBookings.Contains(v.VehicleID));
+                .Where(v => !unavailableVehicleIds.Contains(v.VehicleID));
 
             // Apply vehicle type filter
             if (!string.IsNullOrEmpty(vehicleType) && vehicleType != "All")
@@ -255,10 +273,20 @@ namespace Team34FinalAPI.Models
             return await query.ToArrayAsync();
         }
 
-        public async Task<LicenseDisk[]> GetAllLicenseDiskAsync()
+        public async Task<IEnumerable<object>> GetAllLicenseDiskAsync()
         {
-            IQueryable<LicenseDisk> query = _context.LicenseDisks;
-            return await query.ToArrayAsync();
+            var disks = await (from disk in _context.LicenseDisks
+                               join vehicle in _context.Vehicles on disk.VehicleID equals vehicle.VehicleID
+                               select new
+                               {
+                                   Id = disk.Id,
+                                   VehicleID = disk.VehicleID,
+                                   VehicleName = vehicle.Name,
+                                   VehicleRegistration = vehicle.RegistrationNumber,
+                                   LicenseExpiryDate = disk.LicenseExpiryDate,
+                                   Status = disk.LicenseExpiryDate < DateTime.Today ? "Expired" : "Valid"
+                               }).ToListAsync();
+            return disks;
         }
 
         public async Task<IEnumerable<VehicleChecklist>> GetChecklistsAsync()

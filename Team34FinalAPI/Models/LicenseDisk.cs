@@ -6,6 +6,10 @@
 
         public int VehicleID { get; set; }
 
+        //public string VehicleName { get; set; }
+
+        //public string VehicleRegistration { get; set; }
+
         public DateTime LicenseExpiryDate { get; set; }
 
         public string Status

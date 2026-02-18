@@ -7,9 +7,9 @@ namespace Team34FinalAPI.Models
     public class RateRepository : IRateRepo
     {
 
-        private readonly AppDbContext _context;
+        private readonly BookingDbContext _context;
 
-        public RateRepository(AppDbContext context)
+        public RateRepository(BookingDbContext context)
         {
             _context = context;
         }
@@ -21,6 +21,7 @@ namespace Team34FinalAPI.Models
                 .Include(r => r.Project)
                 .Select(r => new RateViewModel
                 {
+                    RateID= r.RateID,
                     ProjectID = r.ProjectID,
                     RateValue = r.RateValue,
                     ApplicableTimePeriod = r.ApplicableTimePeriod,

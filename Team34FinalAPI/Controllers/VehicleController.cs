@@ -57,7 +57,7 @@ namespace Team34FinalAPI.Controllers
             {
 
                 var vehicles = _vehicleContext.Vehicles
-               .Include(v => v.Status)
+               //.Include(v => v.Status)
                .Select(v => new VehicleViewModel
                {
                    VehicleID = v.VehicleID,
@@ -94,6 +94,7 @@ namespace Team34FinalAPI.Controllers
             catch (Exception ex)
             {
                 // Log error
+                _logger.LogError(ex, "Error fetching vehicles");
                 return StatusCode(500, "Internal server error");
             }
 
@@ -875,6 +876,7 @@ namespace Team34FinalAPI.Controllers
             catch (Exception ex)
             {
                 // Log the exception (ex)
+                _logger.LogError(ex, "Error retrieving license disks");
                 return StatusCode(500, "Internal Server Error: Unable to retrieve license disks.");
             }
         }

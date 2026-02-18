@@ -10,6 +10,7 @@
         public DateTime EndDate { get; set; }
         public string VehicleName { get; set; }
 
+        public string VehicleRegistration { get; set; }
         public int? ProjectNumber { get; set; }
 
     }

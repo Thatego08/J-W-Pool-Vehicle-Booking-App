@@ -14,6 +14,11 @@ namespace Team34FinalAPI.Models
         public DbSet<Event> Events { get; set; }
         public DbSet<InspectionList> InspectionLists { get; set; }
 
+        //Rate additions
+        public DbSet<Rate> Rates { get; set; }
+        public DbSet<RateType> RateTypes { get; set; }
+        public DbSet<FAQ> Faqs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Explicitly mapping tables
@@ -71,6 +76,42 @@ namespace Team34FinalAPI.Models
    );
 
 
+            // Rate configuration
+
+
+            modelBuilder.Entity<Rate>().ToTable("Rate");
+            modelBuilder.Entity<RateType>().ToTable("RateTypes");
+            modelBuilder.Entity<Rate>(entity =>
+            {
+                entity.HasKey(r => r.RateID);
+
+                entity.HasOne(r => r.Project)
+                      .WithMany(p => p.Rates)
+                      .HasForeignKey(r => r.ProjectID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(r => r.RateType)
+                      .WithMany(rt => rt.Rates)
+                      .HasForeignKey(r => r.RateTypeID)
+                      .IsRequired(false); // if RateTypeID is nullable
+            });
+
+           
+
+
+            // RateType configuration
+            modelBuilder.Entity<RateType>(entity =>
+            {
+                entity.HasKey(rt => rt.RateTypeID);
+            });
+
+            // FAQ configuration
+            modelBuilder.Entity<FAQ>(entity =>
+            {
+                entity.HasKey(f => f.FAQId);
+            });
+
+
             // Seed data for Bookings
             modelBuilder.Entity<Booking>().HasData(
                 new Booking
@@ -113,6 +154,8 @@ namespace Team34FinalAPI.Models
                     StatusId = 2
                 }
                 // Add more bookings as needed
+
+
             );
         }
 

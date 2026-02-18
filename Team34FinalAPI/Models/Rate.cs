@@ -21,6 +21,10 @@ public class Rate
 
     public Project Project { get; set; }
 
+    // Foreign key to RateType (optional)
+    public int? RateTypeID { get; set; }
+    public RateType RateType { get; set; }
+
     public string? ApplicableTimePeriod { get; set; }
 
     public string? Conditions { get; set; }
