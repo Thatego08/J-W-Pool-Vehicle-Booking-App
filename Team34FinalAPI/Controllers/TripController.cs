@@ -59,6 +59,7 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest("Invalid PreChecklistId.");
                 }
             }
+            //updated
             var travelEnd = tvm.TravelEnd != default(DateTime) ? tvm.TravelEnd : tvm.TravelStart;
             var trip = new Trip
             {
