@@ -59,7 +59,8 @@ namespace Team34FinalAPI.Controllers
                     return BadRequest("Invalid PreChecklistId.");
                 }
             }
-
+            //updated
+            var travelEnd = tvm.TravelEnd != default(DateTime) ? tvm.TravelEnd : tvm.TravelStart;
             var trip = new Trip
             {
                 Name = tvm.Name,
@@ -184,7 +185,7 @@ namespace Team34FinalAPI.Controllers
             return Ok(new { Message = "Trip updated successfully" });
         }
 
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("GetAllTrips")]
         public async Task<IActionResult> GetAllTrips()
         {
