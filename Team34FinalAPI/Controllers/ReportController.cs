@@ -245,7 +245,7 @@ namespace Team34FinalAPI.Controllers
                     worksheet.Cells[row, 4].Value = trip.BookingStart.ToString("g");
                     worksheet.Cells[row, 5].Value = trip.BookingEnd.ToString("g");
                     worksheet.Cells[row, 6].Value = trip.TravelStart.ToString("g");
-                    worksheet.Cells[row, 7].Value = trip.TravelEnd.ToString("g");
+                    worksheet.Cells[row, 7].Value = trip.TravelEnd.Value.ToString("g");
                     worksheet.Cells[row, 8].Value = trip.EarliestStart.ToString("g");
 
                     // Duration

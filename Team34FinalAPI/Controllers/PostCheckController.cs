@@ -99,6 +99,16 @@ namespace Team34FinalAPI.Controllers
             try
             {
                 _context.PostChecks.Add(postCheck);
+                // Update Trips.TravelEnd safely if provided
+                if (pcvm.TravelEnd.HasValue && pcvm.TripId > 0)
+                {
+                    var trip = await _context.Trips.FindAsync(pcvm.TripId);
+                    if (trip != null)
+                    {
+                        trip.TravelEnd = pcvm.TravelEnd.Value;
+                    }
+                }
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException dbEx)

@@ -12,7 +12,7 @@ namespace Team34FinalAPI.ViewModels
         public DateTime BookingEnd { get; set; }
 
         public DateTime TravelStart { get; set; }
-        public DateTime TravelEnd { get; set; }
+        public DateTime? TravelEnd { get; set; }
 
         public DateTime EarliestStart { get; set; }
 
