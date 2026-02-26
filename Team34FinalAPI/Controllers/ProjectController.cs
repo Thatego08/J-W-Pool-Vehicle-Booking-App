@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using iText.Kernel.Counter.Context;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,12 +18,14 @@ namespace Team34FinalAPI.Controllers
         private readonly IProjectRepository _projectRepository;
         private readonly IStatusRepository _statusRepository;  // Added status repository for status lookups
         private readonly ILogger<ProjectController> _logger;
+        private readonly RateEEDBContext _context;
 
-        public ProjectController(IProjectRepository projectRepository, IStatusRepository statusRepository, ILogger<ProjectController> logger)
+        public ProjectController(IProjectRepository projectRepository, IStatusRepository statusRepository, ILogger<ProjectController> logger, RateEEDBContext context)
         {
             _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
             _statusRepository = statusRepository ?? throw new ArgumentNullException(nameof(statusRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context;
         }
 
         // POST: Add a new project
@@ -52,7 +55,7 @@ namespace Team34FinalAPI.Controllers
                     Description = pvm.Description,
                     TaskCode = pvm.TaskCode,
                     ActivityCode = pvm.ActivityCode,
-                    StatusId = status.Id // Use the validated StatusId
+                    StatusId = pvm.StatusId ?? 1 // Use the validated StatusId
                 };
 
                 _logger.LogInformation("Adding project: {@Project}", project);
@@ -60,8 +63,21 @@ namespace Team34FinalAPI.Controllers
                 await _projectRepository.AddProjectAsync(project);
                 await _projectRepository.SaveChangesAsync();
 
+                // If RateID list is provided, update those rates
+                if (pvm.RateID != null && pvm.RateID.Any())
+                {
+                    var rates = await _context.RatesEE
+                        .Where(r => pvm.RateID.Contains(r.RateId))
+                        .ToListAsync();
+                    foreach (var rate in rates)
+                    {
+                        rate.ProjectId = project.ProjectID;
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
                 _logger.LogInformation("Project added successfully with ID: {ProjectID}", project.ProjectID);
-                return Ok("Project added successfully.");
+                return Ok(new { message = "Project added successfully." });
             }
             catch (Exception ex)
             {
@@ -151,8 +167,10 @@ namespace Team34FinalAPI.Controllers
                     Description = p.Description,
                     ActivityCode = p.ActivityCode,
                     StatusId = p.StatusId,
-                    StatusName = p.Status.Name // Include status name in response
+                    StatusName = p.Status.Name, // Include status name in response
+                    RateID = p.RatesEE?.Select(r => r.RateId).ToList() ?? new List<int>() // ensures not null
                 }).ToList();
+            
 
                 return Ok(projectViewModels);
             }
