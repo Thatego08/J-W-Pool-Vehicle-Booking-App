@@ -15,7 +15,7 @@ namespace Team34FinalAPI.Models
 
         public string Comment { get; set; }
         public DateTime TravelStart { get; set; }
-        public DateTime TravelEnd { get; set; }
+        public DateTime? TravelEnd { get; set; }
 
         // Foreign key for PreChecklist
         public int? PreChecklistId { get; set; }

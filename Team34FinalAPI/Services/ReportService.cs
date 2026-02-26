@@ -358,15 +358,19 @@ namespace Team34FinalAPI.Services
                     BookingEnd = booking.EndDate,
 
                     TravelStart = trip.TravelStart,
-                    TravelEnd = trip.TravelEnd,
+                    TravelEnd = trip.TravelEnd, // nullable is fine
 
-                    EarliestStart = booking.StartDate < trip.TravelStart ? booking.StartDate : trip.TravelStart,
+                    EarliestStart = booking.StartDate < trip.TravelStart
+                ? booking.StartDate
+                : trip.TravelStart,
 
-                    Duration = (trip.TravelEnd.Date - trip.TravelStart.Date).Days + 1,
+                    Duration = trip.TravelEnd.HasValue
+           ? (trip.TravelEnd.Value.Date - trip.TravelStart.Date).Days + 1
+           : 0, // or handle as needed if TravelEnd is TravelEnd
 
 
 
-                    OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
+            OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
                     ClosingKms = post != null ? post.ClosingKms : (decimal?)null,
                     TravelledKms = (pre != null && post != null)
                         ? (decimal?)(post.ClosingKms - pre.OpeningKms)

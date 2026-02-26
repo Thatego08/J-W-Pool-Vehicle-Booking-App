@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace Team34FinalAPI.Models
@@ -45,5 +46,8 @@ namespace Team34FinalAPI.Models
         public string AdditionalComments { get; set; }
 
         public ICollection<TripMedia> TripMedia { get; set; } = new List<TripMedia>();
+
+        [NotMapped]
+        public DateTime? TravelEnd { get; set; }
     }
 }

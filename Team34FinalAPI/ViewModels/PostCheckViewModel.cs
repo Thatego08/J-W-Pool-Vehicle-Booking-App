@@ -26,6 +26,7 @@ namespace Team34FinalAPI.ViewModels
         public string JackAndWheelSpannerPresent { get; set; }
         public string Brakes { get; set; }
         public string Handbrake { get; set; }
+        public DateTime? TravelEnd { get; set; }
         public string JWMarketingMagnets { get; set; }
         public string CheckedByJWSecurity { get; set; }
         public string LicenseDiskValid { get; set; }

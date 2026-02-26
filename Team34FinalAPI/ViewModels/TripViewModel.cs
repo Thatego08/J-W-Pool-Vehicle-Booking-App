@@ -10,7 +10,7 @@
     
         public string Comment { get; set; }
         public DateTime TravelStart { get; set; }
-        public DateTime TravelEnd { get; set; }
+        public DateTime? TravelEnd { get; set; }
        
       
      
