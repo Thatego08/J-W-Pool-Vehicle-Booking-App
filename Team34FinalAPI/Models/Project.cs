@@ -16,6 +16,8 @@
         // This line establishes the one-to-many relationship
         public ICollection<Booking> Bookings { get; set; }
         public ICollection<Rate> Rates { get; set; }
-    
-}
+
+        public ICollection<RatesEE> RatesEE { get; set; } = new List<RatesEE>();
+
+    }
 }
