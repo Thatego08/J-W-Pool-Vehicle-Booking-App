@@ -108,6 +108,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddDbContext<BookingDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Configure RateDbContext
+builder.Services.AddDbContext<RateEEDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure TripDbContext
 builder.Services.AddDbContext<TripDbContext>(options =>
