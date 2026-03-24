@@ -305,7 +305,11 @@ catch (Exception ex)
 // Configure the HTTP request pipeline.
 // Always enable Swagger (useful during Azure debugging)
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "J&W API V1");
+    c.RoutePrefix = string.Empty; // This makes Swagger show up at the root URL
+});
 
 if (app.Environment.IsDevelopment())
 {
