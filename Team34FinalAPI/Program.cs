@@ -23,6 +23,7 @@ using Newtonsoft.Json.Linq;
 using User = Team34FinalAPI.Models.User;
 using Org.BouncyCastle.Crypto.Tls;
 using Microsoft.Extensions.FileProviders;
+using Npgsql;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,12 +35,12 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy.WithOrigins(
-                    "http://localhost:4200"
-                    
+                    "http://localhost:4200",
+                    "https://your-frontend-name.vercel.app" // ADD YOUR VERCEL URL HERE
                 )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials(); // Add this if you’re using cookies/auth headers
+                .AllowCredentials();
         });
 });
 
@@ -84,8 +85,8 @@ builder.Services.AddSwaggerGen(c =>
 
 
 //Inspection List exporting
-var context = new CustomAssemblyLoadContext();
-context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "wkhtmltox.dll"));
+//var context = new CustomAssemblyLoadContext();
+//context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "wkhtmltox.dll"));
 
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
@@ -102,28 +103,28 @@ builder.Logging.AddDebug();
 //Config DbContexts
 //Configure AppDbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //Configure BookingDbContext
 builder.Services.AddDbContext<BookingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //Configure RateDbContext
 builder.Services.AddDbContext<RateEEDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure TripDbContext
 builder.Services.AddDbContext<TripDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 // Configure VehicleDbContext
 builder.Services.AddDbContext<VehicleDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure UserDbContext & Identity
 builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 //Identity config
 
