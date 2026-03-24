@@ -48,6 +48,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 
+//booking fix
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
