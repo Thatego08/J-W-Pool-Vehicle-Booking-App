@@ -206,7 +206,10 @@ namespace Team34FinalAPI.Controllers
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "DbUpdateException in PostBookingAsync");
+                // This will print the EXACT database error (e.g., "duplicate key" or "null constraint")
+                var innerException = ex.InnerException?.Message ?? ex.Message;
+                _logger.LogError("DATABASE ERROR: {Message}", innerException);
+                //_logger.LogError(ex, "DbUpdateException in PostBookingAsync");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
             catch (Exception ex)
