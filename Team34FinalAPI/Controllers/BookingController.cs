@@ -161,6 +161,7 @@ namespace Team34FinalAPI.Controllers
                     Type = bookingViewModel.Type,
                     StartDate = bookingViewModel.StartDate,
                     EndDate = bookingViewModel.EndDate,  // Add end date
+                    Vehicle = vehicle,
                     VehicleId = vehicle.VehicleID,
                     ProjectId = projectId,
                     StatusId = 2 // Assuming '2' means 'Booked'
