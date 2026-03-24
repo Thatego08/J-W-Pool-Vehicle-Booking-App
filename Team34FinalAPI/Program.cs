@@ -270,7 +270,7 @@ var request = new MailjetRequest
 {
     new JObject
     {
-        {"Email", "www.sabzayj7@gmailcom"}
+        {"Email", "u20446251@tuks.co.za"}
     }
 })
 .Property(Send.SandboxMode, false); // Enable sandbox mode
@@ -304,43 +304,37 @@ catch (Exception ex)
 //Console.WriteLine("Email sent successfully.");
 // Configure the HTTP request pipeline.
 // Always enable Swagger (useful during Azure debugging)
+// 1. Keep this version (it's the correct one)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "J&W API V1");
-    c.RoutePrefix = string.Empty; // This makes Swagger show up at the root URL
+    c.RoutePrefix = string.Empty;
 });
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
+// 2. Simplifed Exception handling for easier debugging on Render
+app.UseDeveloperExceptionPage();
 
 app.UseHttpsRedirection();
 
-
-
-// Add this line to serve files from Images directory
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
         Path.Combine(Directory.GetCurrentDirectory(), "Images")),
     RequestPath = "/Images"
 });
+
 app.UseRouting();
+
+// 3. CORS MUST come after Routing and before Authentication
 app.UseCors("AllowSpecificOrigin");
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSwagger();
-app.UseSwaggerUI();
-app.MapControllers();
 
+// 4. (Make sure you deleted the extra Swagger lines that were here)
+
+app.MapControllers();
 
 //Role seeding. Happens during runtime
 
