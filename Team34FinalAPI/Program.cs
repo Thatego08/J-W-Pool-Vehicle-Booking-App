@@ -395,7 +395,8 @@ public static class RoleInitializer
                     Name = userRole.Username,
                     Surname = "User", // Set the surname appropriately
                     Role = userRole.Role,
-                    PhoneNumber = "0123456789"
+                    PhoneNumber = "0123456789",
+                    ProfilePhotoPath = "default.png"
                 };
                 await userManager.CreateAsync(user, userRole.Password);
             }
