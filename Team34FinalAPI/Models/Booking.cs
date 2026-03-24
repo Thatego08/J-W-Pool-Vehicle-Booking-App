@@ -15,8 +15,8 @@ namespace Team34FinalAPI.Models
         public DateTime EndDate { get; set; }
         [Required]
         public int VehicleId { get; set; }
-        [Required]
-        public Vehicle Vehicle { get; set; }
+        
+        public Vehicle? Vehicle { get; set; }
 
         public int? ProjectId { get; set; }
         
