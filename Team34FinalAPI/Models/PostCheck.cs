@@ -12,6 +12,7 @@ namespace Team34FinalAPI.Models
         public int PostCheckId { get; set; }
 
         // Foreign key property for Trip
+        [ForeignKey("Trip")]
         public int TripId { get; set; }
 
         [JsonIgnore] // Avoid circular references in JSON serialization

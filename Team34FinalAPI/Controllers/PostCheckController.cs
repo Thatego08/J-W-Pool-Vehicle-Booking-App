@@ -39,6 +39,17 @@ namespace Team34FinalAPI.Controllers
                 return BadRequest("PostCheckViewModel cannot be null");
             }
 
+            // 1. Fetch the trip first. 
+            // This ensures TripId is valid AND loads the trip into the tracker for the TravelEnd update.
+            var trip = await _context.Trips.FindAsync(pcvm.TripId);
+
+            if (trip == null)
+            {
+                // If this hits, it means pcvm.TripId is likely 0 or 
+                // doesn't match a real ID in the 'Trips' table.
+                return BadRequest($"Trip ID {pcvm.TripId} not found in the 'Trips' table. Please verify the Trip ID being sent from the frontend.");
+            }
+
             var postCheck = new PostCheck
             {
                 TripId = pcvm.TripId,
@@ -67,10 +78,10 @@ namespace Team34FinalAPI.Controllers
                 LicenseDiskValid = pcvm.LicenseDiskValid,
                 Comments = pcvm.Comments,
                 AdditionalComments = pcvm.AdditionalComments,
-                TripMedia = new List<TripMedia>() // Initialize the list
+                TripMedia = new List<TripMedia>()
             };
 
-            // Handle MediaFiles as optional
+            // Handle MediaFiles
             if (pcvm.MediaFiles != null && pcvm.MediaFiles.Count > 0)
             {
                 foreach (var file in pcvm.MediaFiles)
@@ -80,17 +91,13 @@ namespace Team34FinalAPI.Controllers
                         using (var ms = new MemoryStream())
                         {
                             await file.CopyToAsync(ms);
-                            var fileBytes = ms.ToArray();
-
-                            var tripMedia = new TripMedia
+                            postCheck.TripMedia.Add(new TripMedia
                             {
-                                Description = pcvm.MediaDescription, // No need to take FirstOrDefault
+                                Description = pcvm.MediaDescription,
                                 FileName = file.FileName,
-                                FileContent = fileBytes,
+                                FileContent = ms.ToArray(),
                                 MediaType = file.ContentType
-                            };
-
-                            postCheck.TripMedia.Add(tripMedia);
+                            });
                         }
                     }
                 }
@@ -98,32 +105,29 @@ namespace Team34FinalAPI.Controllers
 
             try
             {
+                // 2. Add the PostCheck
                 _context.PostChecks.Add(postCheck);
-                // Update Trips.TravelEnd safely if provided
-                if (pcvm.TravelEnd.HasValue && pcvm.TripId > 0)
-                {
-                    var trip = await _context.Trips.FindAsync(pcvm.TripId);
-                    if (trip != null)
-                    {
-                        trip.TravelEnd = pcvm.TravelEnd.Value;
-                    }
-                }
+
+                // 3. Update the Trip's end time. 
+                // If the user didn't provide one from the frontend, we use the current time.
+                trip.TravelEnd = pcvm.TravelEnd ?? DateTime.Now;
 
                 await _context.SaveChangesAsync();
+                return Ok(postCheck);
             }
             catch (DbUpdateException dbEx)
             {
                 var innerExceptionMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+
+                // This is where that 23503 error was being caught.
+                // If the SQL Constraint fix was applied, this shouldn't trigger anymore.
                 return StatusCode(500, $"Database update error: {innerExceptionMessage}");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Unexpected error: {ex.Message}");
             }
-
-            return Ok(postCheck);
         }
-
 
         [HttpGet("{postCheckId}")]
         public async Task<IActionResult> GetPostCheckByIdAsync(int postCheckId)
