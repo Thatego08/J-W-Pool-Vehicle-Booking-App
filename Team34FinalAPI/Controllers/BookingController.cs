@@ -164,10 +164,15 @@ namespace Team34FinalAPI.Controllers
                     VehicleId = vehicle.VehicleID,
                     Vehicle = null,
                     ProjectId = projectId,
-                    StatusId = 2 // Assuming '2' means 'Booked'
+                    StatusId = 2, // Assuming '2' means 'Booked'
+
+                    //Returned for trip fix
+
+                    ReminderSent = false,
+                    IsReturned = false
                 };
 
-             
+
 
                 await _bookingRepository.AddBookingAsync(booking);
 

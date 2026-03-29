@@ -7,7 +7,7 @@ namespace Team34FinalAPI.Models
         public int BookingID { get; set; }
         [Required]
         public string UserName { get; set; }
-        
+
         public string? Event { get; set; }
         [Required]
         public DateTime StartDate { get; set; }
@@ -15,11 +15,11 @@ namespace Team34FinalAPI.Models
         public DateTime EndDate { get; set; }
         [Required]
         public int VehicleId { get; set; }
-        
+
         public Vehicle? Vehicle { get; set; }
 
         public int? ProjectId { get; set; }
-        
+
         public Project? Project { get; set; }
 
         public string Type { get; set; }
@@ -29,6 +29,10 @@ namespace Team34FinalAPI.Models
         public Status? Status { get; set; }
         public ICollection<Trip> Trips { get; set; }
         public ICollection<PreChecklist> PreChecklists { get; set; } = new List<PreChecklist>();
+
+        //Booking Additions
+
+        public bool IsReturned { get; set; }
 
     }
 }
