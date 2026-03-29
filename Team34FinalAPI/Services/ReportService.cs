@@ -12,6 +12,7 @@ namespace Team34FinalAPI.Services
     public interface IReportService
     {
         Task<IEnumerable<ReportViewModel.VehicleStatusReportViewModel>> GetVehicleStatusReportAsync();
+        Task<IEnumerable<ReportViewModel.TripCostingReportViewModel>> GetTripCostingReportAsync();
         Task<IEnumerable<ReportViewModel.BookingTypeReportViewModel>> GetBookingTypeReportAsync();
         Task<IEnumerable<ReportViewModel.TripReportViewModel>> GetTripReportAsync();
         Task<IEnumerable<ReportViewModel.BookingStatusReportViewModel>> GetBookingStatusReportAsync();
@@ -36,12 +37,14 @@ namespace Team34FinalAPI.Services
         private readonly VehicleDbContext _vehicleDbContext;
         private readonly BookingDbContext _bookingDbContext;
         private readonly TripDbContext _tripDbContext;
+        private readonly RateEEDBContext _rateEEDBContext;
 
-        public ReportService(VehicleDbContext vehicleDbContext, BookingDbContext bookingDbContext, TripDbContext tripDbContext)
+        public ReportService(VehicleDbContext vehicleDbContext, BookingDbContext bookingDbContext, TripDbContext tripDbContext, RateEEDBContext rateEEDBContext)
         {
             _vehicleDbContext = vehicleDbContext;
             _bookingDbContext = bookingDbContext;
             _tripDbContext = tripDbContext;
+            _rateEEDBContext = rateEEDBContext;
         }
 
         public async Task<IEnumerable<VehicleStatusReportViewModel>> GetVehicleStatusReportAsync()
@@ -370,7 +373,7 @@ namespace Team34FinalAPI.Services
 
 
 
-            OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
+                    OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
                     ClosingKms = post != null ? post.ClosingKms : (decimal?)null,
                     TravelledKms = (pre != null && post != null)
                         ? (decimal?)(post.ClosingKms - pre.OpeningKms)
@@ -382,32 +385,90 @@ namespace Team34FinalAPI.Services
 
             return report;
         }
+        public async Task<IEnumerable<TripCostingReportViewModel>> GetTripCostingReportAsync()
+        {
+            // Helper method to count weekdays between two dates
+            int GetWeekdays(DateTime start, DateTime end)
+            {
+                int totalDays = 0;
+                for (var date = start.Date; date <= end.Date; date = date.AddDays(1))
+                {
+                    if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                        totalDays++;
+                }
+                return totalDays;
+            }
 
+            // 1️⃣ Fetch trips with related entities using safe left joins
+            var reportData = await (
+                from trip in _tripDbContext.Trips
+                join pre in _tripDbContext.PreChecklists on trip.PreChecklistId equals pre.Id into preGroup
+                from pre in preGroup.DefaultIfEmpty()
 
+                join post in _tripDbContext.PostChecks on trip.TripId equals post.TripId into postGroup
+                from post in postGroup.DefaultIfEmpty()
 
+                join booking in _tripDbContext.Bookings on trip.BookingID equals booking.BookingID
 
+                join project in _tripDbContext.Projects on booking.ProjectId equals project.ProjectID into projectGroup
+                from project in projectGroup.DefaultIfEmpty()
 
-        //public async Task<List<AvailableVehiclesReportViewModel>> GetAvailableVehiclesForMonthAsync()
-        //{
-        //    var availableVehicles = await _vehicleDbContext.Vehicles
-        //        .Where(v => v.Status.Name == "Available") // Example filter
-        //        .GroupBy(v => new
-        //        {
-        //            Month = v.CreatedDate.Month, // Ensure CreatedDate is the correct field
-        //            Year = v.CreatedDate.Year
-        //        })
-        //        .Select(g => new AvailableVehiclesReportViewModel
-        //        {
-        //            Month = g.Key.Month,
-        //            Year = g.Key.Year,
-        //            AvailableCount = g.Count()
-        //        })
-        //        .ToListAsync();
+                select new
+                {
+                    trip.TripId,
+                    trip.Name,
+                    trip.Location,
+                    trip.TravelEnd,
+                    booking.StartDate,
+                    booking.EndDate,
+                    OpeningKms = pre != null ? pre.OpeningKms : (decimal?)null,
+                    ClosingKms = post != null ? post.ClosingKms : (decimal?)null,
+                    ProjectId = project != null ? project.ProjectID : (int?)null
+                }
+            ).ToListAsync();
 
-        //    return availableVehicles;
-        //}
+            // 2️⃣ Map to ViewModel and calculate weekday
+            var report = reportData.Select(x => new TripCostingReportViewModel
+            {
+                TripId = x.TripId,
+                VehicleName = x.Name,
+                Location = x.Location,
+                CalculateStart = x.StartDate,
+                CalculateEnd = x.TravelEnd ?? x.EndDate,
+                Days = GetWeekdays(x.StartDate, x.TravelEnd ?? x.EndDate),
+                TravelKms = (x.OpeningKms != null && x.ClosingKms != null)
+                    ? (x.ClosingKms.Value - x.OpeningKms.Value)
+                    : 0m,
+                ProjectId = x.ProjectId
+            }).ToList();
 
+            // 3️⃣ Fetch rates and calculate amounts safely
+            foreach (var r in report)
+            {
+                var rates = await _rateEEDBContext.RatesEE
+                    .Where(x =>
+                        x.ProjectId == r.ProjectId &&
+                        x.IsActive &&
+                        (x.EffectiveDate == null || x.EffectiveDate <= r.CalculateStart) &&
+                        (x.ExpiryDate == null || x.ExpiryDate >= r.CalculateStart))
+                    .ToListAsync();
 
+                var fullDayRate = rates.FirstOrDefault(x => x.RateName == "Full Day Rate")?.RateValue ?? 0m;
+                var halfDayRate = rates.FirstOrDefault(x => x.RateName == "Half Day Rate")?.RateValue ?? 0m;
+                var kmRate = rates.FirstOrDefault(x => x.RateName == "Kilometer Rate")?.RateValue ?? 0m;
+
+                // 4️⃣ Calculate costing
+                r.Rate = r.Days <= 1 ? halfDayRate : fullDayRate;
+                r.Amount = r.Days * r.Rate;
+                r.TravelKmRate = kmRate;
+
+                // Nullable-safe multiplication
+                r.TravelKmAmount = (r.TravelKms ?? 0m) * kmRate;
+
+                r.TotalSum = r.Amount + r.TravelKmAmount;
+            }
+
+            return report;
+        }
     }
-
 }
