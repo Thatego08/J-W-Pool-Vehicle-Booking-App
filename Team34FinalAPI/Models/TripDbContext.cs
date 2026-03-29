@@ -22,7 +22,7 @@ namespace Team34FinalAPI.Models
             modelBuilder.Entity<RefuelVehicle>().ToTable("RefuelVehicles");
             modelBuilder.Entity<Booking>().ToTable("Bookings");
             modelBuilder.Entity<PreChecklist>().ToTable("PreChecklists");
-            modelBuilder.Entity<PostCheck>().ToTable("PostChecks");
+            modelBuilder.Entity<PostCheck>().ToTable("PostCheck");
 
             modelBuilder.Entity<Trip>()
                 .HasOne(t => t.Booking)
