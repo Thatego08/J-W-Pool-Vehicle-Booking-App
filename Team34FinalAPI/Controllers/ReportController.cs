@@ -41,6 +41,14 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpGet]
+        [Route("trip-costing")]
+        public async Task<IActionResult> GetTripCostingReport()
+        {
+            var report = await _reportService.GetTripCostingReportAsync();
+            return Ok(report);
+        }
+
+        [HttpGet]
         [Route("projects")]
         public async Task<ActionResult<List<ProjectReportDto>>> GetProjectReport()
         {
@@ -63,7 +71,7 @@ namespace Team34FinalAPI.Controllers
         }
 
         [HttpGet]
-
+        //YES
         [Route("vehicle-fuel-report")]
         public async Task<ActionResult<IEnumerable<FuelExpenditureReportViewModel>>> GetFuelExpendituresReport()
         {
