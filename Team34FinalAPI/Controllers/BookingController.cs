@@ -161,8 +161,8 @@ namespace Team34FinalAPI.Controllers
                     Type = bookingViewModel.Type,
                     StartDate = bookingViewModel.StartDate.ToUniversalTime(),
                     EndDate = bookingViewModel.EndDate.ToUniversalTime(),  // Add end date
-                    Vehicle = vehicle,
                     VehicleId = vehicle.VehicleID,
+                    Vehicle = null,
                     ProjectId = projectId,
                     StatusId = 2 // Assuming '2' means 'Booked'
                 };
